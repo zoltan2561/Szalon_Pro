@@ -3,7 +3,7 @@
     <input type="hidden" name="theme" value="{{ $salon->theme }}">
     <p class="settings-note">Jelenlegi kiindulópont: <strong>{{ $brand['label'] }}</strong>. Az alábbi beállításokat a lap alján lévő mentés rögzíti.</p>
     <div class="form-grid three">
-        <label>Főoldali elrendezés<select name="appearance[layout]"><option value="immersive" @selected(($appearance['layout'] ?? 'immersive') === 'immersive')>Nagy képes nyitóoldal</option><option value="split" @selected(($appearance['layout'] ?? '') === 'split')>Szöveg és kép egymás mellett</option></select></label>
+        <label>Főoldali elrendezés<select name="appearance[layout]"><option value="split" @selected(($appearance['layout'] ?? 'split') === 'split')>Atelier · ívelt képes elrendezés</option><option value="immersive" @selected(($appearance['layout'] ?? '') === 'immersive')>Nagy képes nyitóoldal</option></select></label>
         <label>Betűkészlet<select name="font"><option value="serif" @selected(old('font',$salon->font)==='serif')>Playfair Display · elegáns</option><option value="sans" @selected(old('font',$salon->font)==='sans')>DM Sans · letisztult</option></select></label>
         <label>Sarkok<select name="appearance[radius]">@foreach(['4'=>'Finoman szögletes','8'=>'Visszafogott','16'=>'Lágy','24'=>'Kerekített'] as $value=>$label)<option value="{{ $value }}" @selected((string)($appearance['radius'] ?? '8') === (string)$value)>{{ $label }}</option>@endforeach</select></label>
     </div>

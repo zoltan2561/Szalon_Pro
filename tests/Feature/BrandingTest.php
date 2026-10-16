@@ -33,11 +33,12 @@ class BrandingTest extends TestCase
             $salon->refresh();
             $this->assertSame($key, $salon->theme);
             $this->assertSame(config('branding.presets.'.$key.'.accent'), $salon->accent);
+            $this->assertSame('split', $salon->appearance['layout']);
             $this->assertSame('Saját márkanév', $salon->name);
             $this->assertSame('branding/own.webp', $salon->hero_image);
             $this->assertSame('branding/logo.png', $salon->logo);
             $this->assertSame($service->name, $service->fresh()->name);
-            $this->get(route('home'))->assertOk()->assertSee('storage/branding/own.webp')->assertSee('Saját márkanév');
+            $this->get(route('home'))->assertOk()->assertSee('storage/branding/own.webp')->assertSee('Saját márkanév')->assertSee('layout-split');
         }
     }
 
@@ -58,7 +59,7 @@ class BrandingTest extends TestCase
         Service::factory()->create();
         $owner = User::factory()->create(['role' => 'owner']);
         $appearance = config('branding.presets.salon.appearance');
-        $appearance['layout'] = 'split';
+        $appearance['layout'] = 'immersive';
         $appearance['paper'] = '#FFFFFF';
         $appearance['cta_label'] = 'Foglalok magamnak';
         unset($appearance['show_team']);
@@ -66,9 +67,9 @@ class BrandingTest extends TestCase
         $this->actingAs($owner)->post(route('admin.settings.save'), $data)->assertRedirect()->assertSessionHasNoErrors();
         $salon->refresh();
         $this->assertFalse($salon->appearance['show_team']);
-        $this->assertSame('split', $salon->appearance['layout']);
+        $this->assertSame('immersive', $salon->appearance['layout']);
         Storage::disk('public')->assertExists($salon->hero_image);
-        $this->get(route('home'))->assertOk()->assertSee('layout-split')->assertSee('--paper:#FFFFFF', false)->assertSee('Foglalok magamnak')->assertSee('storage/'.$salon->hero_image)->assertDontSee('Akik várnak rád');
+        $this->get(route('home'))->assertOk()->assertSee('layout-immersive')->assertSee('--paper:#FFFFFF', false)->assertSee('Foglalok magamnak')->assertSee('storage/'.$salon->hero_image)->assertDontSee('Akik várnak rád');
         $this->post(route('admin.settings.save'), $this->settingsData($salon, $appearance) + ['published' => 1, 'reset_hero' => 1])->assertSessionHasNoErrors();
         $this->assertNull($salon->fresh()->hero_image);
         $this->get(route('home'))->assertSee('hair-hero.webp');
