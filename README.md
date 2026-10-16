@@ -1,0 +1,117 @@
+# SzalonPRO
+
+Saját arculatra szabható Laravel 13 szalonweboldal és napi szalonkezelés, a `p-szalon_pro` Slack-csatorna 2026. október 14-i, hatrészes MVP-terve alapján.
+
+## Kipróbálás ebben a munkakönyvtárban
+
+- Szalon: http://127.0.0.1:8095
+- Barber: http://127.0.0.1:8096
+- Munkafelület: az adott címen `/admin`; belépés: `/belepes`.
+- Szalon belépési e-mail: `owner@example.test`; barber: `barber@example.test`.
+- A helyi, véletlen jelszó a figyelmen kívül hagyott `.env`, illetve `.env.barber` fájl `SALON_ADMIN_PASSWORD` sorában található. Nincs a forráskódban vagy ebben a dokumentumban.
+- Külön adatbázis: `database/database.sqlite` és `database/barber.sqlite`; külön munkamenetsüti. A nevek, profilok és foglalások szintetikus demóadatok. Az adatbázisok, feltöltések és titkok nincsenek Gitben.
+
+Újraindítás két PowerShell-terminálban:
+
+```powershell
+php artisan serve --host=127.0.0.1 --port=8095 --no-reload
+```
+
+```powershell
+php artisan serve --env=barber --host=127.0.0.1 --port=8096 --no-reload
+```
+
+A felület Blade és közvetlenül kiszolgált CSS/JavaScript; használatához nem szükséges Node vagy frontend-build.
+
+## Funkciók
+
+- Két konfigurálható megjelenés, név, logó, színek, betűkészlet, bemutatkozás, referenciafotók, kapcsolat, nyitvatartás és feltételek.
+- Szolgáltatások: kategória, fix/induló/tájékoztató ár, valódi időtartam, elő- és utópuffer, alkalmas szakemberek, archiválás.
+- Szakemberenként heti munkarend, szünet, napi kivétel, szabadság és blokkolás; külön szalonnyitvatartás.
+- Vendégfiók nélküli online foglalás és közös szabályokkal ellenőrzött kézi felvitel. A „mindegy, kihez” választás után konkrét szakember látható minden választható időpontnál.
+- Adatbázis-tranzakcióval sorosított véglegesítés, idempotens beküldés, mentéskor ismételt szabadidő-ellenőrzés.
+- Mai nap, következő vendég, napi/heti naptár, áthelyezés, lemondás, elvégzett és meg nem jelent státusz, tényleges szolgáltatási összeg.
+- Vendégkeresés, előzmények, kifejezett meglévővendég-választás, következő időpont, kontaktszerkesztés, engedélyhez kötött titkosított megjegyzés.
+- A nevek/elérhetőségek egyezése nem egyesít kartonokat. A foglaláskori ár, név és időtartam változatlan marad.
+- Tulajdonosi és saját naptárra korlátozott munkatársi hozzáférés; külön módosítási és megjegyzési engedélyek.
+- Tulajdonosi JSON-export; törléshez jelszó és külön megerősítés szükséges. A személyes adatok névtelenítése megőrzi a látogatási összesítést.
+- Lejáró, véletlen kezelési link; GET-kérés nem módosít adatot. Lemondási és áthelyezési határidő.
+- Tartós értesítési sor visszaigazoláshoz, módosításhoz, lemondáshoz és emlékeztetőhöz, újrapróbálkozással és kezelői naplóval.
+- Titkosított adatbázis- és hivatkozott médiamentés, üres célba visszaállítás.
+
+A működési összesítésben az elvégzett szolgáltatások rögzített összege szerepel. Ez nem igazolt beérkezett pénz, és nem könyvelés.
+
+## Új, elkülönített telepítés
+
+PHP 8.4+, Composer és SQLite vagy MySQL/MariaDB szükséges. A PHP-bővítmények követelményeit a Composer ellenőrzi. Ugyanazt a kiadást telepítsd minden ügyfélnél, külön konfigurációval, APP_KEY-vel és adatbázissal.
+
+```powershell
+composer install
+Copy-Item .env.example .env
+php artisan key:generate
+New-Item -ItemType File database/database.sqlite
+php artisan migrate
+```
+
+Az új telepítés `.env` fájljában állíts be legalább 12 karakteres `SALON_ADMIN_PASSWORD` értéket, majd:
+
+```powershell
+php artisan salon:install --email=tulajdonos@example.hu
+php artisan storage:link
+php artisan serve --host=127.0.0.1 --port=8095
+```
+
+A `salon:install` nem ír felül meglévő telepítést. Demóhoz új, üres adatbázisban add meg a `--demo=salon` vagy `--demo=barber` kapcsolót. Demót ne telepíts éles ügyféladatbázisba.
+
+A belépés után a Beállítások induló lépései vezetnek végig az adatokon, arculaton, munkatársakon, szolgáltatásokon, tesztfoglaláson és előnézeten. Aktív szolgáltatás, alkalmas szakember és elegendő közös munkaidő nélkül nem engedélyezhető a közzététel.
+
+Tulajdonosi vagy munkatársi jelszó helyreállítása operátori hozzáféréssel: állítsd be a `SALON_ADMIN_PASSWORD` környezeti értéket, majd `php artisan salon:password email@example.hu`. Ez megszünteti az érintett felhasználó adatbázisos munkameneteit.
+
+## Értesítések
+
+```powershell
+php artisan salon:notify
+php artisan schedule:work
+```
+
+A demó `MAIL_MAILER=array` beállítása nem küld valódi e-mailt, és nem írja naplóba a kezelési linket. Az „helyi próba feldolgozva” állapot nem kézbesítési igazolás.
+
+Élesben `MAIL_MAILER=smtp` és a szolgáltató paraméterei szükségesek; a `log` levélküldőt és azt tartalmazó failovert ne használd, mert bizalmas kezelési link kerülhetne naplóba. A feladó domain SPF/DKIM/DMARC beállítása és a tényleges postaládás próba külön üzemeltetési feladat.
+
+A kiszolgáló időzítője percenként futtassa a `php artisan schedule:run` parancsot. Az adatbázisos kimeneti sor miatt nincs külön Laravel queue-worker követelmény. A küldés sikertelensége nem vonja vissza a foglalást. Öt próbálkozás után kezelői újraindítás kell. A visszalépés 2, 4, 8, 16 perc. Módosítás/lemondás érvényteleníti a régi revízió sorban álló értesítéseit.
+
+Az emlékeztetési időn belüli új foglalás csak visszaigazolást kap. Az SMTP által átvett üzenet nem kézbesítési bizonyíték. Bizonytalan SMTP-válasz vagy folyamatleállás után ismételt kézbesítés előfordulhat; a stabil Message-ID segítheti a címzett oldali felismerést, nem garantálja a szolgáltatói idempotenciát. A rövid sorlefoglalás után az SMTP-hívás adatbáziszár nélkül fut. A küldés megkezdésekor még érvényes, már úton lévő levelet egy közben történő lemondás nem tudja visszahívni; a még sorban álló régi értesítéseket érvénytelenítjük. A megszakadt feldolgozás öt perc után ismét próbálható.
+
+## Mentés és visszaállítás
+
+```powershell
+php artisan salon:backup
+php artisan salon:restore "D:\mentesek\szalon.backup"
+```
+
+A mentés alaphelye `storage/app/private/backups`; az időzítő naponta 02:15 UTC-kor futtatja. Az export az alkalmazás adatait és az aktuális logó/galéria hivatkozott képeit tartalmazza, APP_KEY-vel titkosítva. Az APP_KEY külön, biztonságos megőrzése nélkül nincs visszaállítás. A mentést másik tárolóra is másolni kell; ezt a helyi projekt nem állította be.
+
+Visszaállítás kizárólag azonos verziójú migrációkkal előkészített, üres adatbázisba lehetséges. Meglévő adatot vagy képfájlt nem ír felül. A helyreállítás alatt a webes forgalom és az időzítő álljon; újraindítás előtt ellenőrizd az értesítési sort, mert a mentés óta már elküldött üzenet újra esedékes lehet. A korábbi mentések személyes adatainak életciklusát is kezeld a saját megőrzési szabályzatodban.
+
+## Ellenőrzés és kiadás
+
+```powershell
+php artisan test --compact
+php artisan view:cache
+php artisan route:list --except-vendor
+composer validate --strict
+```
+
+A tesztek lefedik a külön folyamatokból érkező párhuzamos foglalást, dupla beküldést, puffert, szünetet, szabadságot, határidőket, időközben betelő időpontot, sikertelen és sikeres áthelyezést, történeti árat és archiválást, hozzáférési köröket, levélhibát/újrapróbálkozást, elavult emlékeztetőt, óraátállítást, explicit közzétételt, SVG-tiltást, törlést, valamint az adat- és médiavisszaállítást.
+
+Böngészős bizonyítékok: `output/playwright/` (helyi, nem verziózott). Ellenőrzött nyilvános mobilfoglalás, tulajdonosi belépés, kézi következő időpont, áthelyezés, lemondás, napi/heti naptár és 320/390/1440 px-es elrendezések.
+
+Éles kiadáskor:
+
+1. Azonos commit/kiadási csomag, ügyfelenként külön konfiguráció; `composer install --no-dev --prefer-dist --no-interaction`.
+2. HTTPS, webszerver-gyökér kizárólag `public/`; `APP_ENV=production`, `APP_DEBUG=false`, valós `APP_URL`, `SESSION_SECURE_COOKIE=true`, külön süti azonos gépen futó példányokhoz.
+3. Mentés, karbantartás, `php artisan migrate --force`, `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`, majd HTTP- és foglalási próba. Az APP_KEY-t frissítéskor őrizd meg.
+4. Percenkénti időzítő, tényleges SMTP-próba, külső mentéstároló és helyreállítási próba.
+5. Valós szolgáltatói tartalom, jogosított képek, ellenőrzött adatkezelési/foglalási feltételek, és valós pilot. A demó adatkezelési szövege nem éles dokumentum.
+
+Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott tárhely telepítési próbája élesítés előtt szükséges. Fizetés, SMS, készlet, számlázás, piactér, több telephely és közös kezelőhelyiség kapacitáskezelése a Slack-terv szerint későbbi modul.

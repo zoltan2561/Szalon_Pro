@@ -1,0 +1,1 @@
+document.querySelectorAll('.booking-submit').forEach(form => form.addEventListener('submit', () => { if (form.checkValidity()) { const button=form.querySelector('button[type=submit],button:not([type])'); if(button){button.disabled=true;button.textContent='Foglalás mentése…';} } }));

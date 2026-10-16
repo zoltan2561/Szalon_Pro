@@ -1,0 +1,299 @@
+=== THREAD PARENT MESSAGE ===
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:47:06 CEST
+Message TS: 1791949626.273209
+SzalonPRO – részletes projektleírás v0.1
+*Státusz:* egyeztetésre előkészített projekttervezet · *Dátum:* 2026. október 14.
+
+*Cél:* szépségipari kisvállalkozásoknak értékesíthető, saját arculatra szabható weboldal és szalonkezelő rendszer. Elsőként egy vállalkozás, egy telephely, javasoltan 1–5 szakember napi működésére fókuszálunk.
+
+*Alapfolyamat:* tájékozódás → online vagy kézi foglalás → visszaigazolás → szolgáltatás → vendégelőzmény → következő időpont.
+
+*Az első kiadás javasolt tartalma:* arculatos nyilvános weboldal, szolgáltatások és árlista, szakemberek és munkaidő, ütközésmentes naptár, vendégnyilvántartás, e-mailes értesítések, lemondás és áthelyezés, alap működési összesítés.
+
+*Termékesítési alapelv:* közös, verziózott kódbázis, konfigurálható ügyfélbeállítások; ne ügyfelenként külön fejlődő forráskódágak.
+
+*Fontos:* a projektindító üzenetben rögzített célból kidolgozott javaslat. A technológia, telepítési modell, árazás, pilot és határidők nem végleges döntések. Ez nem fejlesztésindító munkautasítás.
+
+*A teljes dokumentum ebben a szálban, 6 számozott részben:* célcsoport és problémák; szerepkörök és felületek; részletes funkciók; kritikus foglalási szabályok; műszaki, adatkezelési és üzemeltetési követelmények; fejlesztési szakaszok és elfogadási feltételek; későbbi bővítések, üzleti modell és nyitott döntések.
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+=== THREAD REPLIES (6 total) ===
+
+--- Reply 1 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:47:30 CEST
+Message TS: 1791949650.436519
+*SzalonPRO – projektleírás v0.1 | 1/6. rész*
+
+
+SzalonPRO – részletes projektleírás
+*Verzió:* 0.1 – egyeztetésre előkészített termékterv
+*Készült:* 2026. október 14.
+*Projektazonosító:* Szalon_Pro
+*Munkanév:* SzalonPRO; a végleges terméknév még eldöntendő
+*Forrás:* a SzoftLab Slack-munkaterület `#p-szalon_pro` csatornájának 2026. október 13-án 21:56-kor közzétett projektindító üzenete.
+*Forrásüzenet:* <https://szoftlabworkspace.slack.com/archives/C0C911JUM6V/p1791921363923879>
+
+
+0. A dokumentum státusza és határai
+A csatorna átnézésekor egy érdemi projektindító üzenet volt elérhető; az üzenethez nem tartozott szálválasz. A rögzített elképzelés egy szépségszalonoknak, fodrászoknak, barbereknek, műkörmösöknek, pillásoknak és hasonló kisvállalkozásoknak eladható, hasznos problémákat megoldó, saját arculathoz igazítható és több ügyfélnek újraértékesíthető webalkalmazás.
+
+Az üzenet nem tartalmaz részletes funkciólistát, elfogadott technológiai döntést, árazást, ütemezést vagy készültségi jelentést. Az alábbi funkciók, üzleti szabályok, prioritások és műszaki megoldások ezért *javasolt specifikációt*, nem korábban elfogadott döntéseket jelentenek. A dokumentum nem forráskód-audit és nem piackutatás.
+
+
+1. Projektösszefoglaló
+A SzalonPRO célja egy saját márkára szabható webes rendszer kialakítása, amely összeköti a szolgáltató online megjelenését a napi működésével. A vendég ugyanazon a felületen ismerheti meg a vállalkozást, a szolgáltatásokat és a munkatársakat, majd időpontot foglalhat. A szolgáltató egy közös naptárban kezeli az online és kézzel felvett foglalásokat, a vendégadatokat és a látogatások állapotát.
+
+*Termékígéret:* Saját szalonweboldal, online időpontfoglalás és átlátható napi vendégkezelés egy helyen, a vállalkozás arculatához igazítva.
+
+Az „all-in-one” az első változatban ne minden elképzelhető szalonmodult jelentsen. Egy teljes, megbízható alapfolyamatot kell lefedni:
+
+*Tájékozódás → foglalás → visszaigazolás → szolgáltatás → látogatási előzmény → következő időpont.*
+
+A rendszer ne csak szép bemutatkozó oldal legyen, és ne is túlméretezett vállalatirányítási alkalmazás. Az első értékesíthető változat néhány gyakran használt feladatot végezzen el következetesen és egyszerűen.
+
+
+2. Célcsoport és induló fókusz
+Elsődleges célcsoport
+Egyedül dolgozó szépségipari szolgáltatók és néhány munkatárssal működő, egy telephelyes kis szalonok: fodrászok, barberek, körmösök, pillások, illetve hasonló időpont-alapú szolgáltatók. Javasolt induló méret: 1–5 foglalható szakember, de ez termékpozicionálási cél, nem kötelező technikai korlát.
+
+Egy egyszemélyes vállalkozásnak ne kelljen recepciós, telephelyvezető vagy munkatársi struktúrákat beállítania. A többszereplős lehetőségek csak akkor jelenjenek meg, amikor valóban szükség van rájuk.
+
+
+Eltérő szolgáltatói igények
+A rendszer kezeljen rövid és hosszú szolgáltatásokat, különböző időtartamokat, pufferidőt, ismétlődő látogatásokat és munkatárshoz kötött foglalást. A szolgáltatásnevek és szakmai kategóriák ne legyenek egyetlen szakmához beégetve.
+
+Az eltérő szakmákhoz adhatók induló szolgáltatássablonok, de az árakat, időtartamokat és munkafolyamatokat a szolgáltató ellenőrizze. A sablon segítség, nem szakmai vagy árazási ajánlás.
+
+
+Induló kizárások
+Ne az első verzió oldja meg a több telephelyes hálózatokat, az orvosi jellegű kezelések dokumentálását, a párhuzamos kapacitások bonyolult optimalizálását vagy a közös helyen dolgozó, egymástól független vállalkozások teljes pénzügyi elkülönítését.
+
+Fontos tisztázás: egy szalonban dolgozó több ember nem feltétlenül egy vállalkozás. A székbérlők és önálló vállalkozók adatainak összevonását nem szabad automatikusan feltételezni.
+
+
+3. Megoldandó problémák – validálandó feltevések
+Az alábbi helyzetek kiinduló termékhipotézisek; a csatornában nem szerepelt őket igazoló ügyfélinterjú vagy mérés.
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+--- Reply 2 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:47:55 CEST
+Message TS: 1791949675.346219
+*SzalonPRO – projektleírás v0.1 | 2/6. rész*
+
+
+Nem cél előre garantálni a bevételnövekedést vagy a meg nem jelenések megszűnését. A pilot során kell ellenőrizni, mely problémák jelentősek az adott célcsoportban.
+
+
+4. Felhasználói szerepkörök
+*Tulajdonos / adminisztrátor:* kezeli a vállalkozás adatait, arculatát, szolgáltatásait, munkatársait, foglalási szabályait és teljes naptárát; hozzáfér az összesítéshez és a jogosultságokhoz.
+
+*Munkatárs:* alapértelmezetten saját naptárát és a munkájához szükséges vendégadatokat látja. Saját foglalásainak kezelése külön engedélyezhető. Nem kap automatikusan hozzáférést más munkatárs teljes vendéglistájához vagy a vállalkozás beállításaihoz.
+
+*Recepciós – későbbi vagy pilothoz kötött szerepkör:* több munkatárs időpontjait kezelheti, de nem módosíthat tulajdonosi, hozzáférési vagy technikai beállításokat. Az első változat kiadható e szerepkör nélkül, ha a pilot nem igényli.
+
+*Vendég:* megismeri a szolgáltatásokat, szabad időpontot keres, foglal és saját foglalását biztonságos linken kezeli. Az MVP-ben ne legyen kötelező vendégfiók-regisztráció.
+
+
+5. A termék két felülete
+5.1. Nyilvános szalonweboldal
+Saját névvel, logóval, színvilággal és szükség szerint saját domainnel működő weboldal. A fontos információk: bemutatkozás, szolgáltatások és árak, időtartamok, munkatársak, válogatott referenciaképek, cím, nyitvatartás, kapcsolati adatok és foglalási feltételek.
+
+Az „Időpontot foglalok” művelet legyen könnyen elérhető mobilon is. Az oldal ne igényeljen hosszú görgetést ahhoz, hogy a vendég megtudja, milyen szolgáltatás mennyibe kerül és hogyan foglalhat.
+
+A referenciafotók, munkatársportrék és értékelések csak valós, felhasználásra jogosult tartalomból kerüljenek fel. Hiányzó tartalom helyett ne jelenjenek meg kitalált vendégvélemények, eredmények vagy szakemberek.
+
+
+5.2. Belső munkafelület
+A kezdőképernyő a napi munkát mutassa: következő vendég, mai időpontok, lemondott foglalások, szabad idősávok és gyors új foglalás. Ne általános grafikonfal fogadja a szolgáltatót.
+
+Javasolt alapmenü: *Mai nap, Naptár, Vendégek, Szolgáltatások, Beállítások.* A munkatársak és az egyszerű összesítések a szükséges jogosultsággal legyenek elérhetők.
+
+Telefonon az időrendi lista, nagyobb kijelzőn a napi/heti naptár legyen az elsődleges nézet. A napi munkához szükséges műveletek ne szoruljanak asztali gépre.
+
+
+6. Az első értékesíthető verzió funkciói
+6.1. Vezetett induló beállítás
+A rendszer lépésenként kérje be a vállalkozás nevét és elérhetőségeit, a munkavégzés helyét, a foglalható szakembereket, a szolgáltatásokat, a munkarendet és az alap arculati elemeket. Ezt kövesse előnézet és tesztfoglalás.
+
+Az online foglalás ne váljon aktívvá addig, amíg nincs legalább egy aktív szolgáltatás, hozzá alkalmas szakember és érvényes munkaidő. A nyilvános közzététel legyen tudatos adminművelet.
+
+
+6.2. Szolgáltatáskatalógus
+Szolgáltatásonként legyen név, rövid leírás, kategória, időtartam, ár vagy jelzett induló ár, foglalhatóság, rendelhető munkatárs, valamint szükség esetén elő- és utópuffer.
+
+Az első verzióban egy foglalás egy szolgáltatást és egy szakembert foglaljon. Az ismert kombinációk külön szolgáltatásként rögzíthetők, például „hajvágás és szakálligazítás”. Az összetett, több szakemberes kezelési lánc ne kerüljön az MVP-be.
+
+Változó ár esetén a foglalási összesítő egyértelműen jelezze, hogy az összeg tájékoztató vagy induló ár. A történeti foglalás őrizze meg a foglaláskori megnevezést, időtartamot és árat; egy későbbi árlistamódosítás ne írja át a múltat.
+
+
+6.3. Munkaidő és elérhetőség
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+--- Reply 3 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:48:36 CEST
+Message TS: 1791949716.069719
+*SzalonPRO – projektleírás v0.1 | 3/6. rész*
+
+Külön kezelendő a vállalkozás nyitvatartása és az egyes szakemberek tényleges foglalhatósága. Legyen heti munkarend, adott napi eltérés, szabadság, szünet és kézzel blokkolt időszak.
+
+A szabad időpont számításakor a rendszer vegye figyelembe a szolgáltatás teljes hosszát, a puffereket, a munkatárs alkalmasságát, a munkaidőt, a szüneteket, a blokkolásokat és a meglévő foglalásokat. A megjelenített időpontlépés ne kerekítse át vagy rövidítse meg a tényleges foglalási időtartamot.
+
+Az MVP-ben egy szakember egyszerre egy vendéggel foglalkozzon. Egy kezelés várakozási idejében másik vendég párhuzamos kiszolgálása külön későbbi funkció legyen. Közösen használt, szűkös erőforrás esetén – például egyetlen kezelőhelyiség – a pilot indulása előtt szükséges erőforráskezelést kell tisztázni, nem elhallgatni a korlátot.
+
+
+6.4. Online időpontfoglalás
+Javasolt vendégút: szolgáltatás → szakember vagy „mindegy, kihez” → nap és időpont → szükséges kapcsolati adatok → összesítés és véglegesítés.
+
+A „mindegy, kihez” választás mögött is egy konkrét, alkalmas és szabad szakember kapja a foglalást. A véglegesítés előtt látszódjon a helyszín, a szolgáltatás, a szakember, az időpont, az időtartam, az ár jellege és a lemondási feltétel.
+
+A sikeroldal csak ténylegesen elmentett foglalás után jelenhet meg. A visszaigazoló e-mail küldésének hibája ne szüntesse meg a már létrejött időpontot, és ne indítsa újra a teljes foglalást.
+
+Az alapértelmezés automatikus visszaigazolás legyen. A kézi jóváhagyásos folyamat csak külön validált igény esetén kerüljön be, mert várakozó állapotokat és további kommunikációt igényel.
+
+
+6.5. Adminnaptár és kézi foglalás
+A telefonon, személyesen vagy üzenetben egyeztetett időpont ugyanabba a nyilvántartásba kerüljön, mint az online foglalás. A kézi felvitel ne kerülhesse meg az ütközésellenőrzést.
+
+A naptárban lehessen vendégre keresni, meglévő vendéget kiválasztani, új vendéget rögzíteni, foglalást megnyitni, áthelyezni, lemondani, elvégzettként megjelölni vagy meg nem jelenésként rögzíteni. Az első verzióhoz elég megbízható szerkesztőűrlap; az áthúzásos naptárkezelés nem kiadási feltétel.
+
+Időpont-áthelyezéskor az új helyet újra ellenőrizni kell. Ha foglalt, az eredeti időpont maradjon érvényben. A munkaidő későbbi módosítása pedig ne törölje vagy helyezze át csendben a korábban rögzített foglalásokat.
+
+
+6.6. Vendégnyilvántartás és látogatási előzmény
+A vendégkarton tartalmazza a nevet, a szükséges kapcsolati adatokat, a korábbi és következő látogatásokat, azok szolgáltatását, szakemberét és státuszát. Opcionális, jogosultsággal védett szakmai megjegyzés rögzíthető, de egészségügyi adatgyűjtés és érzékeny fotódokumentáció ne legyen MVP-funkció.
+
+A rendszer segítse a meglévő vendég felismerését, de ne vonjon össze automatikusan két személyt kizárólag névegyezés miatt. Telefonszám vagy e-mail alapján is csak duplikációgyanút jelezzen; eltérő személyek közös elérhetőséget is használhatnak.
+
+Az előző látogatásból lehessen új foglalást indítani. A korábbi szolgáltatás előtölthető, de az új foglalásra az aktuális ár, időtartam és elérhetőség vonatkozzon. A régi látogatás adatai változatlanok maradjanak.
+
+
+6.7. Értesítések és önkiszolgáló kezelés
+Az MVP e-mailben küldjön foglalási visszaigazolást, módosítási és lemondási értesítést, valamint beállítható idővel korábbi emlékeztetőt. A 24 órás emlékeztetés csak javasolt induló alapérték; a rövidebb időn belüli foglalások kezelése legyen külön meghatározva.
+
+A vendég biztonságos, nehezen kitalálható és érvényességében korlátozható linken érhesse el saját foglalását. A lemondás vagy módosítás külön megerősítő művelet legyen; a link puszta megnyitása ne módosítson adatot. A szolgáltató szabályozhassa, meddig engedélyezett az online lemondás vagy áthelyezés.
+
+Az értesítések hátterében legyen sorba állítás, ismételt próbálkozás, küldési napló és adminnak látható hibajelzés. Módosítás után a régi időpontra tervezett emlékeztető ne menjen ki. Az SMS későbbi, szolgáltató- és költségfüggő integráció legyen.
+
+
+6.8. Napi lezárás és alap összesítés
+Javasolt foglalásállapotok: *visszaigazolt, elvégzett, lemondott, nem jelent meg*. Az áthelyezés változási esemény, nem tartós foglalásállapot.
+
+A szolgáltató az elvégzett látogatásnál rögzíthesse a tényleges szolgáltatási összeget. Az első változat napi/heti foglalásszámot, elvégzett látogatásokat, lemondásokat, meg nem jelenéseket és rögzített szolgáltatási összegeket összesítsen.
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+--- Reply 4 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:49:03 CEST
+Message TS: 1791949743.722629
+*SzalonPRO – projektleírás v0.1 | 4/6. rész*
+
+A jövőbeli foglalások értéke, az elvégzett szolgáltatások rögzített összege és a ténylegesen beérkezett pénz külön fogalom. Fizetéskezelés nélkül a rendszer ne nevezzen automatikusan minden összeget befolyt bevételnek. Ez működési áttekintés, nem könyvelési vagy számlázási modul.
+
+
+7. Kritikus üzleti és foglalási szabályok
+1. *Ne legyen dupla foglalás.* Két párhuzamos kérés esetén is legfeljebb egy érvényes foglalás jöhessen létre ugyanarra a szakemberre és átfedő időszakra. A végső ellenőrzés és mentés szerveroldali, tranzakciósan védett művelet legyen.
+2. *Az admin és a vendég ugyanazt a foglalási logikát használja.* Külön kézi és nyilvános számítás ne tudjon eltérő eredményre jutni. A pufferek minden belépési ponton számítsanak.
+3. *Minden újraellenőrzendő véglegesítéskor.* Az időpontlista megtekintése önmagában nem foglal helyet. Az időközben elfogyott időpont helyett a rendszer kínáljon új választást, adatvesztés nélkül.
+4. *A többszöri elküldés ne hozzon létre másolatokat.* Dupla kattintás vagy hálózati újrapróbálkozás esetén ugyanaz a foglalási kérés ne eredményezzen újabb időpontot vagy ismételt értesítési sort.
+5. *A módosítás legyen követhető és biztonságos.* Sikertelen áthelyezéskor ne vesszen el az eredeti foglalás; a módosító, időpont és korábbi/új értékek naplózhatók legyenek.
+6. *A múlt maradjon változatlan.* Szolgáltatás vagy szakember archiválása ne törölje a látogatási előzményt. A későbbi árváltozás ne írja át a korábbi foglalási adatokat.
+7. *Az időkezelés legyen egységes.* A szalon időzónája legyen rögzítve; magyar indulásnál Europe/Budapest. Az óraátállítás és az eltérő kliensidőzóna viselkedését is tesztelni kell.
+8. *A túl közeli, túl távoli és tiltott foglalások legyenek szabályozhatók.* Legyen minimum előfoglalási idő, maximum foglalási horizont és egyértelmű lemondási/módosítási határidő.
+
+8. Arculat és használhatóság
+A több ügyfélnek történő értékesítés alapja a konfigurálhatóság. A logó, színek, tipográfiai készletek, képek, bemutatkozás, szolgáltatások, munkatársak, kapcsolati adatok és foglalási feltételek adminból vagy dokumentált konfigurációból legyenek állíthatók.
+
+Készülhet két visszafogott kiinduló megjelenés – például világos, elegáns szalon és kontrasztos barber –, de ezek ugyanazokat a komponenseket és működést használják. Új ügyfél arculata ne igényeljen külön frontendet. Az adminnál az olvashatóság és a kiszámítható működés fontosabb legyen a látványos effekteknél.
+
+Minden alapfolyamat használható legyen telefonon. Nagy érintési célok, érthető magyar feliratok, egyértelmű visszajelzések, kitöltés közben megőrzött adatok és hasznos üres állapotok szükségesek. A státuszokat ne csak szín különböztesse meg. Billentyűzettel is legyen bejárható a foglalás.
+
+A felületen hétköznapi megnevezések szerepeljenek: „Vendégeim”, „Szabad időpontok”, „Új foglalás”, „Elvégezve”; ne belső fejlesztői vagy indokolatlan angol kifejezések.
+
+
+9. Műszaki irány és újraértékesíthetőség
+Javasolt alap
+Laravel-alapú, moduláris monolit egyetlen közös, verziózott kódbázissal. Relációs adatbázis, központi foglalási szolgáltatás, jogosultságkezelés, háttérfeladatok és időzített értesítések. A konkrét keretrendszer- és csomagverziókat a megvalósítás kezdetén kell kiválasztani; itt nincs elfogadott verziólista.
+
+A nyilvános weboldal és az admin ugyanazokra a szolgáltatás- és foglalási adatokra épüljön. Mikroszolgáltatás-architektúra, külön natív alkalmazás és komplex integrációs infrastruktúra ne legyen induló követelmény.
+
+
+Telepítési modell
+*Javasolt indulás:* ügyfelenként elkülönített telepítés és adatbázis, közös alkalmazáskódból. Ez illeszkedhet az egyszeri bevezetésre és külön üzemeltetésre épülő értékesítéshez. Ugyanakkor csak automatizálható telepítéssel, migrációval és verziónyilvántartással érdemes választani; sok kézzel karbantartott példány önálló működési kockázat.
+
+Az ügyfélspecifikus megjelenés és szabályok adatokban, sablonokban vagy funkciókapcsolókban legyenek. Ne legyen minden ügyfélhez tartósan külön fejlődő forráskódág. A fejlesztési ágak munkafolyamatot szolgáljanak, ne ügyfélkonfigurációt helyettesítsenek.
+
+*Későbbi alternatíva:* központi, több-bérlős SaaS. Ezt az üzleti modell alapján külön kell eldönteni; a két működési mód teljes körű párhuzamos támogatása nem MVP-cél. Egy adatbázisbeli vállalkozásazonosító önmagában nem kész SaaS-architektúra.
+
+
+Fő adategységek
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+--- Reply 5 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:49:29 CEST
+Message TS: 1791949769.155099
+*SzalonPRO – projektleírás v0.1 | 5/6. rész*
+
+
+Az értesítésküldés és a későbbi integrációk ne módosíthassák ellenőrizetlenül a foglalási állapotot. A külső szolgáltatások kiesése legyen elkülöníthető a naptár alapműködésétől.
+
+
+10. Adatkezelési és üzemeltetési követelmények
+Csak a szolgáltatáshoz szükséges adatokat kérje a rendszer. A vendég ne férjen hozzá más vendéghez, a munkatárs csak engedélyezett adatkörhöz, az egyik ügyfél pedig semmilyen módon ne lássa egy másik vállalkozás adatait.
+
+Szükséges a biztonságos bejelentkezés, tulajdonosi hozzáférés megfelelő védelme, belépési és foglalási visszaélések korlátozása, biztonságos fájlfeltöltés, naplózás és a hozzáférési kulcsok megfelelő kezelése. A foglaláskezelő link ne legyen egyszerűen sorszámból kitalálható.
+
+Legyen meghatározott adatmegőrzési, exportálási és törlési folyamat, automatizált biztonsági mentés, valamint kipróbált visszaállítás. A naplózás se tároljon indokolatlanul teljes vendégadatokat vagy titkos kezelési linkeket.
+
+A foglalási értesítések és a reklámcélú üzenetek külön funkcióként kezelendők; az MVP ne indítson automatikus marketingkampányokat. Az adatkezelési dokumentumokat, szolgáltatói szerepeket és tényleges működést élesítés előtt külön át kell tekinteni. Ez a projektleírás nem jogi megfelelőségi igazolás.
+
+
+11. Fejlesztési szakaszok és kilépési feltételek
+A pilothoz nem szükséges minden szépségipari szakmát egyszerre lefedni. Viszont még szélesebb értékesítés előtt érdemes ellenőrizni egy rövid szolgáltatásokra és egy hosszabb kezelésekre épülő működést. A szakaszok itt nem naptári vagy költségvállalások.
+
+
+12. Elfogadási feltételek
+A kiadás alapfeltétele egy valósághű teljes nap sikeres kezelése online és kézi foglalásokkal, módosítással, lemondással, meg nem jelenéssel és következő időponttal.
+
+A tesztelés fedje le legalább a párhuzamos foglalást, a dupla elküldést, a pufferidőt, a munkaidőhatárokat, a szabadságot, az időközben elfogyó időpontot, a sikertelen áthelyezést, a múltbeli árak megőrzését, az archivált szolgáltatást, a munkatársi jogosultságokat, az e-mail hibáját és újrapróbálkozását, a lemondott időpont emlékeztetőjének tiltását, valamint a mentésből történő visszaállítást.
+
+A naptárt tényleges böngészős végponttól végpontig tesztekkel is ellenőrizni kell; pusztán az egységtesztek sikere nem helyettesíti a felhasználói folyamat próbáját. A tesztadatok különüljenek el az éles adatoktól.
+
+*Javasolt használhatósági célértékek, nem mért eredmények:* egy új vendég mobilon, magyarázat nélkül körülbelül 2–3 perc alatt foglaljon; egy visszatérő vendég kézi időpontja nagyjából 30 másodperc alatt rögzíthető legyen; a következő vendég belépés után azonnal látszódjon.
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
+
+--- Reply 6 of 6 ---
+From: PZ <pappzoltan6969@gmail.com> (U0C8RGY1YAY)
+Time: 2026-10-14 05:49:53 CEST
+Message TS: 1791949793.437459
+*SzalonPRO – projektleírás v0.1 | 6/6. rész*
+
+A termékesítési próba részeként ugyanazzal a kiadással két eltérő arculatú, elkülönített demót kell létrehozni. Ez ellenőrzi, hogy valóban újraértékesíthető termék készült, nem egyetlen szalonra szabott egyedi projekt.
+
+
+13. Későbbi bővítések és kizárt MVP-elemek
+A pilot visszajelzései alapján jöhet SMS, naptárszinkron, várólista és felszabaduló időpont értesítése, online előlegfizetés, ismétlődő időpontsorozat, több szolgáltatás egy alkalommal, ajándékutalvány, bérlet, hűségprogram, készlet, számlázókapcsolat, több telephely és összetett erőforráskezelés.
+
+Ezeket nem indokolt egyszerre megvalósítani. A fizetéshez például külön lemondási, visszatérítési, fizetési állapot- és hibakezelési szabályok kellenek; a naptárszinkronnál irányt, konfliktuskezelést és adatgazdát kell választani.
+
+AI-asszisztens, közös szolgáltatói piactér, natív mobilalkalmazás, komplex bérszámfejtés és teljes vállalatirányítás ne legyen indulási feltétel. Új modul csak akkor kapjon prioritást, ha konkrét ügyféligényhez és várható használathoz kapcsolódik.
+
+
+14. Üzleti és termékesítési elképzelés
+A termék értékét ne önmagában a foglalási naptár jelentse, hanem a saját arculatú megjelenés és a napi működés összekapcsolása. A kommunikáció megfogható előnyökre épüljön: áttekinthető időpontok, egyszerű foglalás, visszakereshető vendégelőzmények, kevesebb ismételt adatbevitel.
+
+Javasolt első konstrukció: egyszeri bevezetés és arculatbeállítás, külön meghatározott üzemeltetési/támogatási szolgáltatással. Alternatíva a központilag üzemeltetett előfizetés. A végső konstrukció nincs eldöntve, és műszaki következményei miatt a fejlesztés elején szükséges választani.
+
+Az ajánlatban külön kell kezelni az alapterméket, az arculati beállítást, az adatimportot, a tárhelyet/domaint, a támogatást, az üzenetküldési költségeket és az egyedi fejlesztést. Az egyszeri díj ne jelentsen kimondatlanul korlátlan jövőbeli fejlesztést vagy költségmentes üzemeltetést.
+
+Fix értékesítési ár és garantált megtérülés nem vezethető le a Slack-üzenetből. Ezeket a pilotok, az üzemeltetési ráfordítás és a valós fizetési hajlandóság alapján lehet meghatározni.
+
+
+15. Nyitott döntések
+16. Projektirány egy mondatban
+*Először egy olyan saját arculatú szalonrendszer készüljön, amellyel a vendég önállóan időpontot foglal, a szolgáltató pedig egyetlen felületen végigviszi a teljes napi munkát; ezt lehessen új ügyfelekhez ugyanabból a termékből, kódmásolgatás nélkül bevezetni.*
+*Sent using* <@U0C8N0BKG3C|ChatGPT>
