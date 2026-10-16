@@ -59,4 +59,20 @@ State: published synthetic local demos, public homepage at scroll zero; native m
 
 The barber demo retains its previous custom business introduction; replace demo text with client-specific copy when onboarding a real salon. This is a content refinement, not a layout defect.
 
+## Current color-depth refinement
+
+User follow-up: the page still felt too white. The selected Atelier layout is retained; the color changes below explicitly supersede the earlier ivory palette.
+
+- Source baseline: `output/design/editorial-hair-desktop-final.jpg` (1426 x 1014, CSS 1440 x 1024). Current capture: `output/design/warm-hair-desktop.jpg`, same dimensions and state.
+- Full before/after comparison opened together: `output/design/warm-before-after.png`. Readable headline/CTA comparison: `output/design/warm-focus.png`.
+- Additional evidence: `warm-hair-contact.jpg` (desktop), `warm-hair-mobile.jpg` and `warm-nails-mobile.jpg` (CSS 390 x 844), `warm-hair-mobile-320.jpg` (CSS 320 x 704), `warm-booking-mobile.jpg`, all in `output/design/`.
+- [P2, fixed] Large near-white regions blended together. Hair now uses champagne #EFE3D4, sand #E2CDB7 and burgundy #6D2734. Nails uses richer powder #F1DEE4 / #E6CAD3. Dark barber colors remain unchanged. Header, service band, staff cards and filled service actions create a clear section rhythm; contact areas use the editable accent with automatically contrasting text and an inverse CTA.
+- [P2, fixed during refinement] The first full-width service-band implementation inherited a large-screen wrap-padding override and misaligned its content. Kept the band full-width and moved the existing constrained wrap inside it. The post-fix desktop comparison confirms alignment with hero/header content.
+- Typography, copy, generated photo crops, editable line breaks, routes and booking behavior remain intact. Only color, section framing and the service container changed. Real generated assets remain in use.
+- Preset contrast checks initially caught a muted-text/background pair below 4.5. Darkened the muted tokens; the final Branding suite passes all 7 tests and 110 assertions. Pint and Blade cache also pass.
+- Browser DOM: all three profiles have no horizontal overflow at 320 px. Hair and nails were additionally checked at 390 px. Hair photo width is 306.36 px at CSS 320. Native mobile menu opens and the hair booking form loads 16 available slots without overflow; captured console error list is empty. No new booking was submitted in this refinement.
+- Figma foundation variables and visible color labels were updated to match the new palettes and visually reviewed.
+- Intermediate captures affected by browser emulation scaling were rejected; the named final desktop and hair/nails mobile captures were opened and reviewed. Temporary emulation was cleared and the running preview retained.
+- No actionable P0/P1/P2 findings remain. This continues to be a local demo, without a production deployment.
+
 final result: passed

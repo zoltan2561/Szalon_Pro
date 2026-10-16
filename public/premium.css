@@ -16,7 +16,7 @@
 .premium .button.secondary{background:transparent;color:var(--ink);border-color:var(--line)}
 .premium .button.secondary:hover{background:var(--soft);filter:none}
 .premium :focus-visible,.admin.premium-admin :focus-visible{outline:3px solid currentColor;outline-offset:5px}
-.premium .demo-strip{height:32px;padding:6px 16px;font:400 11px/20px 'DM Sans',Arial,sans-serif;letter-spacing:.015em;background:var(--paper);color:var(--muted)}
+.premium .demo-strip{height:32px;padding:6px 16px;font:400 11px/20px 'DM Sans',Arial,sans-serif;letter-spacing:.015em;background:var(--accent);color:var(--on-accent)}
 .premium .public-header{height:88px;border:0;border-bottom:1px solid var(--line);display:block;position:relative;z-index:10;padding:0;color:var(--ink);background:var(--paper)}
 .premium .header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;gap:24px}
 .premium .brand{font:500 26px/1.2 'Playfair Display',Georgia,serif;letter-spacing:-.045em;gap:14px;white-space:normal;min-width:0}
@@ -54,7 +54,7 @@
 .premium .section-heading h2{margin:0}
 .premium .section-heading .eyebrow{margin-bottom:16px}
 .premium .section-heading>p{font-size:14px;line-height:1.7;max-width:280px;color:var(--muted);margin:0}
-.premium .services-section{padding-top:64px;padding-bottom:72px;border:0}
+.premium .services-section{max-width:none;padding:64px 0 72px;background:var(--soft);border-block:1px solid var(--line)}
 .premium .service-list{border-top:1px solid var(--line)}
 .premium .service-row{display:grid;grid-template-columns:36px minmax(0,1fr) 180px 52px;gap:28px;align-items:center;border-bottom:1px solid var(--line);padding:27px 0;background:transparent}
 .premium .service-number{font:italic 20px 'Playfair Display',Georgia,serif;color:var(--muted)}
@@ -66,11 +66,11 @@
 .premium .service-meta strong{font-size:18px;font-weight:500}
 .premium .service-meta span{display:flex;align-items:center;justify-content:flex-end;gap:6px;color:var(--muted);font-size:13px;margin-top:5px}
 .premium .service-meta .icon{width:14px;height:14px}
-.premium .round-link{width:50px;height:50px;border:1px solid var(--line);border-radius:50%;color:var(--ink);background:transparent}
-.premium .round-link:hover{background:var(--soft)}
-.premium .studio-section{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9%;align-items:center;padding-top:40px;padding-bottom:88px}
+.premium .round-link{width:50px;height:50px;border:1px solid transparent;border-radius:50%;color:var(--on-accent);background:var(--accent)}
+.premium .round-link:hover{background:var(--accent);filter:brightness(.9)}
+.premium .studio-section{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9%;align-items:center;padding-top:88px;padding-bottom:88px}
 .premium .studio-image{position:relative;min-width:0}
-.premium .studio-image img{width:100%;height:440px;display:block;object-fit:cover;object-position:70% center;border-radius:var(--radius)}
+.premium .studio-image img{width:100%;height:440px;display:block;object-fit:cover;object-position:70% center;border-radius:var(--radius);border:8px solid var(--soft)}
 .premium .studio-image small{display:block;font-size:10px;margin-top:8px;color:var(--muted)}
 .premium .studio-copy h2{font-size:clamp(36px,3.8vw,56px);margin:20px 0 26px}
 .premium .studio-copy>p:not(.eyebrow){color:var(--muted);font-size:16px;line-height:1.85}
@@ -78,7 +78,7 @@
 .premium .text-link:hover{opacity:.7}
 .premium .team-section{padding-top:30px;padding-bottom:90px}
 .premium .team-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
-.premium .team-card{display:block;border:1px solid var(--line);padding:30px;border-radius:var(--radius);background:transparent}
+.premium .team-card{display:block;border:1px solid var(--line);padding:30px;border-radius:var(--radius);background:var(--soft)}
 .premium .team-heading{display:flex;gap:12px;align-items:center;margin-bottom:25px;color:var(--muted)}
 .premium .team-heading p{margin:0;font-size:10px}
 .premium .team-card h3{font:400 30px/1.25 'Playfair Display',Georgia,serif;margin:0 0 16px;color:var(--ink)}
@@ -87,7 +87,7 @@
 .premium .gallery-section{padding-top:20px;padding-bottom:88px}
 .premium .gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:0}
 .premium .gallery img{width:100%;height:280px;border-radius:var(--radius);object-fit:cover}
-.premium .contact-section{display:block;background:var(--soft);border-radius:0;padding:64px 0;color:var(--ink)}
+.premium .contact-section{--ink:var(--on-accent);--muted:var(--on-accent);--line:color-mix(in srgb,var(--on-accent) 30%,transparent);display:block;background:var(--accent);border-radius:0;padding:76px 0;color:var(--ink)}
 .premium .contact-inner{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:7%}
 .premium .contact-section h2{font-size:42px;line-height:1.2;margin-bottom:25px}
 .premium .contact-section h3{font:500 17px/1.4 'DM Sans',Arial,sans-serif;margin:0 0 22px;letter-spacing:-.015em}
@@ -95,7 +95,7 @@
 .premium .contact-section p{color:var(--muted)}
 .premium .contact-line{display:flex;gap:12px;align-items:flex-start;margin:0 0 10px;overflow-wrap:anywhere;min-height:30px}
 .premium .contact-line .icon{margin-top:4px;width:17px;height:17px}
-.premium .contact-section .button{font-size:14px;line-height:1.4;margin-top:20px}
+.premium .contact-section .button{font-size:14px;line-height:1.4;margin-top:20px;background:var(--on-accent);color:var(--accent)}
 .premium .opening-line{font-size:13px;line-height:1.6;padding:7px 0;border-bottom:1px solid var(--line);gap:20px}
 .premium .public-footer{display:flex;padding-top:46px;padding-bottom:46px;border-top:0;font-size:12px;color:var(--ink);gap:32px}
 .premium .public-footer p{font-size:12px;color:var(--muted);margin:12px 0 0}
@@ -131,7 +131,7 @@
 .premium .success-page h1{font-size:clamp(40px,5vw,66px)}
 .premium .success-page{padding-top:55px}
 .premium .success-page>.success-icon{display:none}
-.premium.layout-split.public-home .public-header{position:relative;top:auto;background:var(--paper);color:var(--ink)}
+.premium.layout-split.public-home .public-header{position:relative;top:auto;background:var(--soft);color:var(--ink)}
 .premium.layout-split.public-home .public-header{height:98px}
 .premium.layout-split .brand{font-size:32px}
 .premium.layout-split .hero{background:var(--paper);color:var(--ink);min-height:590px;display:grid;grid-template-columns:48% 52%;gap:0;isolation:auto}
