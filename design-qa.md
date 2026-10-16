@@ -1,66 +1,62 @@
-# SzalonPRO 0.2 design QA
+# SzalonPRO Atelier design QA
 
-Date: 2026-10-16. Scope: configurable public appearance, three industry presets, generated assets, owner appearance editor and the existing booking journey.
+Date: 2026-10-16. Scope: the user-selected option 1, Atelier editorial, applied to the existing configurable product and all three saved industry presets.
 
 ## Visual truth and evidence
 
-- Visual direction: `output/design/reference-premium.png` (Signature immersive, displayed third in the earlier concept set). The user subsequently requested generated images/logo and direct implementation of the premium appearance.
-- Editable profile foundations: https://www.figma.com/design/KpvtZCXgsAV78AENAzP2qZ?node-id=3-137
-- Actual generated asset board: https://www.figma.com/design/KpvtZCXgsAV78AENAzP2qZ?node-id=6-11
-- Implementation: `http://127.0.0.1:8095/`, `http://127.0.0.1:8096/`, `http://127.0.0.1:8097/`.
-- Desktop captures: `output/design/hair-desktop.jpg`, `barber-desktop.jpg`, `nails-desktop.jpg`, `presets-desktop.jpg`, `hair-split-desktop.jpg`.
-- Mobile captures: `output/design/hair-mobile.jpg`, `nails-mobile.jpg`, `barber-mobile-320.jpg`, `barber-booking-320.jpg`, `presets-mobile-320.jpg`, `booking-success-mobile.jpg`.
-- Full-view comparison, opened and reviewed together: `output/design/qa-desktop-final.png`.
-- Focused typography/CTA/photo comparison, opened and reviewed together: `output/design/qa-hero-final.png`.
-- Three mobile profiles reviewed together: `output/design/mobile-profiles.png`.
+- Selected source: `output/design/reference-editorial.png`, normalized from `exec-2ab94bb6-9d68-4b56-b2a2-73a82cf1b6f4.png`. The user explicitly answered 1 to the original three-option question.
+- Figma foundations: https://www.figma.com/design/KpvtZCXgsAV78AENAzP2qZ?node-id=3-137 . The hair palette variables and visible hexadecimal labels now match the cream/burgundy implementation. The footer records the selected direction. The generated asset board remains at node 6:11.
+- Local application: http://127.0.0.1:8095/ (hair), :8096/ (barber), :8097/ (nails).
+- Current desktop implementation: `output/design/editorial-hair-desktop-final.jpg`.
+- Full comparison, opened together: `output/design/editorial-comparison-final.png`.
+- Focused headline, supporting copy and CTA comparison, opened together: `output/design/editorial-focus-final.png`.
+- Other desktop profiles: `output/design/editorial-barber-desktop.jpg`, `output/design/editorial-nails-desktop.jpg`.
+- Three mobile profiles, opened together: `output/design/editorial-mobile-profiles.jpg`.
+- Additional mobile evidence: `editorial-hair-mobile-320.jpg`, `editorial-barber-mobile-320.jpg`, `editorial-nails-mobile-320.jpg`, `editorial-barber-services-320.jpg`, `editorial-booking-mobile.jpg`, all in `output/design/`.
 
 ## Viewport, density and state
 
-Desktop: measured CSS viewport 1440 × 1024. Chrome has devicePixelRatio 1.1; its viewport override was compensated and the DOM dimensions verified. The browser captures the content region at 1426 × 1014, omitting scrollbar/chrome. Source pixels: 1487 × 1058; normalized with aspect-preserving fit to the same 1426 × 1014 comparison region. No device frames were compared.
+Source: 1487 x 1058 pixels, normalized proportionally to the intended 1440 x 1024 desktop frame. Actual desktop CSS viewport: 1440 x 1024. Browser content screenshot: 1426 x 1014, normalized to the same comparison frame; no browser chrome or invented device frame was compared. Full comparison has a 26 px label strip.
 
-Mobile: measured CSS viewports 390 × 844 and 320 × 704. Saved browser content regions are 376 × 813 and 306 × 673 respectively. These are actual browser captures, not image-generated UI. Mobile figures preserve their source proportions. An intermediate desktop capture taken during window resizing was rejected and replaced after the measured viewport and a fresh render agreed.
+Mobile CSS viewports: 390 x 844 and 320 x 704. The browser's zoom required compensated per-tab dimensions of 429 x 928 and 352 x 774. Saved content images are 376 x 813 and 306 x 673. Widths, absence of horizontal overflow and nonzero photo dimensions were read from the rendered DOM for all three profiles at both sizes. Temporary emulation and viewport overrides were cleared after testing.
 
-State: public, published synthetic demo data; owner login only for settings. Stored business content, catalog and prices intentionally differ from the illustrative concept. The new SP mark and separately generated interior photographs replace the concept's illustrative assets, as requested. The three palettes and type families follow the editable Figma foundations. This is a configurable product implementation, not a pixel-identical copy of the concept's sample copy.
+State: published synthetic local demos, public homepage at scroll zero; native mobile menu opened; mobile services anchor; booking form with 11 available slots. Owner settings were used to apply each saved preset. The hair headline was saved with an editable line break. Existing catalogs, guests, bookings and custom media were preserved. The 32 px demo disclosure, SP logo, original generated interiors and actual service content intentionally differ from the illustrative concept. Barber and nails intentionally retain their industry palettes.
 
-## Comparison history and fixes
+## Findings and comparison history
 
-1. [P1] The appearance partial initially appeared as literal Blade text because `@csrf` and `@include` were adjacent. Split the directives; verified the editor renders all layout, palette, upload and section controls. A regression assertion checks the rendered controls. Evidence: `presets-desktop.jpg`, `presets-mobile-320.jpg` and the browser DOM.
-2. [P1] The real settings form submitted empty password fields, which triggered current-password validation. Added nullable handling while retaining the required current password for a requested password change. Verified a browser save, persisted split layout, restoration of the immersive preset, and a regression test that rejects password replacement without the current password.
-3. [P2] The split hero photograph initially kept its intrinsic height and left an empty lower area. Made the actual image cover the full picture container. Post-fix evidence: `hair-split-desktop.jpg`.
-4. [P2] Excess supporting hero copy pushed the services below the intended first-screen proportions. Removed the redundant note and limited the hero excerpt; the full introduction remains in its own section. Post-fix measured desktop hero: 650 px; first service is visible at the desktop target viewport.
-5. [P2] Selected slot detail text inherited legacy colors. Bound it to the active preset's muted text color. Browser verified a selected barber slot at 320 px: light text on the dark surface, including the staff/offset detail. Evidence: `barber-booking-320.jpg`.
-6. [P2] A flat photo dimming treatment was insufficiently predictable for bright custom images. Added a dedicated readable text-area overlay and a consistent mobile treatment while keeping actual photographs. Re-captured and reviewed both full-view and focused comparisons: `qa-desktop-final.png`, `qa-hero-final.png`, `mobile-profiles.png`.
-7. Figma asset-board QA: WebP uploads did not render in the first export. Replaced the Figma image fills with original generated PNGs and repaired text wrapping; the website retains optimized WebP. Final visual proof: `output/design/figma-assets-final.png`, all four assets visible and no remaining shimmer.
+1. [P1, fixed] The previous implementation used option 3. All three presets now default to the selected split editorial layout. Hair uses a cream/burgundy palette, a large two-line serif headline, inline desktop actions and the curved-edge photo. The immersive alternative remains selectable. Verified by persisted owner settings, public DOM, feature tests and current captures.
+2. [P2, fixed] First comparison showed undersized CTA text and brand type, plus muted supporting copy. Increased the desktop hero CTA to 20 px, secondary action to 18 px, wordmark to 32 px and supporting copy to the ink token. Post-fix comparison: `editorial-focus-final.png` and `editorial-comparison-final.png`.
+3. [P1, fixed] Mobile flex layout inherited centered cross-axis alignment; the picture width collapsed to zero. Explicitly sized the picture to 100%. Post-fix DOM picture widths: 376.36 px at CSS 390 and 306.36 px at CSS 320 for every industry profile. Actual generated photos are visible in the mobile composite.
+4. [P2, fixed] Hiding a desktop line break joined two supporting sentences on mobile. Added a literal separating space. Post-fix DOM confirms separated sentences at 320 px; evidence: `editorial-barber-services-320.jpg`.
+5. Browser control temporarily timed out. The user confirmed the extension connection; testing resumed through the same Chrome browser and completed. Earlier stale/intermediate resize captures were discarded from final evidence.
 
 ## Required fidelity surfaces
 
-- Fonts/typography: self-hosted DM Sans body and controls, Playfair Display editorial headings; sans display option for barber. Body is 16 px, forms remain 16 px on mobile, major controls are at least 48 px high. No clipped headings were found in the verified viewports.
-- Spacing/layout rhythm: full-width photo masthead, clear primary action, open service rows, generous section spacing, two working hero layouts. Mobile sections stack; checked public home, booking and owner presets without horizontal overflow. The persistent mobile booking button stays inside the viewport.
-- Colors/tokens: separate barber, hair and nails palettes; all default body/muted text combinations pass 4.5:1 on page and surface colors. Custom palette saves reject low contrast. Button foreground is chosen from the actual accent color. Focus and selected slot states remain visible.
-- Image quality/assets: original generated SP mark with transparency; three separate industry photographs; actual desktop/mobile WebP files, no UI screenshot used as a page asset. Image geometry and crop checked in-browser. The logo is readable at header size. Licensed Phosphor assets supply UI icons; local font/icon licenses are included.
-- Copy/content: real stored demo names, prices, duration and service links remain data-driven. No invented ratings, awards, client totals or testimonials. The demo and generated atmosphere images are identified. The full introduction and contact details remain editable.
+- Typography: self-hosted Playfair Display and DM Sans remain real text. Source hierarchy, two-line hair headline, serif editorial character and large CTAs are retained. Line breaks are editable in the owner form. Barber uses its saved sans family. No clipped display text was observed at tested sizes.
+- Layout rhythm: source-like split proportions, curved photo edge, editorial margins and flat service separators on desktop. Mobile stacks copy and the actual photo, uses a native menu and persistent booking action; all three profiles have no horizontal overflow at 320/390 px.
+- Colors/tokens: cream/burgundy hair palette matches the selected direction; barber copper/dark and nails mauve/powder remain deliberate variants. Automated tests verify every preset's body/muted text contrast >= 4.5 and automatic button foreground contrast. Figma aliases remain bound to updated primitives.
+- Image quality: original generated interiors, optimized WebP sources and transparent SP logo are integrated. Photos are sharp and correctly cropped. No placeholder or code-drawn asset replaces the supplied generated artwork.
+- Copy/content: the selected hair headline and short introduction are used. Service names, durations and prices remain persisted business data. Synthetic demo disclosures and image captions remain visible. The mobile sentence-spacing defect is fixed.
 
-## Interaction and backend evidence
+## Validation and limits
 
-- Mobile menu opened and exposed all four navigation links. Its booking action reached the existing booking form.
-- A synthetic nails booking was completed from the 390 px browser view. Success screen verified; database readback confirms booking #2, confirmed, 2026-10-17 09:00 Europe/Budapest, 60 minutes, 8500 Ft. The mail is queued; no live SMTP delivery is claimed.
-- Owner applied the hair preset, saved a custom split layout and edited demo copy, verified the persisted public result, then restored the immersive profile.
-- Preset changes preserve business fields and uploaded media. Upload validation rejects SVG. The encrypted backup/restore test now covers the custom hero and appearance configuration.
-- Browser console error checks on final public views: none.
-- Final backend suite: 36 tests, 249 assertions passed. Pint, Blade cache, route cache, Composer strict validation and diff whitespace check passed.
-
-## Follow-up polish and limits
-
-- P3: an unusually long saved introduction is intentionally shortened in the hero; clients can tune the full editable copy for their own brand.
-- Browser checks used Chrome. No physical iPhone/Safari verification, production hosting/MySQL pilot or real SMTP delivery was performed in this change.
-- Figma remains editable foundations and an asset board; it is not a fabricated screenshot-only full-site design file.
+- PHPUnit: 36 tests, 255 assertions passed after preset and form changes. Branding-specific suite: 7 tests, 110 assertions passed.
+- Pint, Blade cache, route cache and whitespace checks passed.
+- Browser: owner applies presets; hair multiline headline saved; public reads back the selected layout; mobile menu opens; services anchor works; mobile booking form loads 11 available slots without overflow. Captured console error list was empty.
+- Booking transactions were covered by the full suite; the earlier successful persisted mobile demo booking was retained. This visual follow-up did not submit another booking or send real email.
+- Local implementation only; no hosting deployment, remote push, real SMTP or customer UAT is implied.
 
 ## Implementation checklist
 
-- [x] Three saved presets, owner customization and two layouts.
-- [x] Generated logo/photos integrated, optimized and verified.
-- [x] Mobile navigation and booking journey verified through persistence.
-- [x] All actionable P0/P1/P2 findings fixed and rechecked.
-- [x] Existing booking regression suite passes.
+- [x] Resolve the exact selected option and preserve generated assets.
+- [x] Update all three saved presets and owner controls.
+- [x] Compare desktop source and implementation together, including readable focused regions.
+- [x] Fix mobile photo width and sentence spacing; verify all profiles at 320/390 px.
+- [x] Reconcile Figma palette variables and labels.
+- [x] Complete functional and framework checks.
+
+## Follow-up polish
+
+The barber demo retains its previous custom business introduction; replace demo text with client-specific copy when onboarding a real salon. This is a content refinement, not a layout defect.
 
 final result: passed
