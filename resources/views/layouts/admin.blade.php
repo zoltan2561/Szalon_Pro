@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="stylesheet" href="{{ asset('salon.css') }}"></head>
-<body class="admin">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css') }}"><link rel="stylesheet" href="{{ asset('premium.css') }}"></head>
+<body class="admin premium-admin">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 <aside class="sidebar">
-<a class="brand" href="{{ route('admin.today') }}"><span class="brand-mark">s.</span><span>Szalon<span class="muted">PRO</span></span></a>
+<a class="brand" href="{{ route('admin.today') }}"><span class="brand-mark"><img src="{{ asset('assets/branding/sp-mark.png') }}" alt="" width="31" height="31"></span><span>Szalon<span class="muted">PRO</span></span></a>
 <p class="workspace-label">{{ $salon->name }}</p>
 <nav aria-label="Munkafelület">
-@foreach(['today'=>['◷','Mai nap'],'calendar'=>['▦','Naptár'],'guests'=>['◎','Vendégeim']] as $key=>$item)
-<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><span aria-hidden="true">{{ $item[0] }}</span>{{ $item[1] }}</a>
+@foreach(['today'=>['clock','Mai nap'],'calendar'=>['calendar-blank','Naptár'],'guests'=>['users','Vendégeim']] as $key=>$item)
+<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
 @if(auth()->user()->role==='owner')
-@foreach(['services'=>['≋','Szolgáltatások'],'staff'=>['♧','Munkatársak'],'notifications'=>['✉','Értesítések'],'settings'=>['⚙','Beállítások']] as $key=>$item)
-<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><span aria-hidden="true">{{ $item[0] }}</span>{{ $item[1] }}</a>
+@foreach(['services'=>['scissors','Szolgáltatások'],'staff'=>['user','Munkatársak'],'notifications'=>['envelope-simple','Értesítések'],'settings'=>['gear-six','Beállítások']] as $key=>$item)
+<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
 @endif
 </nav>

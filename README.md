@@ -6,12 +6,13 @@ Saját arculatra szabható Laravel 13 szalonweboldal és napi szalonkezelés, a 
 
 - Szalon: http://127.0.0.1:8095
 - Barber: http://127.0.0.1:8096
+- Műköröm: http://127.0.0.1:8097
 - Munkafelület: az adott címen `/admin`; belépés: `/belepes`.
-- Szalon belépési e-mail: `owner@example.test`; barber: `barber@example.test`.
-- A helyi, véletlen jelszó a figyelmen kívül hagyott `.env`, illetve `.env.barber` fájl `SALON_ADMIN_PASSWORD` sorában található. Nincs a forráskódban vagy ebben a dokumentumban.
-- Külön adatbázis: `database/database.sqlite` és `database/barber.sqlite`; külön munkamenetsüti. A nevek, profilok és foglalások szintetikus demóadatok. Az adatbázisok, feltöltések és titkok nincsenek Gitben.
+- Szalon belépési e-mail: `owner@example.test`; barber: `barber@example.test`; műköröm: `nails@example.test`.
+- A helyi, véletlen jelszó a figyelmen kívül hagyott `.env`, `.env.barber`, illetve `.env.nails` fájl `SALON_ADMIN_PASSWORD` sorában található. Nincs a forráskódban vagy ebben a dokumentumban.
+- Külön adatbázis: `database/database.sqlite`, `database/barber.sqlite`, `database/nails.sqlite`; külön munkamenetsüti. A nevek, profilok és foglalások szintetikus demóadatok. Az adatbázisok, feltöltések és titkok nincsenek Gitben.
 
-Újraindítás két PowerShell-terminálban:
+Újraindítás külön PowerShell-terminálokban:
 
 ```powershell
 php artisan serve --host=127.0.0.1 --port=8095 --no-reload
@@ -21,11 +22,18 @@ php artisan serve --host=127.0.0.1 --port=8095 --no-reload
 php artisan serve --env=barber --host=127.0.0.1 --port=8096 --no-reload
 ```
 
+```powershell
+php artisan serve --env=nails --host=127.0.0.1 --port=8097 --no-reload
+```
+
 A felület Blade és közvetlenül kiszolgált CSS/JavaScript; használatához nem szükséges Node vagy frontend-build.
 
 ## Funkciók
 
-- Két konfigurálható megjelenés, név, logó, színek, betűkészlet, bemutatkozás, referenciafotók, kapcsolat, nyitvatartás és feltételek.
+- Három mentett, tovább alakítható arculat: barber, fodrászat, műköröm. A Beállításokban egy kattintással alkalmazható, a vállalkozás adatai, feltöltött képei, szolgáltatásai és foglalásai megmaradnak.
+- Saját generált SP-logó, szakági enteriőrképek, mobil/asztali WebP változatok, helyből betöltött DM Sans és Playfair Display betűk, Phosphor ikonok (licencek az eszközök mellett).
+- Nagy képes vagy osztott főoldal; színek, betűk, lekerekítés, főoldali feliratok és foglalási gomb szövege. Saját logó/nyitókép/galéria, választható csapat- és galériaszakasz, mobilmenü és alsó foglalási sáv.
+- A szöveg/háttér színekhez legalább 4,5:1 mentési kontrasztellenőrzés, automatikus gombfeliratszín. Név, bemutatkozás, kapcsolat, nyitvatartás és feltételek továbbra is szabadon szerkeszthetők.
 - Szolgáltatások: kategória, fix/induló/tájékoztató ár, valódi időtartam, elő- és utópuffer, alkalmas szakemberek, archiválás.
 - Szakemberenként heti munkarend, szünet, napi kivétel, szabadság és blokkolás; külön szalonnyitvatartás.
 - Vendégfiók nélküli online foglalás és közös szabályokkal ellenőrzött kézi felvitel. A „mindegy, kihez” választás után konkrét szakember látható minden választható időpontnál.
@@ -61,7 +69,7 @@ php artisan storage:link
 php artisan serve --host=127.0.0.1 --port=8095
 ```
 
-A `salon:install` nem ír felül meglévő telepítést. Demóhoz új, üres adatbázisban add meg a `--demo=salon` vagy `--demo=barber` kapcsolót. Demót ne telepíts éles ügyféladatbázisba.
+A `salon:install` nem ír felül meglévő telepítést. Demóhoz új, üres adatbázisban add meg a `--demo=salon`, `--demo=barber` vagy `--demo=nails` kapcsolót. Demót ne telepíts éles ügyféladatbázisba.
 
 A belépés után a Beállítások induló lépései vezetnek végig az adatokon, arculaton, munkatársakon, szolgáltatásokon, tesztfoglaláson és előnézeten. Aktív szolgáltatás, alkalmas szakember és elegendő közös munkaidő nélkül nem engedélyezhető a közzététel.
 
@@ -89,7 +97,7 @@ php artisan salon:backup
 php artisan salon:restore "D:\mentesek\szalon.backup"
 ```
 
-A mentés alaphelye `storage/app/private/backups`; az időzítő naponta 02:15 UTC-kor futtatja. Az export az alkalmazás adatait és az aktuális logó/galéria hivatkozott képeit tartalmazza, APP_KEY-vel titkosítva. Az APP_KEY külön, biztonságos megőrzése nélkül nincs visszaállítás. A mentést másik tárolóra is másolni kell; ezt a helyi projekt nem állította be.
+A mentés alaphelye `storage/app/private/backups`; az időzítő naponta 02:15 UTC-kor futtatja. Az export az alkalmazás adatait, arculati beállításait és az aktuális logó/nyitókép/galéria hivatkozott képeit tartalmazza, APP_KEY-vel titkosítva. A mellékelt generált képek a kiadási csomag részei. Az APP_KEY külön, biztonságos megőrzése nélkül nincs visszaállítás. A mentést másik tárolóra is másolni kell; ezt a helyi projekt nem állította be.
 
 Visszaállítás kizárólag azonos verziójú migrációkkal előkészített, üres adatbázisba lehetséges. Meglévő adatot vagy képfájlt nem ír felül. A helyreállítás alatt a webes forgalom és az időzítő álljon; újraindítás előtt ellenőrizd az értesítési sort, mert a mentés óta már elküldött üzenet újra esedékes lehet. A korábbi mentések személyes adatainak életciklusát is kezeld a saját megőrzési szabályzatodban.
 
@@ -105,6 +113,8 @@ composer validate --strict
 A tesztek lefedik a külön folyamatokból érkező párhuzamos foglalást, dupla beküldést, puffert, szünetet, szabadságot, határidőket, időközben betelő időpontot, sikertelen és sikeres áthelyezést, történeti árat és archiválást, hozzáférési köröket, levélhibát/újrapróbálkozást, elavult emlékeztetőt, óraátállítást, explicit közzétételt, SVG-tiltást, törlést, valamint az adat- és médiavisszaállítást.
 
 Böngészős bizonyítékok: `output/playwright/` (helyi, nem verziózott). Ellenőrzött nyilvános mobilfoglalás, tulajdonosi belépés, kézi következő időpont, áthelyezés, lemondás, napi/heti naptár és 320/390/1440 px-es elrendezések.
+
+A prémium arculat képernyőképei és összehasonlításai: `output/design/`. Figma: https://www.figma.com/design/KpvtZCXgsAV78AENAzP2qZ (szerkeszthető arculati alapok és a beépített képkészlet). A három helyi demó adatbázisa szándékosan elkülönül.
 
 Éles kiadáskor:
 

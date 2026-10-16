@@ -39,7 +39,8 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
         Route::delete('/napi-munkarend/{exception}', [AdminController::class, 'removeException'])->name('exception.delete');
         Route::get('/beallitasok', [AdminController::class, 'settings'])->name('settings');
         Route::post('/beallitasok', [AdminController::class, 'saveSettings'])->name('settings.save');
+        Route::post('/beallitasok/arculat', [AdminController::class, 'applyPreset'])->name('branding.preset');
         Route::get('/ertesitesek', [AdminController::class, 'notifications'])->name('notifications');
-        Route::post('/ertesitesek/{message}/ujra',[AdminController::class, 'retry'])->name('retry');
+        Route::post('/ertesitesek/{message}/ujra', [AdminController::class, 'retry'])->name('retry');
     });
 });

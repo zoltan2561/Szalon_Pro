@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Salon;
+use App\Services\Branding;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -18,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', fn (Request $r) => [Limit::perMinute(5)->by($r->ip()), Limit::perMinute(5)->by(strtolower($r->input('email', '')).'|'.$r->ip())]);
         RateLimiter::for('booking', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
         View::composer(['layouts.*', 'public.*', 'admin.*', 'auth.*'], function ($view): void {
-            $view->with('salon', Salon::current());
+            $salon = Salon::current();
+            $view->with('salon', $salon)->with('brand', app(Branding::class)->forSalon($salon));
         });
     }
 }

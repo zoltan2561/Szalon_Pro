@@ -306,7 +306,8 @@ class SalonWorkflowTest extends TestCase
         $booking = $this->create();
         Storage::fake('public');
         Storage::disk('public')->put('gallery/test.png', 'sample-image-bytes');
-        Salon::current()->update(['gallery' => ['gallery/test.png']]);
+        Storage::disk('public')->put('branding/hero.webp', 'hero-image-bytes');
+        Salon::current()->update(['gallery' => ['gallery/test.png'], 'hero_image' => 'branding/hero.webp', 'appearance' => ['layout' => 'split']]);
         $path = storage_path('framework/testing-'.Str::uuid().'.backup');
         try {
             $this->artisan('salon:backup', ['--path' => $path])->assertSuccessful();
@@ -318,11 +319,14 @@ class SalonWorkflowTest extends TestCase
                 DB::table($table)->delete();
             }
             Storage::disk('public')->delete('gallery/test.png');
+            Storage::disk('public')->delete('branding/hero.webp');
             $this->artisan('salon:restore', ['path' => $path])->assertSuccessful();
             $restored = Booking::first();
             $this->assertSame($booking->manage_token, $restored->manage_token);
             $this->assertSame('guest@example.test', $restored->guest->email);
             $this->assertSame('sample-image-bytes', Storage::disk('public')->get('gallery/test.png'));
+            $this->assertSame('hero-image-bytes', Storage::disk('public')->get('branding/hero.webp'));
+            $this->assertSame('split', Salon::current()->appearance['layout']);
         } finally {
             if (file_exists($path)) {
                 unlink($path);

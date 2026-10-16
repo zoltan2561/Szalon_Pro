@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\WorkException;
 use App\Services\Availability;
 use App\Services\BookingService;
+use App\Services\Branding;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -240,15 +241,43 @@ class AdminController extends Controller
         return view('admin.settings', ['ready' => $availability->ready()]);
     }
 
+    public function applyPreset(Request $request, Branding $branding): RedirectResponse
+    {
+        $data = $request->validate(['preset' => ['required', Rule::in(array_keys(config('branding.presets')))]]);
+        $preset = $branding->preset($data['preset']);
+        $this->mutate(fn () => Salon::current()->update(['theme' => $data['preset'], 'accent' => $preset['accent'], 'font' => $preset['font'], 'appearance' => $preset['appearance']]));
+
+        return back()->with('success', $preset['label'].' arculat alkalmazva. A saját szövegek, feltöltött képek és foglalási adatok megmaradtak.');
+    }
+
     public function saveSettings(Request $request, Availability $availability): RedirectResponse
     {
-        $data = $request->validate(['name' => 'required|string|max:120', 'tagline' => 'required|string|max:150', 'about' => 'nullable|string|max:3000', 'email' => 'required|email|max:200', 'phone' => 'required|string|max:40', 'address' => 'required|string|max:200', 'theme' => ['required', Rule::in(['salon', 'barber'])], 'accent' => 'required|regex:/^#[a-fA-F0-9]{6}$/', 'font' => ['required', Rule::in(['serif', 'sans'])], 'terms' => 'required|string|max:5000', 'privacy' => 'required|string|max:10000', 'min_notice_minutes' => 'required|integer|min:0|max:10080', 'horizon_days' => 'required|integer|min:1|max:365', 'cancel_notice_hours' => 'required|integer|min:0|max:168', 'reminder_hours' => 'required|integer|min:0|max:168', 'retention_days' => 'required|integer|min:30|max:3650', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 'gallery' => 'nullable|array|max:8', 'gallery.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096', 'hours' => 'required|array', 'content_rights' => 'accepted', 'current_password' => 'required_with:new_password|current_password', 'new_password' => 'nullable|string|min:12|max:200']);
+        $data = $request->validate(['name' => 'required|string|max:120', 'tagline' => 'required|string|max:150', 'about' => 'nullable|string|max:3000', 'email' => 'required|email|max:200', 'phone' => 'required|string|max:40', 'address' => 'required|string|max:200', 'theme' => ['required', Rule::in(['salon', 'barber', 'nails'])], 'accent' => 'required|regex:/^#[a-fA-F0-9]{6}$/', 'font' => ['required', Rule::in(['serif', 'sans'])], 'terms' => 'required|string|max:5000', 'privacy' => 'required|string|max:10000', 'min_notice_minutes' => 'required|integer|min:0|max:10080', 'horizon_days' => 'required|integer|min:1|max:365', 'cancel_notice_hours' => 'required|integer|min:0|max:168', 'reminder_hours' => 'required|integer|min:0|max:168', 'retention_days' => 'required|integer|min:30|max:3650', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096', 'appearance' => 'sometimes|array:paper,ink,muted,surface,line,layout,radius,eyebrow,cta_label,show_team,show_gallery', 'appearance.paper' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.ink' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.muted' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.surface' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.line' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.layout' => ['required_with:appearance', Rule::in(['immersive', 'split'])], 'appearance.radius' => ['required_with:appearance', Rule::in(['4', '8', '16', '24'])], 'appearance.eyebrow' => 'required_with:appearance|string|max:100', 'appearance.cta_label' => 'required_with:appearance|string|max:40', 'appearance.show_team' => 'sometimes|boolean', 'appearance.show_gallery' => 'sometimes|boolean', 'gallery' => 'nullable|array|max:8', 'gallery.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096', 'hours' => 'required|array', 'content_rights' => 'accepted', 'current_password' => 'nullable|required_with:new_password|current_password', 'new_password' => 'nullable|string|min:12|max:200']);
         $this->mutate(function () use ($request, $data, $availability): void {
             $salon = Salon::current();
-            unset($data['logo'],$data['gallery'],$data['hours'],$data['content_rights'],$data['current_password'],$data['new_password']);
+            unset($data['logo'],$data['hero_image'],$data['gallery'],$data['hours'],$data['content_rights'],$data['current_password'],$data['new_password']);
+            if (isset($data['appearance'])) {
+                $branding = app(Branding::class);
+                foreach (['ink', 'muted'] as $color) {
+                    if ($branding->contrast($data['appearance'][$color], $data['appearance']['paper']) < 4.5 || $branding->contrast($data['appearance'][$color], $data['appearance']['surface']) < 4.5) {
+                        throw ValidationException::withMessages(['appearance.'.$color => 'A szövegszín és a háttér kontrasztja legalább 4,5:1 legyen az olvashatósághoz.']);
+                    }
+                }
+                $data['appearance']['show_team'] = $request->boolean('appearance.show_team');
+                $data['appearance']['show_gallery'] = $request->boolean('appearance.show_gallery');
+            }
             $data['opening_hours'] = $this->hours($request->input('hours'));
             $data['published'] = false;
             $salon->update($data);
+            if ($request->boolean('reset_logo')) {
+                $salon->logo = null;
+            }
+            if ($request->boolean('reset_hero')) {
+                $salon->hero_image = null;
+            }
+            if ($request->hasFile('hero_image')) {
+                $salon->hero_image = $request->file('hero_image')->store('branding', 'public');
+            }
             if ($request->hasFile('logo')) {
                 $salon->logo = $request->file('logo')->store('branding', 'public');
             }

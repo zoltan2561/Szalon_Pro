@@ -33,7 +33,7 @@ class BackupSalon extends Command
             }
             $media = [];
             $salon = Salon::current();
-            foreach (array_filter(array_merge([$salon->logo], $salon->gallery ?? [])) as $file) {
+            foreach (array_unique(array_filter(array_merge([$salon->logo, $salon->hero_image], $salon->gallery ?? []))) as $file) {
                 if (! preg_match('#^(branding|gallery)/[A-Za-z0-9]+\.(jpg|jpeg|png|webp)$#', $file)) {
                     throw new \RuntimeException('Invalid media path');
                 }
