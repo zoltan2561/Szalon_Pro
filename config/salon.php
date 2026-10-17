@@ -1,3 +1,11 @@
 <?php
 
-return ['version' => '0.2.0'];
+return [
+    'version' => '0.2.0',
+    'demo_urls' => [
+        'salon' => env('SALON_DEMO_SALON_URL'),
+        'barber' => env('SALON_DEMO_BARBER_URL'),
+        'nails' => env('SALON_DEMO_NAILS_URL'),
+    ],
+    'demo_sales_contact' => env('SALON_DEMO_SALES_CONTACT'),
+];

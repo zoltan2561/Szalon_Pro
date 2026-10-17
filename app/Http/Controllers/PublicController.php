@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Services\Availability;
 use App\Services\BookingService;
+use App\Services\Branding;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,10 +17,15 @@ use Illuminate\Validation\Rule;
 
 class PublicController extends Controller
 {
-    public function home(Availability $availability): View
+    public function home(Request $request, Availability $availability, Branding $branding): View|RedirectResponse
     {
         $salon = Salon::current();
         abort_unless($salon->published || auth()->user()?->role === 'owner', 404);
+        $requestedStyle = $request->query('stilus');
+        $demoUrls = $branding->demoUrls();
+        if ($salon->demo && is_string($requestedStyle) && isset($demoUrls[$requestedStyle])) {
+            return redirect()->away($demoUrls[$requestedStyle]);
+        }
 
         return view('public.home', ['salon' => $salon, 'services' => Service::where('active', true)->with('staff')->get(), 'staff' => Staff::where('active', true)->get(), 'ready' => $availability->ready()]);
     }
@@ -28,16 +34,32 @@ class PublicController extends Controller
     {
         $salon = Salon::current();
         abort_unless($salon->published || $request->user()?->role === 'owner', 404);
+        $request->validate(['date' => 'nullable|date_format:Y-m-d']);
         $services = Service::where('active', true)->with('staff')->get();
         $requestedStaff = $request->integer('staff_id');
         $service = $services->firstWhere('id', (int) $request->query('service_id')) ?? ($requestedStaff ? $services->first(fn ($s) => $s->staff->contains($requestedStaff)) : null) ?? $services->first();
-        $date = $request->query('date', now($salon->timezone)->addDay()->toDateString());
         $staffId = $request->integer('staff_id') ?: null;
         if ($staffId && ! $service?->staff->contains($staffId)) {
             $staffId = null;
         }
+        $date = $request->filled('date') ? $request->query('date') : now($salon->timezone)->toDateString();
+        $slots = $service ? $availability->slots($service, $date, $staffId) : [];
+        if (! $request->filled('date') && $service && ! $slots) {
+            $today = now($salon->timezone)->startOfDay();
+            for ($daysAhead = 1; $daysAhead <= min($salon->horizon_days, 7); $daysAhead++) {
+                $candidate = $today->copy()->addDays($daysAhead);
+                if (! ($salon->opening_hours[$candidate->isoWeekday()] ?? [])) {
+                    continue;
+                }
+                $date = $candidate->toDateString();
+                $slots = $availability->slots($service, $date, $staffId);
+                if ($slots) {
+                    break;
+                }
+            }
+        }
 
-        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId') + ['slots' => $service ? $availability->slots($service, $date, $staffId) : [], 'requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready()]);
+        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready()]);
     }
 
     public function store(Request $request, BookingService $bookings): RedirectResponse
@@ -102,6 +124,6 @@ class PublicController extends Controller
     {
         abort_unless(preg_match('/^[a-f0-9]{64}$/', $token), 404);
 
-        return Booking::where('token_hash',hash('sha256',$token))->where('token_expires_at','>',now())->firstOrFail();
+        return Booking::where('token_hash', hash('sha256', $token))->where('token_expires_at', '>', now())->firstOrFail();
     }
 }

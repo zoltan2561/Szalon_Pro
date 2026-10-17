@@ -1,23 +1,31 @@
 @extends('layouts.public')
 @section('title','Kezdőlap')
 @section('content')
-<section class="hero">
-    <picture class="hero-picture"><source media="(max-width: 640px)" srcset="{{ $brand['hero_mobile'] }}"><img src="{{ $brand['hero'] }}" alt="{{ $brand['custom_hero'] ? $salon->name.' – szalonfotó' : $brand['label'].' – hangulatkép' }}" width="1586" height="992" fetchpriority="high"></picture>
-    <div class="hero-content wrap"><div class="hero-text"><p class="eyebrow">{{ $brand['eyebrow'] }}</p><h1>{{ $salon->tagline }}</h1><p class="hero-copy">{{ Str::limit($salon->about, 120) }}</p><div class="hero-actions"><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a><a class="hero-secondary" href="#szolgaltatasok">Szolgáltatásaink</a></div>@if($salon->demo && $brand['layout'] === 'split')<p class="hero-note">Bemutatószalon</p>@endif</div></div>
-    @unless($brand['custom_hero'])<span class="image-caption">Hangulatkép</span>@endunless
-</section>
-<section class="services-section" id="szolgaltatasok"><div class="wrap">
-    <div class="section-heading"><div><p class="eyebrow">SZOLGÁLTATÁSAINK</p><h2>A frissülés nálunk kezdődik.</h2></div><p>Találd meg, ami hozzád illik. <br>Az időpontot te választod.</p></div>
-    <div class="service-list">@forelse($services as $service)
-        <article class="service-row"><span class="service-number">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><div><p class="eyebrow">{{ $service->category }}</p><h3><a href="{{ route('booking.form',['service_id'=>$service->id]) }}">{{ $service->name }}</a></h3>@if($service->description)<p>{{ $service->description }}</p>@endif</div><div class="service-meta"><strong>{{ number_format($service->price,0,',',' ') }} Ft{{ $service->price_kind==='from' ? '-tól':'' }}</strong><span><x-icon name="clock" /> {{ $service->duration_minutes }} perc{{ $service->price_kind==='indicative' ? ' · tájékoztató ár':'' }}</span></div><a class="round-link" aria-label="{{ $service->name }} foglalása" href="{{ route('booking.form',['service_id'=>$service->id]) }}"><x-icon name="arrow-up-right" /></a></article>
-    @empty<p class="empty">A szolgáltatások hamarosan elérhetők.</p>@endforelse</div>
-</div></section>
-<section class="studio-section wrap" id="rolunk"><div class="studio-image"><img src="{{ $brand['hero_mobile'] }}" alt="{{ $salon->name }} – hangulat" width="800" height="500" loading="lazy">@unless($brand['custom_hero'])<small>AI-generált bemutató enteriőr</small>@endunless</div><div class="studio-copy"><p class="eyebrow">JÓ HELYEN VAGY</p><h2>Rólad szól.<br>A részletekig.</h2><p class="preserve">{{ $salon->about }}</p><a class="text-link" href="{{ route('booking.form') }}">Találjuk meg a te időpontod <x-icon name="arrow-right" /></a></div></section>
-@if($brand['show_team'] && $staff->isNotEmpty())
-<section class="team-section wrap"><div class="section-heading"><div><p class="eyebrow">SZEMÉLYES FIGYELEM</p><h2>Akik várnak rád</h2></div><p>Választhatsz szakembert is<br>az időpontfoglalás során.</p></div><div class="team-grid">@foreach($staff as $person)<article class="team-card"><div class="team-heading"><x-icon name="user" /><p class="eyebrow">{{ $person->title }}</p></div><h3>{{ $person->name }}</h3><p>{{ $person->bio }}</p><a class="text-link" href="{{ route('booking.form',['staff_id'=>$person->id]) }}">Hozzá foglalok <x-icon name="arrow-right" /></a></article>@endforeach</div></section>
-@endif
-@if($brand['show_gallery'] && $salon->gallery)
-<section class="gallery-section wrap"><div class="section-heading"><div><p class="eyebrow">EGY PILLANTÁS HOZZÁNK</p><h2>A szalon és a munkáink</h2></div></div><div class="gallery">@foreach($salon->gallery as $picture)<img src="{{ Storage::url($picture) }}" alt="{{ $salon->name }} – referencia {{ $loop->iteration }}" loading="lazy" width="640" height="480">@endforeach</div></section>
-@endif
-<section class="contact-section" id="kapcsolat"><div class="contact-inner wrap"><div><p class="eyebrow">TALÁLKOZZUNK</p><h2>Várunk szeretettel.</h2><p class="contact-line"><x-icon name="map-pin" />{{ $salon->address }}</p><a class="contact-line" href="tel:{{ preg_replace('/[^+0-9]/','',$salon->phone ?? '') }}"><x-icon name="phone" />{{ $salon->phone }}</a><a class="contact-line" href="mailto:{{ $salon->email }}"><x-icon name="envelope-simple" />{{ $salon->email }}</a></div><div><h3>Nyitvatartás</h3>@foreach([1=>'Hétfő',2=>'Kedd',3=>'Szerda',4=>'Csütörtök',5=>'Péntek',6=>'Szombat',7=>'Vasárnap'] as $day=>$label)<div class="opening-line"><span>{{ $label }}</span><span>{{ collect($salon->opening_hours[$day] ?? [])->map(fn($r)=>$r[0].'–'.$r[1])->join(', ') ?: 'Zárva' }}</span></div>@endforeach</div><div><h3>A következő énidőd.</h3><p class="preserve">{{ $salon->terms }}</p><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div></div></section>
+@switch($brand['theme'])
+    @case('barber')
+        @include('public.home-hero')
+        @include('public.home-services')
+        @include('public.home-team')
+        @include('public.home-studio')
+        @include('public.home-journey')
+        @include('public.home-gallery')
+        @break
+    @case('nails')
+        @include('public.home-hero')
+        @include('public.home-studio')
+        @include('public.home-gallery')
+        @include('public.home-services')
+        @include('public.home-journey')
+        @include('public.home-team')
+        @break
+    @default
+        @include('public.home-hero')
+        @include('public.home-studio')
+        @include('public.home-services')
+        @include('public.home-team')
+        @include('public.home-journey')
+        @include('public.home-gallery')
+@endswitch
+@include('public.home-system')
+@include('public.home-contact')
 @endsection

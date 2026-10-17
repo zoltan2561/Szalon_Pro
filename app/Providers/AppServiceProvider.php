@@ -20,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('booking', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
         View::composer(['layouts.*', 'public.*', 'admin.*', 'auth.*'], function ($view): void {
             $salon = Salon::current();
-            $view->with('salon', $salon)->with('brand', app(Branding::class)->forSalon($salon));
+            $branding = app(Branding::class);
+            $view->with('salon', $salon)->with('brand', $branding->forSalon($salon))->with('demoUrls', $branding->demoUrls())->with('demoSalesContactUrl', $branding->demoSalesContactUrl());
         });
     }
 }

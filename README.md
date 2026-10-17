@@ -11,6 +11,8 @@ Saját arculatra szabható Laravel 13 szalonweboldal és napi szalonkezelés, a 
 - Szalon belépési e-mail: `owner@example.test`; barber: `barber@example.test`; műköröm: `nails@example.test`.
 - A helyi, véletlen jelszó a figyelmen kívül hagyott `.env`, `.env.barber`, illetve `.env.nails` fájl `SALON_ADMIN_PASSWORD` sorában található. Nincs a forráskódban vagy ebben a dokumentumban.
 - Külön adatbázis: `database/database.sqlite`, `database/barber.sqlite`, `database/nails.sqlite`; külön munkamenetsüti. A nevek, profilok és foglalások szintetikus demóadatok. Az adatbázisok, feltöltések és titkok nincsenek Gitben.
+- A nyilvános demóváltó a három külön telepítés között navigál. A `.env`, `.env.barber` és `.env.nails` fájlban a `SALON_DEMO_SALON_URL`, `SALON_DEMO_BARBER_URL`, `SALON_DEMO_NAILS_URL` címek legyenek megadva; éles ügyféloldalon a váltó nem jelenik meg. A három szakágnak külön szolgáltatáslistája, munkatársai és foglalásai vannak.
+- A demó termékérdeklődési gombja a `SALON_DEMO_SALES_CONTACT` mezőben beállított valódi e-mail-címre vagy HTTPS-címre vezet. Üres értéknél nem jelenik meg; a mintaszalon fiktív kapcsolatát nem használjuk ajánlatkérésre.
 
 Újraindítás külön PowerShell-terminálokban:
 
@@ -30,7 +32,7 @@ A felület Blade és közvetlenül kiszolgált CSS/JavaScript; használatához n
 
 ## Funkciók
 
-- Három mentett, tovább alakítható arculat: barber, fodrászat, műköröm. A Beállításokban egy kattintással alkalmazható, a vállalkozás adatai, feltöltött képei, szolgáltatásai és foglalásai megmaradnak.
+- Három mentett, tovább alakítható szakági arculat: barber, fodrászat, műköröm. A bemutatók főoldalán a szakaszok sorrendje és felépítése, a tipográfia, a szolgáltatások megjelenése és a szövegezés is eltér. A Beállításokban egy kattintással alkalmazható egy arculat, a vállalkozás adatai, feltöltött képei, szolgáltatásai és foglalásai megmaradnak.
 - Saját generált SP-logó, szakági enteriőrképek, mobil/asztali WebP változatok, helyből betöltött DM Sans és Playfair Display betűk, Phosphor ikonok (licencek az eszközök mellett).
 - Nagy képes vagy osztott főoldal; színek, betűk, lekerekítés, főoldali feliratok és foglalási gomb szövege. Saját logó/nyitókép/galéria, választható csapat- és galériaszakasz, mobilmenü és alsó foglalási sáv.
 - A szöveg/háttér színekhez legalább 4,5:1 mentési kontrasztellenőrzés, automatikus gombfeliratszín. Név, bemutatkozás, kapcsolat, nyitvatartás és feltételek továbbra is szabadon szerkeszthetők.

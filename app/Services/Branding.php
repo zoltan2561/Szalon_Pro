@@ -19,16 +19,43 @@ class Branding
         $accent = $salon->accent ?: $preset['accent'];
 
         return $appearance + [
+            'theme' => $salon->theme,
             'label' => $preset['label'],
+            'demo_copy' => $preset['demo_copy'],
             'accent' => $accent,
             'on_accent' => $this->foreground($accent),
             'font' => $salon->font,
             'hero' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-hero.webp'),
             'hero_mobile' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-hero-mobile.webp'),
+            'studio' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-studio.webp'),
             'custom_hero' => (bool) $salon->hero_image,
             'logo' => $salon->logo ? Storage::url($salon->logo) : asset('assets/branding/sp-mark.png'),
             'custom_logo' => (bool) $salon->logo,
         ];
+    }
+
+    /** @return array{salon?: string, barber?: string, nails?: string} */
+    public function demoUrls(): array
+    {
+        $urls = array_filter(array_intersect_key(config('salon.demo_urls'), config('branding.presets')), static fn ($url): bool => is_string($url)
+            && filter_var($url, FILTER_VALIDATE_URL) !== false
+            && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true));
+
+        return count($urls) === count(array_unique($urls)) ? $urls : [];
+    }
+
+    public function demoSalesContactUrl(): ?string
+    {
+        $contact = config('salon.demo_sales_contact');
+        if (! is_string($contact) || $contact === '') {
+            return null;
+        }
+        if (filter_var($contact, FILTER_VALIDATE_EMAIL) !== false) {
+            return 'mailto:'.$contact;
+        }
+
+        return filter_var($contact, FILTER_VALIDATE_URL) !== false
+            && parse_url($contact, PHP_URL_SCHEME) === 'https' ? $contact : null;
     }
 
     public function foreground(string $background): string

@@ -1,0 +1,3 @@
+@if($brand['show_team'] && $staff->isNotEmpty())
+<section class="team-section wrap"><div class="section-heading"><div><p class="eyebrow">SZEMÉLYES FIGYELEM</p><h2>Akik várnak rád</h2></div><p>Választhatsz szakembert is<br>az időpontfoglalás során.</p></div><div class="team-grid">@foreach($staff as $person)<article class="team-card"><div class="team-heading"><x-icon name="user" />@if($person->title)<p class="eyebrow">{{ $salon->demo ? Str::before($person->title, ' ·') : $person->title }}</p>@endif</div><h3>{{ $person->name }}</h3><p>{{ $person->bio }}</p><a class="text-link" href="{{ route('booking.form',['staff_id'=>$person->id]) }}">Hozzá foglalok <x-icon name="arrow-right" /></a></article>@endforeach</div></section>
+@endif

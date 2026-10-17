@@ -1,0 +1,214 @@
+/* Each preset has its own page composition. The shared booking controls keep the same behavior. */
+.premium.salon .demo-strip{background:#5a2733}
+.premium.barber .demo-strip{background:#111715}
+.premium.nails .demo-strip{background:#633f55}
+.premium.salon.public-home .system-section{background:#442d31}
+.premium.barber.public-home .system-section{background:#131917}
+.premium.nails.public-home .system-section{background:#523b4a}
+.premium.nails.public-home .system-grid .icon{color:#efd0dc}
+.premium.nails.public-home .system-action .button{color:#523b4a}
+
+/* Barber: a poster-like opening, a compact service menu, and a vertical visit guide. */
+.premium.barber.public-home .brand{font-family:'DM Sans',Arial,sans-serif;font-size:23px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+.premium.barber.public-home .desktop-nav{text-transform:uppercase;letter-spacing:.045em;font-size:12px}
+.premium.barber.public-home.layout-immersive .public-header{background:#141817dc;border-bottom-color:#ffffff38}
+.premium.barber.public-home .hero{display:flex;align-items:flex-end;min-height:780px;background:#141817}
+.premium.barber.public-home .hero-picture img{object-position:66% center;filter:grayscale(.38) brightness(.7) contrast(1.08)}
+.premium.barber.public-home .hero-picture::after{background:linear-gradient(90deg,#101413ec 0%,#101413bd 47%,#10141325 100%)}
+.premium.barber.public-home .hero-content{padding-top:200px;padding-bottom:96px}
+.premium.barber.public-home .hero-text{max-width:960px}
+.premium.barber.public-home .hero .eyebrow{color:#e5c399;font-weight:700;letter-spacing:.28em}
+.premium.barber.public-home .hero h1{max-width:920px;font-size:clamp(72px,8vw,128px);line-height:.94;font-weight:700;letter-spacing:-.07em;text-transform:uppercase}
+.premium.barber.public-home .hero-copy{max-width:560px;font-size:19px}
+.premium.barber.public-home .hero-actions{flex-direction:row;align-items:center;gap:30px}
+.premium.barber.public-home .hero-note{border-top:1px solid #ffffff57;padding-top:17px;max-width:560px}
+.premium.barber.public-home.layout-split .public-header{background:var(--paper);height:88px}
+.premium.barber.public-home.layout-split .hero{display:grid;grid-template-columns:44% 56%;align-items:stretch;min-height:700px;background:var(--paper)}
+.premium.barber.public-home.layout-split .hero-picture{grid-column:2;grid-row:1;position:relative;inset:auto;min-height:700px;border-radius:0}
+.premium.barber.public-home.layout-split .hero-picture img{filter:grayscale(.35) brightness(.78) contrast(1.05)}
+.premium.barber.public-home.layout-split .hero-content{grid-column:1;grid-row:1;align-self:center;padding:90px 30px 70px max(7.5vw,calc((100vw - 1224px)/2))}
+.premium.barber.public-home.layout-split .hero h1{font-size:clamp(56px,5.6vw,84px);line-height:.97}
+.premium.barber.public-home.layout-split .hero-copy{font-size:18px}
+.premium.barber.public-home.layout-split .hero-note{border-top-color:var(--line)}
+.premium.barber.public-home .services-section{padding:86px 0 96px;background:var(--paper)}
+.premium.barber.public-home .services-section .section-heading{align-items:start}
+.premium.barber.public-home .services-section .section-heading h2{text-transform:uppercase;font-weight:700;max-width:550px}
+.premium.barber.public-home .service-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;border:0}
+.premium.barber.public-home .service-row{display:flex;flex-direction:column;align-items:stretch;position:relative;gap:0;min-width:0;min-height:290px;padding:27px;border:1px solid var(--line);background:var(--soft)}
+.premium.barber.public-home .service-number{display:block;font:600 13px/1.3 'DM Sans',Arial,sans-serif;letter-spacing:.15em;color:var(--accent);margin-bottom:46px}
+.premium.barber.public-home .service-row>div:nth-child(2){padding-right:35px}
+.premium.barber.public-home .service-row h3{font:600 27px/1.16 'DM Sans',Arial,sans-serif;letter-spacing:-.045em;text-transform:uppercase}
+.premium.barber.public-home .service-meta{margin-top:auto;padding-top:32px;text-align:left}
+.premium.barber.public-home .service-meta strong{font:600 20px/1.3 'DM Sans',Arial,sans-serif;color:var(--accent)}
+.premium.barber.public-home .service-meta span{justify-content:flex-start}
+.premium.barber.public-home .round-link{position:absolute;right:25px;top:25px;width:42px;height:42px;margin:0;border-radius:4px}
+.premium.barber.public-home .team-section{padding-top:100px;padding-bottom:105px}
+.premium.barber.public-home .team-card{background:transparent;border:0;border-top:3px solid var(--accent);border-radius:0;padding:28px 8px 15px 0}
+.premium.barber.public-home .team-card h3{font-family:'DM Sans',Arial,sans-serif;font-weight:600;text-transform:uppercase}
+.premium.barber.public-home .studio-section{border-top:1px solid var(--line);grid-template-columns:1.15fr .85fr;gap:7%}
+.premium.barber.public-home .studio-image img{height:520px;border:0;border-radius:2px;filter:grayscale(.32) contrast(1.06)}
+.premium.barber.public-home .studio-copy h2{text-transform:uppercase;font-weight:700}
+.premium.barber.public-home .journey-section{display:grid;grid-template-columns:.65fr 1.35fr;gap:7%;align-items:start}
+.premium.barber.public-home .journey-section .section-heading{display:block;margin:0}
+.premium.barber.public-home .journey-section .section-heading>p{margin-top:22px}
+.premium.barber.public-home .journey-grid{display:block}
+.premium.barber.public-home .journey-grid article,.premium.barber.public-home .journey-grid article+article{display:grid;grid-template-columns:55px 38px minmax(0,.8fr) minmax(0,1.2fr);gap:14px;align-items:center;border-left:0;border-top:1px solid var(--line);padding:25px 0}
+.premium.barber.public-home .journey-grid .journey-number,.premium.barber.public-home .journey-grid .icon,.premium.barber.public-home .journey-grid h3,.premium.barber.public-home .journey-grid p{margin:0}
+.premium.barber.public-home .journey-grid h3{text-transform:uppercase;font-size:17px}
+.premium.barber.public-home .system-grid article{border-radius:2px;border-top:3px solid #e5c399}
+.premium.barber.public-home .contact-inner{grid-template-columns:1.25fr .75fr;gap:22px 9%}
+.premium.barber.public-home .contact-inner>div:first-child{grid-row:1/3}
+.premium.barber.public-home .public-footer .brand{text-transform:uppercase}
+
+/* Nails: image-first magazine opening, an early portfolio, and a card-based catalogue. */
+.premium.nails.public-home.layout-split .public-header{background:var(--paper);height:88px}
+.premium.nails.public-home .brand{font-size:27px;letter-spacing:-.065em}
+.premium.nails.public-home.layout-split .hero{display:grid;grid-template-columns:54% 46%;min-height:650px;background:var(--paper)}
+.premium.nails.public-home.layout-split .hero-picture{grid-column:1;grid-row:1;min-height:650px;border-radius:0 40% 40% 0 / 0 50% 50% 0}
+.premium.nails.public-home.layout-split .hero-picture img{object-position:62% center}
+.premium.nails.public-home.layout-split .hero-content{grid-column:2;grid-row:1;align-self:center;padding:75px 9% 75px 10%;max-width:none}
+.premium.nails.public-home.layout-split .hero h1{font-size:clamp(62px,6vw,92px);line-height:1.06;max-width:600px}
+.premium.nails.public-home.layout-split .hero-copy{font-size:21px;max-width:480px}
+.premium.nails.public-home.layout-split .hero-actions{align-items:flex-start;flex-direction:column;gap:12px}
+.premium.nails.public-home.layout-split .hero .button{font-size:16px;min-height:54px}
+.premium.nails.public-home.layout-split .hero-note{margin-top:32px}
+.premium.nails.public-home .image-caption{right:auto;left:24px;bottom:16px;color:#fff9f2}
+.premium.nails.public-home .studio-section{grid-template-columns:.8fr 1.2fr;gap:10%;padding-top:100px;padding-bottom:96px}
+.premium.nails.public-home .studio-image img{height:500px;border:0;border-radius:48% 48% 8px 8px / 35% 35% 8px 8px}
+.premium.nails.public-home .studio-copy h2{font-size:clamp(42px,4.2vw,64px)}
+.premium.nails.public-home .gallery-section{padding-top:0}
+.premium.nails.public-home .gallery{grid-template-columns:1.35fr 1fr 1fr;gap:14px}
+.premium.nails.public-home .gallery img{height:310px;border-radius:24px 24px 5px 5px}
+.premium.nails.public-home .services-section{padding:84px 0 94px;background:var(--soft)}
+.premium.nails.public-home .services-section .section-heading{align-items:start}
+.premium.nails.public-home .service-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;border:0}
+.premium.nails.public-home .service-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;grid-template-rows:auto 1fr auto;align-items:start;gap:0 12px;min-height:250px;padding:27px;background:var(--paper);border:1px solid var(--line);border-radius:26px 26px 6px 6px;box-shadow:0 8px 25px #382d370a}
+.premium.nails.public-home .service-number{display:block;grid-column:1;grid-row:1;font:500 13px/1.3 'DM Sans',Arial,sans-serif;letter-spacing:.16em;margin-bottom:26px}
+.premium.nails.public-home .service-row>div:nth-child(2){grid-column:1/-1;grid-row:2}
+.premium.nails.public-home .service-row h3{font-size:28px}
+.premium.nails.public-home .service-meta{grid-column:1;grid-row:3;text-align:left;margin-top:25px}
+.premium.nails.public-home .service-meta strong{font-size:19px}
+.premium.nails.public-home .service-meta span{justify-content:flex-start}
+.premium.nails.public-home .round-link{grid-column:2;grid-row:3;width:44px;height:44px;align-self:end}
+.premium.nails.public-home .journey-section{padding-top:85px;padding-bottom:90px}
+.premium.nails.public-home .journey-grid{gap:16px}
+.premium.nails.public-home .journey-grid article,.premium.nails.public-home .journey-grid article+article{border:1px solid var(--line);border-radius:24px 24px 5px 5px;background:var(--soft);padding:28px;min-height:260px}
+.premium.nails.public-home .journey-number{font-style:italic;font-size:25px}
+.premium.nails.public-home .team-section{padding-top:0}
+.premium.nails.public-home .team-card{border:0;border-radius:28px 28px 5px 5px}
+.premium.nails.public-home .contact-section{background:var(--paper);padding:58px 20px 75px}
+.premium.nails.public-home .contact-inner{background:var(--accent);border-radius:30px 30px 8px 8px;max-width:1270px;padding:62px 60px;grid-template-columns:1.15fr .9fr .95fr;gap:5%}
+
+/* The booking task stays identical, while its reading hierarchy follows the chosen site. */
+.premium.barber.public-inner .booking-wrap>.eyebrow{text-transform:uppercase;color:var(--accent)}
+.premium.barber.public-inner .booking-wrap>.page-title{text-transform:uppercase;font-weight:700;max-width:850px}
+.premium.barber.public-inner .booking-grid{grid-template-columns:minmax(0,1fr) 310px;grid-template-areas:'filter filter' 'submit summary'}
+.premium.barber.public-inner .filter-form{display:grid;grid-template-columns:1fr 1.45fr auto;gap:16px 24px;align-items:end;background:var(--soft);border-top:4px solid var(--accent)}
+.premium.barber.public-inner .filter-form>.eyebrow,.premium.barber.public-inner .filter-form>h2{grid-column:1/-1;margin:0}
+.premium.barber.public-inner .filter-form>.button{align-self:end}
+.premium.barber.public-inner .booking-submit{border-top:4px solid var(--accent)}
+.premium.barber.public-inner .booking-summary{background:var(--soft);border-radius:2px}
+.premium.barber.public-inner input[type="date"]{color-scheme:dark}
+.premium.barber.public-inner .slots{grid-template-columns:repeat(4,minmax(0,1fr))}
+.premium.barber.public-inner .slot span{border-radius:2px}
+.premium.nails.public-inner .booking-wrap>.page-title{max-width:800px}
+.premium.nails.public-inner .booking-grid{grid-template-columns:minmax(0,1fr) minmax(330px,.65fr);grid-template-areas:'filter summary' 'submit summary'}
+.premium.nails.public-inner .filter-form,.premium.nails.public-inner .booking-summary,.premium.nails.public-inner .booking-submit{border-radius:26px 26px 6px 6px}
+.premium.nails.public-inner .booking-summary{background:var(--soft)}
+.premium.nails.public-inner .booking-submit{max-width:none}
+.premium.nails.public-inner .slots{grid-template-columns:repeat(4,minmax(0,1fr));max-height:450px}
+.premium.nails.public-inner .slot span{border-radius:18px 18px 4px 4px}
+
+@media(max-width:1100px){
+ .premium.barber.public-home .service-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium.barber.public-home .journey-section{grid-template-columns:1fr;gap:30px}
+ .premium.nails.public-home.layout-split .hero-content{padding-right:6%;padding-left:7%}
+ .premium.nails.public-home.layout-split .hero h1{font-size:clamp(52px,6vw,72px)}
+ .premium.nails.public-home .contact-inner{padding:46px 42px}
+ .premium.barber.public-inner .filter-form{grid-template-columns:1fr 1fr}
+ .premium.barber.public-inner .filter-form>.button{grid-column:1/-1;justify-self:start}
+}
+@media(max-width:800px){
+ .premium.barber.public-home .hero{min-height:690px}
+ .premium.barber.public-home .hero h1{font-size:clamp(60px,10vw,86px)}
+ .premium.barber.public-home.layout-split .hero{grid-template-columns:46% 54%;min-height:580px}
+ .premium.barber.public-home.layout-split .hero-picture{min-height:580px}
+ .premium.barber.public-home.layout-split .hero-content{padding:70px 24px 60px 5vw}
+ .premium.barber.public-home.layout-split .hero h1{font-size:clamp(46px,6vw,64px)}
+ .premium.barber.public-home .service-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium.barber.public-home .service-row{min-height:260px}
+ .premium.barber.public-home .journey-grid article,.premium.barber.public-home .journey-grid article+article{grid-template-columns:50px 35px minmax(0,1fr);gap:10px}
+ .premium.barber.public-home .journey-grid p{grid-column:3}
+ .premium.nails.public-home.layout-split .hero{grid-template-columns:50% 50%;min-height:580px}
+ .premium.nails.public-home.layout-split .hero-picture{min-height:580px}
+ .premium.nails.public-home.layout-split .hero h1{font-size:clamp(44px,6.2vw,60px)}
+ .premium.nails.public-home.layout-split .hero-copy{font-size:17px}
+ .premium.nails.public-home .studio-section{gap:6%}
+ .premium.nails.public-home .studio-image img{height:360px}
+ .premium.nails.public-home .service-list{gap:12px}
+ .premium.nails.public-home .service-row{padding:22px}
+ .premium.nails.public-home .contact-inner{grid-template-columns:1fr 1fr}
+ .premium.nails.public-home .contact-inner>div:first-child{grid-column:1/-1}
+ .premium.barber.public-inner .booking-grid,.premium.nails.public-inner .booking-grid{grid-template-columns:1fr;grid-template-areas:'filter' 'summary' 'submit'}
+ .premium.barber.public-inner .filter-form{grid-template-columns:1fr}
+ .premium.barber.public-inner .slots,.premium.nails.public-inner .slots{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:640px){
+ .premium.barber.public-home .brand{font-size:18px}
+ .premium.barber.public-home .hero{min-height:630px;align-items:end}
+ .premium.barber.public-home .hero-content{padding-top:190px;padding-bottom:53px}
+ .premium.barber.public-home .hero h1{font-size:clamp(49px,13vw,76px);line-height:.96}
+ .premium.barber.public-home.layout-split .hero{display:flex;min-height:630px;isolation:isolate;align-items:flex-end;background:#141817}
+ .premium.barber.public-home.layout-split .hero-picture{position:absolute;inset:0;z-index:-2;width:100%;height:100%;min-height:0;order:0}
+ .premium.barber.public-home.layout-split .hero-picture img{filter:grayscale(.38) brightness(.65)}
+ .premium.barber.public-home.layout-split .hero-picture::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#101413df,#1014136b)}
+ .premium.barber.public-home.layout-split .hero-content{position:relative;z-index:1;order:1;grid-column:auto;grid-row:auto;align-self:end;padding:145px 24px 53px;width:100%}
+ .premium.barber.public-home.layout-split .hero h1,.premium.barber.public-home.layout-split .hero-copy,.premium.barber.public-home.layout-split .hero-secondary{color:#fff9f2}
+ .premium.barber.public-home.layout-split .hero .eyebrow{color:#e5c399}
+ .premium.barber.public-home.layout-split .hero-note{color:#f4ece2;border-top-color:#ffffff57}
+ .premium.barber.public-home .hero-copy{font-size:16px}
+ .premium.barber.public-home .hero-actions{align-items:flex-start;flex-direction:column;gap:12px}
+ .premium.barber.public-home .services-section{padding:55px 0 65px}
+ .premium.barber.public-home .service-list{grid-template-columns:1fr;gap:10px}
+ .premium.barber.public-home .service-row{min-height:210px;padding:21px}
+ .premium.barber.public-home .service-number{margin-bottom:24px}
+ .premium.barber.public-home .service-row h3{font-size:22px}
+ .premium.barber.public-home .service-meta{padding-top:20px}
+ .premium.barber.public-home .team-section{padding-top:60px;padding-bottom:60px}
+ .premium.barber.public-home .studio-section{grid-template-columns:1fr;gap:26px;padding-top:50px;padding-bottom:60px}
+ .premium.barber.public-home .studio-image img{height:280px}
+ .premium.barber.public-home .journey-section{display:block}
+ .premium.barber.public-home .journey-section .section-heading{margin-bottom:24px}
+ .premium.barber.public-home .journey-grid article,.premium.barber.public-home .journey-grid article+article{grid-template-columns:35px minmax(0,1fr);gap:8px 12px;padding:20px 0}
+ .premium.barber.public-home .journey-grid .icon{display:none}
+ .premium.barber.public-home .journey-grid h3{font-size:16px}
+ .premium.barber.public-home .journey-grid p{grid-column:2}
+ .premium.barber.public-home .contact-inner{grid-template-columns:1fr;gap:28px}
+ .premium.barber.public-home .contact-inner>div:first-child{grid-row:auto}
+ .premium.nails.public-home.layout-split .public-header{height:78px}
+ .premium.nails.public-home.layout-split .hero{display:flex;flex-direction:column;min-height:0}
+ .premium.nails.public-home.layout-split .hero-picture{order:0;min-height:0;height:275px;width:calc(100% - 24px);margin-left:24px;border-radius:0 0 0 90px}
+ .premium.nails.public-home.layout-split .hero-content{order:1;padding:35px 24px 62px;width:100%;max-width:none}
+ .premium.nails.public-home .image-caption{top:244px;bottom:auto;left:34px}
+ .premium.nails.public-home.layout-split .hero h1{font-size:clamp(43px,12vw,63px)}
+ .premium.nails.public-home.layout-split .hero-copy{font-size:18px}
+ .premium.nails.public-home.layout-split .hero .button{font-size:15px}
+ .premium.nails.public-home .studio-section{grid-template-columns:1fr;gap:24px;padding-top:25px;padding-bottom:60px}
+ .premium.nails.public-home .studio-image img{height:340px}
+ .premium.nails.public-home .service-list{grid-template-columns:1fr;gap:12px}
+ .premium.nails.public-home .service-row{min-height:210px;padding:22px}
+ .premium.nails.public-home .service-number{margin-bottom:16px}
+ .premium.nails.public-home .service-row h3{font-size:24px}
+ .premium.nails.public-home .gallery{grid-template-columns:1fr 1fr}
+ .premium.nails.public-home .gallery img{height:190px}
+ .premium.nails.public-home .journey-grid{grid-template-columns:1fr;gap:12px}
+ .premium.nails.public-home .journey-grid article,.premium.nails.public-home .journey-grid article+article{min-height:0;padding:22px}
+ .premium.nails.public-home .contact-section{padding:30px 12px 54px}
+ .premium.nails.public-home .contact-inner{grid-template-columns:1fr;gap:28px;padding:30px 23px;border-radius:24px 24px 6px 6px}
+ .premium.nails.public-home .contact-inner>div:first-child{grid-column:auto}
+ .premium.barber.public-inner .filter-form{grid-template-columns:1fr;gap:0}
+ .premium.barber.public-inner .filter-form>.eyebrow,.premium.barber.public-inner .filter-form>h2,.premium.barber.public-inner .filter-form>.button{grid-column:auto}
+ .premium.barber.public-inner .filter-form>.button{justify-self:stretch}
+ .premium.barber.public-inner .slots,.premium.nails.public-inner .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium.nails.public-inner .booking-submit .slots{max-height:none;overflow:visible}
+}
