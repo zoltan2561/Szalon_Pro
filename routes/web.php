@@ -2,7 +2,11 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BenefitsController;
+use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
@@ -12,6 +16,8 @@ Route::post('/foglalas', [PublicController::class, 'store'])->middleware('thrott
 Route::get('/foglalas/kesz', [PublicController::class, 'success'])->name('booking.success');
 Route::get('/kezeles/{token}', [PublicController::class, 'manage'])->middleware('throttle:booking')->name('booking.manage');
 Route::post('/kezeles/{token}', [PublicController::class, 'update'])->middleware('throttle:booking')->name('booking.update');
+Route::get('/kezeles/{token}/ujra', [PublicController::class, 'rebook'])->middleware('throttle:booking')->name('booking.rebook.form');
+Route::post('/kezeles/{token}/ujra', [PublicController::class, 'storeRebooking'])->middleware('throttle:booking')->name('booking.rebook.store');
 Route::get('/belepes', fn () => view('auth.login'))->name('login');
 Route::post('/belepes', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::post('/kilepes', [AuthController::class, 'logout'])->name('logout');
@@ -26,7 +32,24 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::get('/vendegek/{guest}', [AdminController::class, 'guest'])->name('guest');
     Route::post('/vendegek/{guest}/megjegyzes', [AdminController::class, 'notes'])->name('notes');
     Route::post('/vendegek/{guest}/adatok', [AdminController::class, 'contact'])->name('contact');
+    Route::get('/varolista', [WaitlistController::class, 'index'])->name('waitlist.index');
+    Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
+    Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::get('/modulok', [ModuleSettingsController::class, 'index'])->name('modules.index');
+        Route::post('/modulok', [ModuleSettingsController::class, 'update'])->name('modules.update');
+        Route::get('/berletek-huseg', [BenefitsController::class, 'index'])->name('benefits.index');
+        Route::post('/berletek-huseg/beallitasok', [BenefitsController::class, 'saveSettings'])->name('benefits.settings');
+        Route::post('/berletek-huseg/tipus/{passPlan?}', [BenefitsController::class, 'savePlan'])->name('benefits.plan');
+        Route::post('/berletek-huseg/pont/{service}', [BenefitsController::class, 'saveServicePoints'])->name('benefits.points');
+        Route::post('/vendegek/{guest}/berlet', [BenefitsController::class, 'issuePass'])->name('benefits.issue');
+        Route::post('/vendegek/{guest}/berlet/{guestPass}/visszavonas', [BenefitsController::class, 'voidPass'])->name('benefits.void');
+        Route::post('/vendegek/{guest}/jutalom', [BenefitsController::class, 'redeemReward'])->name('benefits.redeem');
+        Route::get('/google-naptar', [GoogleCalendarController::class, 'index'])->name('google.index');
+        Route::post('/google-naptar/{staff}/kapcsolodas', [GoogleCalendarController::class, 'connect'])->name('google.connect');
+        Route::get('/google-naptar/visszateres', [GoogleCalendarController::class, 'callback'])->name('google.callback');
+        Route::post('/google-naptar/{connection}/szinkron', [GoogleCalendarController::class, 'syncNow'])->name('google.sync');
+        Route::post('/google-naptar/{connection}/bontas', [GoogleCalendarController::class, 'disconnect'])->name('google.disconnect');
         Route::get('/vendegek/{guest}/export', [AdminController::class, 'export'])->name('export');
         Route::post('/vendegek/{guest}/torles', [AdminController::class, 'anonymize'])->name('anonymize');
         Route::get('/szolgaltatasok', [AdminController::class, 'services'])->name('services');
@@ -42,5 +65,6 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
         Route::post('/beallitasok/arculat', [AdminController::class, 'applyPreset'])->name('branding.preset');
         Route::get('/ertesitesek', [AdminController::class, 'notifications'])->name('notifications');
         Route::post('/ertesitesek/{message}/ujra', [AdminController::class, 'retry'])->name('retry');
+        Route::post('/ertesitesek/sms/{message}/ujra', [AdminController::class, 'retrySms'])->name('sms.retry');
     });
 });

@@ -18,7 +18,7 @@ class Booking extends Model
 
     protected function casts(): array
     {
-        return ['starts_at' => 'immutable_datetime', 'ends_at' => 'immutable_datetime', 'busy_from' => 'immutable_datetime', 'busy_until' => 'immutable_datetime', 'token_expires_at' => 'immutable_datetime', 'manage_token' => 'encrypted'];
+        return ['starts_at' => 'immutable_datetime', 'ends_at' => 'immutable_datetime', 'busy_from' => 'immutable_datetime', 'busy_until' => 'immutable_datetime', 'token_expires_at' => 'immutable_datetime', 'manage_token' => 'encrypted', 'sms_opt_in' => 'boolean'];
     }
 
     public function guest(): BelongsTo

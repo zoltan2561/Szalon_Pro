@@ -10,8 +10,14 @@
 @foreach(['today'=>['clock','Mai nap'],'calendar'=>['calendar-blank','Naptár'],'guests'=>['users','Vendégeim']] as $key=>$item)
 <a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
+@if($salon->featureEnabled('waitlist'))
+<a class="{{ request()->routeIs('admin.waitlist.*') ? 'active':'' }}" href="{{ route('admin.waitlist.index') }}"><x-icon name="list" />Várólista</a>
+@endif
 @if(auth()->user()->role==='owner')
-@foreach(['services'=>['scissors','Szolgáltatások'],'staff'=>['user','Munkatársak'],'notifications'=>['envelope-simple','Értesítések'],'settings'=>['gear-six','Beállítások']] as $key=>$item)
+@if($salon->featureEnabled('passes') || $salon->featureEnabled('loyalty'))
+<a class="{{ request()->routeIs('admin.benefits.*') ? 'active':'' }}" href="{{ route('admin.benefits.index') }}"><x-icon name="sparkle" />Bérletek és hűségpontok</a>
+@endif
+@foreach(['services'=>['scissors','Szolgáltatások'],'staff'=>['user','Munkatársak'],'google.index'=>['calendar-blank','Google Naptár'],'notifications'=>['envelope-simple','Értesítések'],'modules.index'=>['squares-four','Modulok'],'settings'=>['gear-six','Beállítások']] as $key=>$item)
 <a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
 @endif

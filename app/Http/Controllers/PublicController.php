@@ -9,11 +9,13 @@ use App\Models\Staff;
 use App\Services\Availability;
 use App\Services\BookingService;
 use App\Services\Branding;
+use App\Services\SmsGateway;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PublicController extends Controller
 {
@@ -30,7 +32,7 @@ class PublicController extends Controller
         return view('public.home', ['salon' => $salon, 'services' => Service::where('active', true)->with('staff')->get(), 'staff' => Staff::where('active', true)->get(), 'ready' => $availability->ready()]);
     }
 
-    public function book(Request $request, Availability $availability): View
+    public function book(Request $request, Availability $availability, SmsGateway $smsGateway): View
     {
         $salon = Salon::current();
         abort_unless($salon->published || $request->user()?->role === 'owner', 404);
@@ -59,13 +61,44 @@ class PublicController extends Controller
             }
         }
 
-        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready()]);
+        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready(), 'rebookToken' => $request->attributes->get('rebookToken'), 'rebookingGuest' => $request->attributes->get('rebookingGuest'), 'smsReady' => $salon->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
     public function store(Request $request, BookingService $bookings): RedirectResponse
     {
         $data = $this->bookingData($request);
         $booking = $bookings->create($data);
+        $request->session()->put('last_booking', $booking->id);
+
+        return redirect()->route('booking.success');
+    }
+
+    public function rebook(string $token, Request $request, Availability $availability, SmsGateway $smsGateway): View|RedirectResponse
+    {
+        $booking = $this->rebookingSource($token);
+        if (! $booking) {
+            return redirect()->route('booking.form')->with('error', 'Az újrafoglalási link lejárt. Kérj új időpontot, vagy keresd a szalont.');
+        }
+        $request->query->set('service_id', $request->query('service_id', $booking->service_id));
+        $request->query->set('staff_id', $request->query('staff_id', $booking->staff_id));
+        $request->attributes->set('rebookToken', $token);
+        $request->attributes->set('rebookingGuest', $booking->guest);
+
+        return $this->book($request, $availability, $smsGateway);
+    }
+
+    public function storeRebooking(string $token, Request $request, BookingService $bookings): RedirectResponse
+    {
+        $source = $this->rebookingSource($token);
+        if (! $source) {
+            return redirect()->route('booking.form')->with('error', 'Az újrafoglalási link lejárt. Kérj új időpontot, vagy keresd a szalont.');
+        }
+        $data = $this->bookingData($request);
+        if (mb_strtolower(trim($data['email'])) !== mb_strtolower((string) $source->guest->email)
+            || trim($data['name']) !== $source->guest->name) {
+            throw ValidationException::withMessages(['email' => 'A korábbi vendégadatok megváltoztak. Kérjük, keresd a szalont.']);
+        }
+        $booking = $bookings->create($data, null, $source->guest);
         $request->session()->put('last_booking', $booking->id);
 
         return redirect()->route('booking.success');
@@ -105,8 +138,8 @@ class PublicController extends Controller
     public function bookingData(Request $request, bool $manual = false): array
     {
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
-            'email' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|email:rfc|max:200', 'phone' => 'nullable|string|max:40', 'request_key' => 'required|uuid',
-            'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'terms' => $manual ? 'nullable' : 'accepted']);
+            'email' => ($manual ? 'nullable' : 'required').'|email:rfc|max:200', 'phone' => 'nullable|string|max:40', 'request_key' => 'required|uuid',
+            'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
         [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
 
         return $data;
@@ -125,5 +158,14 @@ class PublicController extends Controller
         abort_unless(preg_match('/^[a-f0-9]{64}$/', $token), 404);
 
         return Booking::where('token_hash', hash('sha256', $token))->where('token_expires_at', '>', now())->firstOrFail();
+    }
+
+    private function rebookingSource(string $token): ?Booking
+    {
+        if (! preg_match('/^[a-f0-9]{64}$/', $token)) {
+            return null;
+        }
+
+        return Booking::with('guest')->where('token_hash', hash('sha256', $token))->where('token_expires_at', '>', now())->whereHas('guest', fn ($query) => $query->whereNull('anonymized_at')->whereNotNull('email'))->first();
     }
 }

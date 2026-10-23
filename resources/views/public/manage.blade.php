@@ -4,5 +4,6 @@
 @else
 <div class="notice">Online már nem módosítható. Egyeztetéshez keresd a szalont: {{ $salon->phone }}.</div>
 @endif
+<div class="panel"><h2>Újra jönnél?</h2><p>Az új foglalásnál a korábbi vendégkártyádat használjuk. Ez a hivatkozás a foglalásod után 30 napig érvényes.</p><a class="button secondary" href="{{ route('booking.rebook.form', $token) }}">Új időpont foglalása</a></div>
 </div>
 @endsection

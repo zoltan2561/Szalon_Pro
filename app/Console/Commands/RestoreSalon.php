@@ -26,7 +26,12 @@ class RestoreSalon extends Command
         try {
             $raw = file_get_contents($this->argument('path'));
             $snapshot = json_decode(Crypt::decryptString($raw), true, 512, JSON_THROW_ON_ERROR);
-            if (($snapshot['format'] ?? null) !== 1 || array_keys($snapshot['tables']) !== BackupSalon::TABLES) {
+            $tables = match ($snapshot['format'] ?? null) {
+                1 => BackupSalon::LEGACY_TABLES,
+                2 => BackupSalon::TABLES,
+                default => null,
+            };
+            if ($tables === null || ! isset($snapshot['tables']) || array_keys($snapshot['tables']) !== $tables) {
                 throw new \RuntimeException('format');
             }
             foreach ($snapshot['media'] ?? [] as $path => $contents) {
@@ -40,8 +45,8 @@ class RestoreSalon extends Command
                 }
                 $created[] = $path;
             }
-            DB::transaction(function () use ($snapshot): void {
-                foreach (BackupSalon::TABLES as $table) {
+            DB::transaction(function () use ($snapshot, $tables): void {
+                foreach ($tables as $table) {
                     foreach (array_chunk($snapshot['tables'][$table], 50) as $rows) {
                         DB::table($table)->insert($rows);
                     }

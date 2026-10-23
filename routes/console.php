@@ -10,6 +10,8 @@ Artisan::command('salon:notify', function (NotificationSender $sender): void {
     $this->info($sender->sendDue().' értesítés feldolgozva.');
 })->purpose('Esedékes tartós értesítési sor feldolgozása');
 Schedule::command('salon:notify')->everyMinute()->withoutOverlapping();
+Schedule::command('salon:sms-notify')->everyMinute()->withoutOverlapping();
+Schedule::command('salon:google-sync')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('salon:backup')->dailyAt('02:15')->withoutOverlapping();
 Artisan::command('salon:password {email}', function (): int {
     $password = env('SALON_ADMIN_PASSWORD');

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\GoogleCalendarBusy;
 use App\Models\Salon;
 use App\Models\Service;
 use App\Models\Staff;
@@ -58,6 +59,7 @@ class Availability
 
     public function canBook(Service $service, Staff $staff, CarbonImmutable $start, ?Booking $ignore = null): bool
     {
+        $start = $start->utc();
         $salon = Salon::current();
         $local = $start->setTimezone($salon->timezone);
         if (! $service->active || ! $staff->active || ! $service->staff()->whereKey($staff->id)->exists()
@@ -76,6 +78,17 @@ class Availability
         }
         if (TimeBlock::where('staff_id', $staff->id)->where('starts_at', '<', $until)->where('ends_at', '>', $from)->exists()) {
             return false;
+        }
+
+        $staff->loadMissing('googleCalendarConnection');
+        $connection = $staff->googleCalendarConnection;
+        if ($connection) {
+            if ($connection->sync_status !== 'connected' || ! $connection->last_imported_at || $connection->last_imported_at->lt(now()->subMinutes(15))) {
+                return false;
+            }
+            if (GoogleCalendarBusy::where('google_calendar_connection_id', $connection->id)->where('starts_at', '<', $until)->where('ends_at', '>', $from)->exists()) {
+                return false;
+            }
         }
 
         return ! Booking::where('staff_id', $staff->id)->whereIn('status', ['confirmed', 'completed', 'no_show'])

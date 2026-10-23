@@ -15,7 +15,12 @@ class Salon extends Model
 
     protected function casts(): array
     {
-        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'published' => 'boolean', 'demo' => 'boolean'];
+        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'features' => 'array', 'published' => 'boolean', 'demo' => 'boolean'];
+    }
+
+    public function featureEnabled(string $key): bool
+    {
+        return (bool) ($this->features[$key] ?? false);
     }
 
     public static function current(): self

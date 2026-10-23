@@ -22,7 +22,7 @@ class NotificationSender
                 continue;
             }
             $booking = Booking::with('guest', 'staff')->findOrFail($message->booking_id);
-            if (! $this->current($message, $booking)) {
+            if (! $this->current($message, $booking) || ! $booking->guest->email) {
                 $this->finish($message, ['status' => 'obsolete']);
 
                 continue;
@@ -79,6 +79,6 @@ class NotificationSender
 
     private function finish(OutboxMessage $message, array $values): void
     {
-        OutboxMessage::whereKey($message->id)->where('status', 'sending')->where('attempts',$message->attempts)->update($values);
+        OutboxMessage::whereKey($message->id)->where('status', 'sending')->where('attempts', $message->attempts)->update($values);
     }
 }

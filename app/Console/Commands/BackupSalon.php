@@ -11,7 +11,14 @@ use Illuminate\Support\Facades\Storage;
 
 class BackupSalon extends Command
 {
-    public const TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'work_exceptions', 'outbox_messages', 'booking_events'];
+    public const LEGACY_TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'work_exceptions', 'outbox_messages', 'booking_events'];
+
+    public const TABLES = [
+        ...self::LEGACY_TABLES,
+        'google_calendar_connections', 'google_calendar_events', 'google_calendar_busies',
+        'sms_outbox_messages', 'waitlist_entries', 'benefit_settings', 'pass_plans',
+        'guest_passes', 'pass_uses', 'loyalty_entries',
+    ];
 
     protected $signature = 'salon:backup {--path= : Titkosított mentés célfájlja}';
 
@@ -40,7 +47,7 @@ class BackupSalon extends Command
                 $media[$file] = base64_encode(Storage::disk('public')->get($file));
             }
 
-            return ['format' => 1, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media];
+            return ['format' => 2, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media];
         }, 5);
         File::ensureDirectoryExists(dirname($path));
         if (file_put_contents($path, Crypt::encryptString(json_encode($snapshot, JSON_THROW_ON_ERROR)), LOCK_EX) === false) {

@@ -4,13 +4,22 @@ namespace Tests\Feature;
 
 use App\Console\Commands\BackupSalon;
 use App\Models\Booking;
+use App\Models\GoogleCalendarBusy;
+use App\Models\GoogleCalendarConnection;
+use App\Models\GoogleCalendarEvent;
 use App\Models\Guest;
+use App\Models\GuestPass;
+use App\Models\LoyaltyEntry;
 use App\Models\OutboxMessage;
+use App\Models\PassPlan;
+use App\Models\PassUse;
 use App\Models\Salon;
 use App\Models\Service;
+use App\Models\SmsOutboxMessage;
 use App\Models\Staff;
 use App\Models\TimeBlock;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use App\Models\WorkException;
 use App\Services\Availability;
 use App\Services\BookingService;
@@ -18,6 +27,7 @@ use App\Services\NotificationSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -282,6 +292,7 @@ class SalonWorkflowTest extends TestCase
 
     public function test_completed_and_no_show_visits_are_recorded_without_claiming_cash_revenue(): void
     {
+        Salon::current()->update(['features' => ['financials' => true]]);
         $a = $this->create();
         $b = $this->create(['starts_at' => '2026-10-19T13:00:00+02:00']);
         $this->travelTo(CarbonImmutable::parse('2026-10-19T14:00:00+00:00'));
@@ -290,20 +301,49 @@ class SalonWorkflowTest extends TestCase
         $this->actingAs($this->owner)->get(route('admin.today', ['date' => '2026-10-19']))->assertOk()->assertSee('10 500')->assertSee('nem pénzforgalmi adat')->assertSee('Nem jelent meg');
     }
 
+    public function test_financial_module_controls_actual_amount_recording_and_visibility(): void
+    {
+        $hidden = $this->create();
+        $visible = $this->create(['starts_at' => '2026-10-19T13:00:00+02:00']);
+        $this->travelTo(CarbonImmutable::parse('2026-10-19T14:00:00+00:00'));
+
+        $this->actingAs($this->owner)->post(route('admin.booking.update', $hidden), ['action' => 'complete', 'revision' => 1, 'actual_amount' => 12345])->assertRedirect();
+        $this->assertNull($hidden->fresh()->actual_amount);
+        $this->get(route('admin.booking', $hidden))->assertOk()->assertDontSee('Rögzített szolgáltatási összeg')->assertDontSee('Foglaláskori ár');
+        $this->get(route('admin.guest', $hidden->guest))->assertOk()->assertDontSee('9 500 Ft');
+
+        Salon::current()->update(['features' => ['financials' => true]]);
+        $this->post(route('admin.booking.update', $visible), ['action' => 'complete', 'revision' => 1, 'actual_amount' => 12000])->assertRedirect();
+        $this->assertSame(12000, $visible->fresh()->actual_amount);
+        $this->get(route('admin.booking', $visible))->assertOk()->assertSee('Rögzített szolgáltatási összeg')->assertSee('12 000')->assertSee('Foglaláskori ár');
+    }
+
     public function test_anonymization_requires_password_and_no_future_bookings(): void
     {
         $booking = $this->create();
         $this->owner->update(['password' => 'long-test-password']);
         $this->actingAs($this->owner)->post(route('admin.anonymize', $booking->guest), ['password' => 'long-test-password', 'confirm' => 1])->assertSessionHasErrors('confirm');
         app(BookingService::class)->change($booking, ['action' => 'cancel', 'revision' => 1], $this->owner);
+        $waiting = WaitlistEntry::factory()->create(['guest_id' => $booking->guest_id, 'service_id' => $this->service->id, 'staff_id' => $this->staff->id, 'note' => 'Személyes kérés']);
         $this->post(route('admin.anonymize', $booking->guest), ['password' => 'long-test-password', 'confirm' => 1])->assertRedirect();
         $this->assertNotNull($booking->guest->fresh()->anonymized_at);
+        $this->assertSame('cancelled', $waiting->fresh()->status);
+        $this->assertNull($waiting->fresh()->note);
         $this->assertDatabaseCount('bookings', 1);
     }
 
     public function test_backup_is_encrypted_and_restores_into_empty_database_only(): void
     {
         $booking = $this->create();
+        $connection = GoogleCalendarConnection::factory()->create(['staff_id' => $this->staff->id]);
+        GoogleCalendarEvent::factory()->create(['google_calendar_connection_id' => $connection->id, 'booking_id' => $booking->id]);
+        GoogleCalendarBusy::factory()->create(['google_calendar_connection_id' => $connection->id]);
+        $plan = PassPlan::factory()->create(['service_id' => $this->service->id]);
+        $pass = GuestPass::factory()->create(['guest_id' => $booking->guest_id, 'pass_plan_id' => $plan->id]);
+        PassUse::factory()->create(['guest_pass_id' => $pass->id, 'booking_id' => $booking->id]);
+        LoyaltyEntry::factory()->create(['booking_id' => $booking->id, 'guest_id' => $booking->guest_id]);
+        WaitlistEntry::factory()->create(['guest_id' => $booking->guest_id, 'service_id' => $this->service->id, 'staff_id' => $this->staff->id]);
+        SmsOutboxMessage::factory()->create(['booking_id' => $booking->id]);
         Storage::fake('public');
         Storage::disk('public')->put('gallery/test.png', 'sample-image-bytes');
         Storage::disk('public')->put('branding/hero.webp', 'hero-image-bytes');
@@ -327,9 +367,46 @@ class SalonWorkflowTest extends TestCase
             $this->assertSame('sample-image-bytes', Storage::disk('public')->get('gallery/test.png'));
             $this->assertSame('hero-image-bytes', Storage::disk('public')->get('branding/hero.webp'));
             $this->assertSame('split', Salon::current()->appearance['layout']);
+            $this->assertDatabaseCount('google_calendar_events', 1);
+            $this->assertDatabaseCount('google_calendar_busies', 1);
+            $this->assertSame('test-refresh-token', GoogleCalendarConnection::sole()->refresh_token);
+            $this->assertDatabaseCount('guest_passes', 1);
+            $this->assertDatabaseCount('pass_uses', 1);
+            $this->assertDatabaseCount('loyalty_entries', 1);
+            $this->assertDatabaseCount('waitlist_entries', 1);
+            $this->assertDatabaseCount('sms_outbox_messages', 1);
         } finally {
             if (file_exists($path)) {
                 unlink($path);
+            }
+        }
+    }
+
+    public function test_legacy_backup_restores_without_optional_module_tables(): void
+    {
+        $booking = $this->create();
+        $path = storage_path('framework/testing-'.Str::uuid().'.backup');
+        $legacyPath = storage_path('framework/testing-'.Str::uuid().'.backup');
+        try {
+            $this->artisan('salon:backup', ['--path' => $path])->assertSuccessful();
+            $snapshot = json_decode(Crypt::decryptString(file_get_contents($path)), true, 512, JSON_THROW_ON_ERROR);
+            $snapshot['format'] = 1;
+            $snapshot['tables'] = array_intersect_key($snapshot['tables'], array_flip(BackupSalon::LEGACY_TABLES));
+            unset($snapshot['tables']['salons'][0]['features'], $snapshot['tables']['services'][0]['loyalty_points'], $snapshot['tables']['bookings'][0]['sms_opt_in']);
+            file_put_contents($legacyPath, Crypt::encryptString(json_encode($snapshot, JSON_THROW_ON_ERROR)));
+            foreach (array_reverse(BackupSalon::TABLES) as $table) {
+                DB::table($table)->delete();
+            }
+
+            $this->artisan('salon:restore', ['path' => $legacyPath])->assertSuccessful();
+            $this->assertSame($booking->manage_token, Booking::sole()->manage_token);
+            $this->assertDatabaseCount('guest_passes', 0);
+            $this->assertDatabaseCount('sms_outbox_messages', 0);
+        } finally {
+            foreach ([$path, $legacyPath] as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
             }
         }
     }
