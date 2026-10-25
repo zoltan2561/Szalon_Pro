@@ -128,6 +128,10 @@ A prémium arculat képernyőképei és összehasonlításai: `output/design/`. 
 
 Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott tárhely telepítési próbája élesítés előtt szükséges. Fizetés, készlet, piactér, több telephely és közös kezelőhelyiség kapacitáskezelése későbbi modul.
 
+## Változásnapló
+
+- 1.2.1 (2026-10-25): javított magyar telefonszám- és mezővalidáció, konfigurációval elszigetelt telepítőtesztek, olvashatóbb adminszövegek, kikapcsolt SMS-modulhoz igazított diagnosztika, névvel és forrással kiegészített foglalásrészletek, billentyűzettel elérhető idővonal és múltbeli dátum magyarázata.
+
 ## Opcionális SMS (Twilio)
 
 A Modulok oldalon külön kapcsolható a megosztás és QR, a meg nem jelenés elleni védelem, a telefonközpontú foglalás, az értékeléskérés, az ajándékutalvány, a statisztika és a bizonylatkezelés. Alapból kikapcsoltak. Az elérhetőség, lemondási szabály és értékeléskérés itt állítható be; az utalvány kiadása és beváltása tulajdonosi művelet. Az online/admin foglalási csatorna a meglévő `bookings.source`, a Google/Facebook/Instagram/QR/SMS eredet a külön `referral_source` mezőben marad meg.
