@@ -13,4 +13,5 @@
 @endforeach
 <button class="button">Modulok mentése</button>
 </form>
+@if($salon->featureEnabled('no_show_protection'))<form method="post" action="{{ route('admin.policy.no-show') }}" class="panel">@csrf<h2>Meg nem jelenés szabálya</h2><p>Az egyező e-mail vagy telefonszám alapján számolunk, a vendégkartonokat nem vonjuk össze. Közös családi elérhetőségnél is lehet egyezés; a kezelő telefonon mindig felvehet foglalást.</p><label>Korlátozás ennyi meg nem jelenés után (0 = nincs korlátozás)<input name="no_show_limit" type="number" min="0" max="100" value="{{ $salon->no_show_limit }}" required></label><label>Online lemondási határidő (óra)<input type="number" name="cancel_notice_hours" min="0" max="168" value="{{ $salon->cancel_notice_hours }}" required></label><label>Foglalási feltételek<textarea name="terms" required maxlength="5000">{{ $salon->terms }}</textarea></label><button class="button">Szabályok mentése</button></form>@endif
 @endsection

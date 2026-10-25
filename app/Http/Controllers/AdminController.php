@@ -51,7 +51,7 @@ class AdminController extends Controller
             $day = $day->startOfWeek(CarbonImmutable::MONDAY);
         }
         $end = $week ? $day->addDays(7) : $day->addDay();
-        $bookings = Booking::visibleTo($request->user())->with('guest', 'staff')->where('starts_at', '>=', $day->utc())->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
+        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff'])->where('starts_at', '>=', $day->utc())->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
         $next = Booking::visibleTo($request->user())->with('guest', 'staff')->where('status', 'confirmed')->where('starts_at', '>=', now())->orderBy('starts_at')->first();
         $visibleStaffIds = $request->user()->role === 'owner' ? Staff::pluck('id')->all() : [$request->user()->staff_id];
         $calendarStaff = Staff::whereIn('id', $visibleStaffIds)->orderBy('name')->get();
@@ -144,7 +144,7 @@ class AdminController extends Controller
         $benefitData = $request->user()->role === 'owner' && (Salon::current()->featureEnabled('passes') || Salon::current()->featureEnabled('loyalty'))
             ? app(BenefitsService::class)->guestData($guest) : [];
 
-        return view('admin.guest', compact('guest', 'bookings', 'duplicates') + $benefitData);
+        return view('admin.guest', compact('guest', 'bookings', 'duplicates') + $benefitData + ['noShowCount' => $bookings->where('status', 'no_show')->count()]);
     }
 
     public function notes(Guest $guest, Request $request): RedirectResponse

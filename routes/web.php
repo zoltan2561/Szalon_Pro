@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BenefitsController;
+use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
@@ -37,6 +38,7 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::post('/foglalasi-szabalyok/no-show', [BookingPolicyController::class, 'noShow'])->name('policy.no-show');
         Route::get('/megosztas', [SharingController::class, 'index'])->name('sharing.index');
         Route::get('/megosztas/qr', [SharingController::class, 'qr'])->name('sharing.qr');
         Route::get('/modulok', [ModuleSettingsController::class, 'index'])->name('modules.index');

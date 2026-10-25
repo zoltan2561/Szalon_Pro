@@ -13,6 +13,7 @@ class ModuleSettingsController extends Controller
 {
     /** @var array<string, array{title: string, description: string}> */
     public const Modules = [
+        'no_show_protection' => ['title' => 'Meg nem jelenés elleni védelem', 'description' => 'Beállítható korlátozás egyező elérhetőséghez tartozó korábbi meg nem jelenések után.'],
         'sharing' => ['title' => 'Megosztás és QR', 'description' => 'Foglalási linkek és letölthető QR-kódok, forrás szerinti összesítéssel.'],
         'waitlist' => ['title' => 'Várólista', 'description' => 'A felszabaduló időpontokra váró vendégek kezelése a munkafelületen.'],
         'sms' => ['title' => 'SMS-emlékeztetők', 'description' => 'Telefonos emlékeztetők a megadott számmal rendelkező vendégeknek. A tényleges küldéshez SMS-szolgáltató kapcsolata kell.'],

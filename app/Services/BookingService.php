@@ -37,6 +37,9 @@ class BookingService
                 return $old;
             }
             $salon = Salon::current();
+            if (! $actor && app(NoShowPolicy::class)->blocks($data, $rebookingGuest)) {
+                $this->error('Kérjük, a következő időpontodat telefonon egyeztesd a szalonnal: '.$salon->phone.'. Szívesen segítünk.');
+            }
             if (! $actor && (! $salon->published || ! $this->availability->ready())) {
                 $this->error('Az online foglalás jelenleg nem elérhető.');
             }

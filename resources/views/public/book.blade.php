@@ -42,6 +42,7 @@
                 <hr>
                 <h3 id="booking-terms">Ha közbejön valami</h3>
                 <p class="preserve">{{ $salon->terms }}</p>
+                @if($salon->featureEnabled('no_show_protection'))<p>Online módosítás és lemondás: legalább {{ $salon->cancel_notice_hours }} órával az időpont előtt. Egyeztetés: <a href="tel:{{ preg_replace('/[^+0-9]/', '', $salon->phone) }}">{{ $salon->phone }}</a>.</p>@endif
                 @unless($salon->demo)<p class="muted">A visszaigazolást és a foglalásod kezelési linkjét e-mailben küldjük.</p>@endunless
             </aside>
             <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit">
