@@ -54,6 +54,8 @@ class LocalDemoProfilesTest extends TestCase
             foreach (['admin.today', 'admin.guests', 'admin.notifications', 'admin.sharing.index', 'admin.vouchers.index', 'admin.statistics.index', 'admin.billing.index', 'admin.modules.index'] as $route) {
                 $this->actingAs($owner)->get(route($route))->assertOk();
             }
+            $this->get(route('admin.modules.index'))->assertOk()->assertSee('name="contact_mode"', false);
+            $this->get(route('admin.booking', Booking::where('status', 'completed')->firstOrFail()))->assertOk()->assertSee('Nyugta vagy számla')->assertSee('Ajándékutalvány beváltása');
             $this->get(route('admin.calendar', ['date' => $day->toDateString()]))->assertOk()->assertSee('Hosszú Nevű Szintetikus Bemutató Vendég')->assertSee('calendar-agenda-item', false);
             $this->get(route('admin.calendar', ['date' => $day->toDateString(), 'view' => 'week']))->assertOk()->assertSee('calendar-week-booking', false);
             $this->assertSame(27, Booking::count());

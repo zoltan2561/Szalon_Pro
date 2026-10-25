@@ -39,7 +39,7 @@
     <div><a class="brand footer-brand" href="{{ route('home') }}"><img class="brand-logo {{ $brand['custom_logo'] ? 'custom-logo' : 'default-logo' }}" src="{{ $brand['logo'] }}" alt="" width="40" height="40"><span>{{ $salon->name }}</span></a><p>{{ $salon->tagline }}</p></div>
     <div><a href="{{ route('privacy') }}">Adatkezelés</a><a href="{{ route('login') }}">Munkatársi belépés</a><span class="muted">SzalonPRO</span></div>
 </footer>
-@unless(request()->routeIs('booking.*', 'login', 'privacy'))
+@unless(request()->routeIs('booking.*', 'vouchers.*', 'login', 'privacy'))
 <div class="mobile-booking-bar"><span>{{ $salon->demo ? $brand['demo_copy']['mobile_cta'] : 'Egy kis idő magadra.' }}</span><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div>
 @endunless
 <script src="{{ asset('salon.js') }}" defer></script>

@@ -28,6 +28,7 @@ Thumbs.db
 /.bootstrap/
 /.playwright-cli/
 /output/
+/storage/framework/qa2-*.sqlite
 /.env.*
 !/.env.example
 /storage/app/private/backups/

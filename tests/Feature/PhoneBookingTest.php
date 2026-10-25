@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\Guest;
 use App\Models\Salon;
 use App\Models\Service;
 use App\Services\SmsNotificationSender;
@@ -29,6 +30,7 @@ class PhoneBookingTest extends TestCase
         $this->post(route('booking.store'), $data)->assertRedirect(route('booking.success'));
         $booking = Booking::firstOrFail();
         $this->assertNull($booking->guest->email);
+        $this->get(route('booking.success'))->assertOk()->assertSee('SMS-visszaigazolás')->assertSee(route('booking.manage', $booking->manage_token));
         $this->assertDatabaseHas('sms_outbox_messages', ['booking_id' => $booking->id, 'kind' => 'confirmation']);
         $this->assertSame(1, app(SmsNotificationSender::class)->sendDue());
         Http::assertSent(fn ($request) => $request['To'] === '+36301234567' && str_contains($request['Body'], route('booking.manage', $booking->manage_token)));
@@ -43,5 +45,17 @@ class PhoneBookingTest extends TestCase
         Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => 'both']);
         $response = $this->postJson(route('booking.store'), ['phone' => '123']);
         $response->assertJsonValidationErrors('email');
+    }
+
+    public function test_phone_booking_without_queued_confirmation_still_exposes_its_private_management_link_to_its_session(): void
+    {
+        Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => 'phone']);
+        $booking = Booking::factory()->create(['guest_id' => Guest::factory()->create(['email' => null, 'phone' => '+36305550001'])->id]);
+        $this->withSession(['last_booking' => $booking->id])->get(route('booking.success'))
+            ->assertOk()->assertSee('Automatikus visszaigazolás nem küldhető')
+            ->assertSee(route('booking.manage', $booking->manage_token))->assertDontSee('küldése sorba került')
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->flushSession();
+        $this->get(route('booking.success'))->assertNotFound();
     }
 }

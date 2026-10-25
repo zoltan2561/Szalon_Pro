@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Salon;
 use App\Models\Service;
+use App\Models\SmsOutboxMessage;
 use App\Models\Staff;
 use App\Services\Availability;
 use App\Services\BookingLinks;
@@ -108,8 +109,9 @@ class PublicController extends Controller
     public function success(Request $request): View
     {
         $booking = Booking::with('guest', 'staff')->findOrFail($request->session()->get('last_booking'));
+        $confirmationChannel = $booking->guest->email ? 'email' : (SmsOutboxMessage::where('booking_id', $booking->id)->where('kind', 'confirmation')->exists() ? 'sms' : null);
 
-        return view('public.success', compact('booking'));
+        return view('public.success', compact('booking', 'confirmationChannel'));
     }
 
     public function manage(string $token, Request $request, Availability $availability): View

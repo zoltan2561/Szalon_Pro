@@ -130,6 +130,10 @@ Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott t
 
 ## Opcionális SMS (Twilio)
 
+A Modulok oldalon külön kapcsolható a megosztás és QR, a meg nem jelenés elleni védelem, a telefonközpontú foglalás, az értékeléskérés, az ajándékutalvány, a statisztika és a bizonylatkezelés. Alapból kikapcsoltak. Az elérhetőség, lemondási szabály és értékeléskérés itt állítható be; az utalvány kiadása és beváltása tulajdonosi művelet. Az online/admin foglalási csatorna a meglévő `bookings.source`, a Google/Facebook/Instagram/QR/SMS eredet a külön `referral_source` mezőben marad meg.
+
+A QA2 háromprofilos, 27 foglalással feltöltött helyi próbája és a 320/390/768/1440 px-es képek az `output/playwright/qa2-20261025/` alatt találhatók. A szintetikus adatbázisok külön állnak a meglévő demóktól. A helyi tesztek nem igazolják a valódi szolgáltatói kézbesítést vagy az éles adatbázis kompatibilitását.
+
 A tulajdonosi Modulok oldalon kapcsolható be. Az üzemeltető állítsa be a `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` és `TWILIO_SENDER` konfigurációt; a titkos értékeket ne küldje dokumentációba vagy naplóba. A feladó és a célország legyen engedélyezve a Twilio-fiókban. A `salon:sms-notify` parancsot az időzítő percenként futtatja. A foglalásban külön hozzájárulás kell az SMS-emlékeztetőhöz. Az „átvette” állapot nem kézbesítés: valódi telefonszámos próba külön szükséges. Bizonytalan kimenetelnél előbb a szolgáltatónál egyeztess, ne küldj vakon újra.
 
 ## Működési ellenőrzés
