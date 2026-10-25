@@ -9,6 +9,7 @@ use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ReviewConsentController;
 use App\Http\Controllers\SharingController;
+use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,7 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::get('/statisztika', [StatisticsController::class, 'index'])->name('statistics.index');
         Route::get('/utalvanyok', [VoucherController::class, 'index'])->name('vouchers.index');
         Route::post('/utalvanyok', [VoucherController::class, 'store'])->name('vouchers.store');
         Route::get('/utalvanyok/{voucher}/qr', [VoucherController::class, 'qr'])->name('vouchers.qr');

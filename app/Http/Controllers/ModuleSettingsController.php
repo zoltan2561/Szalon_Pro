@@ -13,6 +13,7 @@ class ModuleSettingsController extends Controller
 {
     /** @var array<string, array{title: string, description: string}> */
     public const Modules = [
+        'statistics' => ['title' => 'Statisztika', 'description' => 'Heti és havi foglalási arányok, források, szolgáltatások és munkatársi kihasználtság.'],
         'vouchers' => ['title' => 'Ajándékutalványok', 'description' => 'Kiadás, részbeváltható egyenleg, nyomtatható kártya és naplózott sztornó; online fizetés nélkül.'],
         'reviews' => ['title' => 'Értékelés kérése', 'description' => 'Semleges Google-értékeléskérés, külön hozzájárulással, leiratkozással és 90 napos gyakoriságkorláttal.'],
         'phone_booking' => ['title' => 'Telefonközpontú foglalás', 'description' => 'Kiválasztható kötelező elérhetőség; e-mail nélkül SMS-ben is küldhető a kezelési link.'],
