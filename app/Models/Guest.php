@@ -24,7 +24,7 @@ class Guest extends Model
 
     protected function casts(): array
     {
-        return ['notes' => 'encrypted', 'anonymized_at' => 'datetime'];
+        return ['notes' => 'encrypted', 'anonymized_at' => 'datetime', 'review_opt_in_at' => 'immutable_datetime', 'review_opt_out_at' => 'immutable_datetime', 'last_review_requested_at' => 'immutable_datetime'];
     }
 
     public function bookings(): HasMany

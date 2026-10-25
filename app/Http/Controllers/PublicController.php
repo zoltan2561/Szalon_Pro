@@ -139,6 +139,7 @@ class PublicController extends Controller
     public function bookingData(Request $request, bool $manual = false): array
     {
         $mode = Salon::current()->featureEnabled('phone_booking') ? Salon::current()->contact_mode : 'email';
+        $reviewConsent = $request->validate(['review_opt_in' => 'sometimes|boolean']);
         $emailRequired = ! $manual && in_array($mode, ['email', 'both'], true);
         $phoneRequired = ! $manual && in_array($mode, ['phone', 'both'], true);
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
@@ -151,7 +152,7 @@ class PublicController extends Controller
             ? ($request->validate(['referral_source' => ['nullable', Rule::in(BookingLinks::Sources)]])['referral_source'] ?? null) : null;
         [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
 
-        return $data;
+        return $data + ['review_opt_in' => Salon::current()->featureEnabled('reviews') && (bool) ($reviewConsent['review_opt_in'] ?? false)];
     }
 
     private function splitSlot(string $slot): array

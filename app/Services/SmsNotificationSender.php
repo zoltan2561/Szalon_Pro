@@ -98,6 +98,7 @@ class SmsNotificationSender
         }
 
         return match ($message->kind) {
+            'review' => app(ReviewRequests::class)->eligible($booking, $booking->guest),
             'reminder' => $booking->sms_opt_in && $booking->status === 'confirmed' && $booking->starts_at->isFuture(),
             'confirmation', 'changed' => Salon::current()->featureEnabled('phone_booking') && ! $booking->guest->email && $booking->status === 'confirmed',
             'cancelled' => Salon::current()->featureEnabled('phone_booking') && ! $booking->guest->email && $booking->status === 'cancelled',
@@ -113,6 +114,9 @@ class SmsNotificationSender
 
         if ($message->kind === 'reminder') {
             return $name.': időpont-emlékeztető '.$time.'.';
+        }
+        if ($message->kind === 'review') {
+            return $name.': Ha szeretnéd, oszd meg őszinte véleményed: '.$salon->review_url.' Leiratkozás: '.app(ReviewRequests::class)->unsubscribeUrl($booking->guest);
         }
         $label = ['confirmation' => 'Foglalás visszaigazolva', 'changed' => 'Időpont módosult', 'cancelled' => 'Foglalás lemondva'][$message->kind];
 

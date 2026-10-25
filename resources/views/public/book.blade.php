@@ -71,6 +71,7 @@
                     </div>
                 @endif
                 @if($smsReady && (!$rebookingGuest || $rebookingGuest->phone))<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>SMS-emlékeztetőt kérek a megadott telefonszámra.</span></label>@endif
+                @if($salon->featureEnabled('reviews'))<label class="check"><input type="checkbox" name="review_opt_in" value="1" @checked(old('review_opt_in'))><span>Kérek a látogatás után egy semleges értékeléskérő e-mailt vagy SMS-t a szalontól, legfeljebb 90 naponta. Bármikor leiratkozhatok; a foglalásom ettől független.</span></label>@endif
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
                 <p class="muted">A választott időpont mellett láthatod a szakember nevét. A foglalás a véglegesítéskor válik érvényessé.</p>
                 @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif

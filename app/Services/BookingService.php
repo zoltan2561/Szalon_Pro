@@ -29,6 +29,9 @@ class BookingService
             if (! empty($data['referral_source'])) {
                 $fingerprint = hash('sha256', $fingerprint.':'.$data['referral_source']);
             }
+            if (! empty($data['review_opt_in'])) {
+                $fingerprint = hash('sha256', $fingerprint.':review-consent');
+            }
             if ($old = Booking::where('request_key', $key)->first()) {
                 if (! hash_equals($old->request_hash, $fingerprint)) {
                     $this->error('Ez a kérésazonosító már más foglaláshoz tartozik.');
@@ -76,6 +79,9 @@ class BookingService
             }
             if ($salon->featureEnabled('sms') && ($data['sms_opt_in'] ?? false) && ! $this->smsGateway->normalizeNumber($guest->phone)) {
                 throw ValidationException::withMessages(['phone' => 'SMS-emlékeztetőhöz érvényes, országkóddal megadható telefonszám szükséges.']);
+            }
+            if ($salon->featureEnabled('reviews') && ($data['review_opt_in'] ?? false)) {
+                $guest->update(['review_opt_in_at' => now(), 'review_opt_out_at' => null]);
             }
             $token = bin2hex(random_bytes(32));
             $booking = Booking::create([
@@ -151,6 +157,9 @@ class BookingService
             $this->event($booking, $data['action'], ['before' => $before, 'after' => $booking->only(array_keys($before))], $actor);
             OutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             SmsOutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
+            if ($data['action'] === 'complete') {
+                app(ReviewRequests::class)->queue($booking);
+            }
             if (in_array($data['action'], ['move', 'cancel'])) {
                 $this->notify($booking, $data['action'] === 'move' ? 'changed' : 'cancelled');
                 $this->smsNotifications->queue($booking, $data['action'] === 'move' ? 'changed' : 'cancelled');

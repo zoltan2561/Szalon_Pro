@@ -196,6 +196,7 @@ class AdminController extends Controller
             }
             $guest->update(['name' => 'Törölt vendég #'.$guest->id, 'email' => 'deleted-'.$guest->id.'@example.invalid', 'phone' => null, 'notes' => null, 'anonymized_at' => now()]);
             $guest->bookings()->update(['token_expires_at' => now(), 'manage_token' => Crypt::encryptString(bin2hex(random_bytes(32)))]);
+            $guest->update(['review_opt_in_at' => null, 'review_opt_out_at' => now()]);
             OutboxMessage::whereIn('booking_id', $guest->bookings()->select('id'))->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             SmsOutboxMessage::whereIn('booking_id', $guest->bookings()->select('id'))->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             WaitlistEntry::where('guest_id', $guest->id)->where('status', 'waiting')->update(['status' => 'cancelled']);

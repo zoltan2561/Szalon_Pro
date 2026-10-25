@@ -13,6 +13,7 @@ class ModuleSettingsController extends Controller
 {
     /** @var array<string, array{title: string, description: string}> */
     public const Modules = [
+        'reviews' => ['title' => 'Értékelés kérése', 'description' => 'Semleges Google-értékeléskérés, külön hozzájárulással, leiratkozással és 90 napos gyakoriságkorláttal.'],
         'phone_booking' => ['title' => 'Telefonközpontú foglalás', 'description' => 'Kiválasztható kötelező elérhetőség; e-mail nélkül SMS-ben is küldhető a kezelési link.'],
         'no_show_protection' => ['title' => 'Meg nem jelenés elleni védelem', 'description' => 'Beállítható korlátozás egyező elérhetőséghez tartozó korábbi meg nem jelenések után.'],
         'sharing' => ['title' => 'Megosztás és QR', 'description' => 'Foglalási linkek és letölthető QR-kódok, forrás szerinti összesítéssel.'],

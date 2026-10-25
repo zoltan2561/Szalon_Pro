@@ -7,11 +7,14 @@ use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\ReviewConsentController;
 use App\Http\Controllers\SharingController;
 use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'show'])->middleware('signed')->name('reviews.unsubscribe');
+Route::post('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'unsubscribe'])->middleware('signed')->name('reviews.unsubscribe.update');
 Route::get('/adatkezeles', fn () => view('public.privacy'))->name('privacy');
 Route::get('/foglalas', [PublicController::class, 'book'])->name('booking.form');
 Route::post('/foglalas', [PublicController::class, 'store'])->middleware('throttle:booking')->name('booking.store');
@@ -38,6 +41,7 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::post('/ertekeles-beallitasok', [BookingPolicyController::class, 'reviews'])->name('policy.reviews');
         Route::post('/foglalasi-szabalyok/elerhetoseg', [BookingPolicyController::class, 'contact'])->name('policy.contact');
         Route::post('/foglalasi-szabalyok/no-show', [BookingPolicyController::class, 'noShow'])->name('policy.no-show');
         Route::get('/megosztas', [SharingController::class, 'index'])->name('sharing.index');

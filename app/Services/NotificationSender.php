@@ -32,10 +32,15 @@ class NotificationSender
                 if (in_array($transport, ['log', 'failover', 'roundrobin'])) {
                     throw new \LogicException('Private links require a direct, non-logging transport.');
                 }
-                Mail::send('emails.booking', ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind], function ($mail) use ($booking, $message): void {
-                    $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra'];
+                $unsubscribeUrl = $message->kind === 'review' ? app(ReviewRequests::class)->unsubscribeUrl($booking->guest) : null;
+                Mail::send($message->kind === 'review' ? 'emails.review' : 'emails.booking', ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl], function ($mail) use ($booking, $message, $unsubscribeUrl): void {
+                    $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?'];
                     $mail->to($booking->guest->email)->subject($titles[$message->kind].' – '.Salon::current()->name);
                     $mail->getSymfonyMessage()->getHeaders()->addIdHeader('Message-ID', 'booking-'.$booking->id.'-'.$message->revision.'-'.$message->kind.'@'.parse_url(config('app.url'), PHP_URL_HOST));
+                    if ($unsubscribeUrl) {
+                        $mail->getSymfonyMessage()->getHeaders()->addTextHeader('List-Unsubscribe', '<'.$unsubscribeUrl.'>');
+                        $mail->getSymfonyMessage()->getHeaders()->addTextHeader('List-Unsubscribe-Post', 'List-Unsubscribe=One-Click');
+                    }
                 });
                 $this->finish($message, ['status' => 'sent', 'sent_at' => now(), 'error_code' => null]);
                 $count++;
@@ -74,6 +79,10 @@ class NotificationSender
 
     private function current(OutboxMessage $message, Booking $booking): bool
     {
+        if ($message->kind === 'review') {
+            return $message->revision === $booking->revision && app(ReviewRequests::class)->eligible($booking, $booking->guest);
+        }
+
         return $message->revision === $booking->revision && ($message->kind !== 'reminder' || ($booking->status === 'confirmed' && $booking->starts_at->isFuture()));
     }
 

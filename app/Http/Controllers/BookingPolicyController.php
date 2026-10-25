@@ -9,6 +9,14 @@ use Illuminate\Validation\Rule;
 
 class BookingPolicyController extends Controller
 {
+    public function reviews(Request $request): RedirectResponse
+    {
+        abort_unless(Salon::current()->featureEnabled('reviews'), 404);
+        Salon::current()->update($request->validate(['review_url' => 'required|url:https|max:1000', 'review_delay_hours' => 'required|integer|min:0|max:168']));
+
+        return back()->with('success', 'Az értékeléskérés beállításait elmentettük.');
+    }
+
     public function contact(Request $request): RedirectResponse
     {
         abort_unless(Salon::current()->featureEnabled('phone_booking'), 404);
