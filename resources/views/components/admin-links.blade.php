@@ -2,6 +2,7 @@
 <a href="{{ route('admin.waitlist.index') }}" @if(request()->routeIs('admin.waitlist.*')) aria-current="page" @endif><x-icon name="list" />Várólista</a>
 @endif
 @if(auth()->user()->role === 'owner')
+@if($salon->featureEnabled('sharing'))<a href="{{ route('admin.sharing.index') }}" @if(request()->routeIs('admin.sharing.*')) aria-current="page" @endif><x-icon name="arrow-up-right" />Megosztás</a>@endif
 @if($salon->featureEnabled('passes') || $salon->featureEnabled('loyalty'))
 <a href="{{ route('admin.benefits.index') }}" @if(request()->routeIs('admin.benefits.*')) aria-current="page" @endif><x-icon name="sparkle" />Bérletek és hűségpontok</a>
 @endif

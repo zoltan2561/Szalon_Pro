@@ -1,6 +1,7 @@
 @extends('layouts.public')
 @section('title', 'Időpontfoglalás')
 @section('content')
+@php($referralSource = $salon->featureEnabled('sharing') && in_array(request('utm_source', old('referral_source')), \App\Services\BookingLinks::Sources, true) ? request('utm_source', old('referral_source')) : null)
 <div class="booking-wrap wrap">
     <p class="eyebrow">EGY LÉPÉSSEL KÖZELEBB</p>
     <h1 class="page-title">{{ $salon->demo ? $brand['demo_copy']['booking_heading'] : 'A következő énidőd.' }}</h1>
@@ -12,6 +13,7 @@
         <div class="booking-grid">
             <form method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
                 <p class="eyebrow">01 · VÁLASSZ</p>
+                @if($referralSource)<input type="hidden" name="utm_source" value="{{ $referralSource }}">@endif
                 <h2>Mit választasz?</h2>
                 <label>Szolgáltatás
                     <select name="service_id" required>
@@ -46,6 +48,7 @@
                 @csrf
                 <input type="hidden" name="service_id" value="{{ $service?->id }}">
                 <input type="hidden" name="request_key" value="{{ $requestKey }}">
+                @if($referralSource)<input type="hidden" name="referral_source" value="{{ $referralSource }}">@endif
                 <p class="eyebrow">02 · IDŐPONT</p>
                 <h2>Mikor érkezel?</h2>
                 <p class="booking-date-label">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>

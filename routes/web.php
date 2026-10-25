@@ -6,6 +6,7 @@ use App\Http\Controllers\BenefitsController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\SharingController;
 use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,8 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::get('/megosztas', [SharingController::class, 'index'])->name('sharing.index');
+        Route::get('/megosztas/qr', [SharingController::class, 'qr'])->name('sharing.qr');
         Route::get('/modulok', [ModuleSettingsController::class, 'index'])->name('modules.index');
         Route::post('/modulok', [ModuleSettingsController::class, 'update'])->name('modules.update');
         Route::get('/berletek-huseg', [BenefitsController::class, 'index'])->name('benefits.index');

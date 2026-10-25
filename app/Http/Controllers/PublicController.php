@@ -7,6 +7,7 @@ use App\Models\Salon;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Services\Availability;
+use App\Services\BookingLinks;
 use App\Services\BookingService;
 use App\Services\Branding;
 use App\Services\SmsGateway;
@@ -140,6 +141,8 @@ class PublicController extends Controller
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
             'email' => ($manual ? 'nullable' : 'required').'|email:rfc|max:200', 'phone' => 'nullable|string|max:40', 'request_key' => 'required|uuid',
             'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
+        $data['referral_source'] = Salon::current()->featureEnabled('sharing')
+            ? ($request->validate(['referral_source' => ['nullable', Rule::in(BookingLinks::Sources)]])['referral_source'] ?? null) : null;
         [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
 
         return $data;

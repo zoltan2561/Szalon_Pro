@@ -26,6 +26,9 @@ class BookingService
             Salon::whereKey(1)->increment('lock_version');
             $fingerprint = hash('sha256', json_encode([$data['service_id'], $data['staff_id'], $data['starts_at'], $data['guest_id'] ?? $rebookingGuest?->id, $data['waitlist_entry_id'] ?? null, $data['name'] ?? null, $data['email'] ?? null, $data['phone'] ?? null, (bool) ($data['sms_opt_in'] ?? false), $actor?->id]));
             $key = ($actor ? 'admin:'.$actor->id.':' : 'public:').$data['request_key'];
+            if (! empty($data['referral_source'])) {
+                $fingerprint = hash('sha256', $fingerprint.':'.$data['referral_source']);
+            }
             if ($old = Booking::where('request_key', $key)->first()) {
                 if (! hash_equals($old->request_hash, $fingerprint)) {
                     $this->error('Ez a kérésazonosító már más foglaláshoz tartozik.');
@@ -73,6 +76,7 @@ class BookingService
             }
             $token = bin2hex(random_bytes(32));
             $booking = Booking::create([
+                'referral_source' => $salon->featureEnabled('sharing') && in_array($data['referral_source'] ?? null, BookingLinks::Sources, true) ? $data['referral_source'] : null,
                 'service_id' => $service->id, 'staff_id' => $staff->id, 'guest_id' => $guest->id, 'status' => 'confirmed', 'revision' => 1,
                 'service_name' => $service->name, 'duration_minutes' => $service->duration_minutes, 'price' => $service->price, 'price_kind' => $service->price_kind,
                 'buffer_before' => $service->buffer_before, 'buffer_after' => $service->buffer_after,
