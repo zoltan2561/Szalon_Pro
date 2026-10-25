@@ -2,6 +2,12 @@
 
 return [
     'accepted' => 'A(z) :attribute elfogadása szükséges.',
+    'boolean' => 'A(z) :attribute értéke igen vagy nem lehet.',
+    'required_without' => 'A(z) :attribute megadása szükséges, ha a(z) :values nincs megadva.',
+    'url' => 'A(z) :attribute érvényes webcím legyen.',
+    'confirmed' => 'A(z) :attribute megerősítése nem egyezik.',
+    'same' => 'A(z) :attribute és :other mező egyezzen meg.',
+    'after_or_equal' => 'A(z) :attribute nem lehet korábbi, mint :date.',
     'required' => 'A(z) :attribute megadása kötelező.',
     'required_if' => 'A(z) :attribute megadása kötelező ennél a műveletnél.',
     'required_with' => 'A(z) :attribute megadása szükséges a kapcsolódó adatokhoz.',
