@@ -71,6 +71,7 @@ class OperationsHealth
     public function warnings(): array
     {
         $warnings = [];
+        $smsEnabled = Schema::hasTable('salons') && (Salon::find(1)?->featureEnabled('sms') ?? false);
         if (Schema::hasTable('fiscal_documents')) {
             $billingIssues = DB::table('fiscal_documents')->where(function ($query): void {
                 $query->whereIn('status', ['failed', 'uncertain', 'pending'])->orWhere(fn ($stale) => $stale->where('status', 'sending')->where('last_attempt_at', '<', now()->subMinutes(5)));
@@ -86,6 +87,9 @@ class OperationsHealth
             $warnings['debug'] = 'Az éles környezet hibakeresési módja bekapcsolva maradt.';
         }
         foreach (['email' => 'E-mail', 'sms' => 'SMS'] as $channel => $label) {
+            if ($channel === 'sms' && ! $smsEnabled) {
+                continue;
+            }
             $lastRun = $this->lastRun($channel);
             if (! $lastRun || $lastRun->lt(now()->subMinutes(5))) {
                 $warnings['heartbeat_'.$channel] = $label.': az időzített feldolgozás több mint öt perce nem jelentkezett.';
@@ -108,7 +112,7 @@ class OperationsHealth
         if (! $mailReady || ! filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)) {
             $warnings['mail'] = 'A valódi e-mail-küldés nincs beállítva. A helyi levélpróba nem kézbesítés.';
         }
-        if (Schema::hasTable('salons') && Salon::current()->featureEnabled('sms') && ! app(SmsGateway::class)->configured()) {
+        if ($smsEnabled && ! app(SmsGateway::class)->configured()) {
             $warnings['sms'] = 'Az SMS-modul aktív, de a szolgáltató nincs beállítva.';
         }
         if (Schema::hasColumn('salons', 'billing_agent_key') && Salon::current()->featureEnabled('billing') && ! app(BillingService::class)->configured()) {

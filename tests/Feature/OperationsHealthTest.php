@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\OperationsHealth;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -39,6 +40,17 @@ class OperationsHealthTest extends TestCase
         $booking = Booking::factory()->create();
         OutboxMessage::create(['booking_id' => $booking->id, 'revision' => 1, 'kind' => 'confirmation', 'scheduled_at' => now()]);
         $this->artisan('salon:doctor')->expectsOutputToContain('due_email')->expectsOutputToContain('sms:')->assertFailed();
+    }
+
+    public function test_disabled_sms_does_not_require_its_own_heartbeat(): void
+    {
+        $health = app(OperationsHealth::class);
+        Cache::forget($health->heartbeatKey('sms'));
+        $this->artisan('salon:doctor')->assertSuccessful();
+        $this->assertArrayNotHasKey('heartbeat_sms', $health->warnings());
+        Salon::current()->update(['features' => ['sms' => true]]);
+        $this->assertArrayHasKey('heartbeat_sms', $health->warnings());
+        $this->artisan('salon:doctor')->expectsOutputToContain('heartbeat_sms')->assertFailed();
     }
 
     public function test_missing_migration_or_table_has_controlled_admin_response_instead_of_exception(): void
