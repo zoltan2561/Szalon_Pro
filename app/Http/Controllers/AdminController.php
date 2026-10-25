@@ -21,6 +21,7 @@ use App\Services\Availability;
 use App\Services\BenefitsService;
 use App\Services\BookingService;
 use App\Services\Branding;
+use App\Services\OperationsHealth;
 use App\Services\SmsGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -355,12 +356,14 @@ class AdminController extends Controller
         return back()->with('success', 'A beállításokat elmentettük.');
     }
 
-    public function notifications(SmsGateway $smsGateway): View
+    public function notifications(SmsGateway $smsGateway, OperationsHealth $health): View
     {
         return view('admin.notifications', [
             'messages' => OutboxMessage::orderByDesc('id')->paginate(30, ['*'], 'email_page'),
             'smsMessages' => SmsOutboxMessage::orderByDesc('id')->paginate(30, ['*'], 'sms_page'),
             'smsConfigured' => $smsGateway->configured(),
+            'dueCounts' => $health->dueCounts(),
+            'lastRuns' => ['email' => $health->lastRun('email'), 'sms' => $health->lastRun('sms')],
         ]);
     }
 

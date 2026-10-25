@@ -12,6 +12,8 @@
 @if(config('mail.default') === 'array')
 <div class="notice">Helyi levélpróba aktív. A rendszer nem küld valódi e-mailt.</div>
 @endif
+
+<section class="panel"><h2>Időzített feldolgozás</h2>@foreach(['email' => 'E-mail', 'sms' => 'SMS'] as $channel => $label)<p><strong>{{ $label }}</strong> · Utolsó futás: {{ $lastRuns[$channel]?->setTimezone('Europe/Budapest')->format('Y.m.d. H:i') ?? 'még nem ismert' }} (Budapest) · Esedékes sor: {{ $dueCounts[$channel] }}</p>@endforeach<p class="muted">Az utolsó futás nem kézbesítési igazolás; hibánál ellenőrizd a küldési naplót.</p></section>
 @if($salon->featureEnabled('sms') && !$smsConfigured)
 <div class="notice">Az SMS-modul be van kapcsolva, de nincs beállított szolgáltató. SMS nem kerül kiküldésre.</div>
 @endif

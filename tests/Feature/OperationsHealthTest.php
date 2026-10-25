@@ -7,6 +7,7 @@ use App\Models\OutboxMessage;
 use App\Models\Salon;
 use App\Models\User;
 use App\Services\OperationsHealth;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -58,5 +59,17 @@ class OperationsHealthTest extends TestCase
         config(['mail.default' => 'array', 'services.sms.auth_token' => 'must-not-render']);
         $owner = User::factory()->create(['role' => 'owner']);
         $this->actingAs($owner)->get(route('admin.today'))->assertOk()->assertSee('Működési figyelmeztetések')->assertDontSee('must-not-render');
+    }
+
+    public function test_notification_commands_record_separate_runs_and_page_shows_local_time_and_due_counts(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-25T07:00:00+00:00'));
+        $this->artisan('salon:notify')->assertSuccessful();
+        $this->artisan('salon:sms-notify')->assertSuccessful();
+        $health = app(OperationsHealth::class);
+        $this->assertSame(now()->timestamp, $health->lastRun('email')->timestamp);
+        $this->assertSame(now()->timestamp, $health->lastRun('sms')->timestamp);
+        $owner = User::factory()->create(['role' => 'owner']);
+        $this->actingAs($owner)->get(route('admin.notifications'))->assertOk()->assertSee('2026.10.25. 08:00')->assertSee('Esedékes sor: 0');
     }
 }

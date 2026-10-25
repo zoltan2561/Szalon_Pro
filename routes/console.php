@@ -2,12 +2,17 @@
 
 use App\Models\User;
 use App\Services\NotificationSender;
+use App\Services\OperationsHealth;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('salon:notify', function (NotificationSender $sender): void {
-    $this->info($sender->sendDue().' értesítés feldolgozva.');
+Artisan::command('salon:notify', function (NotificationSender $sender, OperationsHealth $health): void {
+    try {
+        $this->info($sender->sendDue().' értesítés feldolgozva.');
+    } finally {
+        $health->recordRun('email');
+    }
 })->purpose('Esedékes tartós értesítési sor feldolgozása');
 Schedule::command('salon:notify')->everyMinute()->withoutOverlapping();
 Schedule::command('salon:sms-notify')->everyMinute()->withoutOverlapping();
