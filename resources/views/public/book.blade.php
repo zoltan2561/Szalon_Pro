@@ -1,6 +1,7 @@
 @extends('layouts.public')
 @section('title', 'Időpontfoglalás')
 @section('content')
+@php($contactMode = $salon->featureEnabled('phone_booking') ? $salon->contact_mode : 'email')
 @php($referralSource = $salon->featureEnabled('sharing') && in_array(request('utm_source', old('referral_source')), \App\Services\BookingLinks::Sources, true) ? request('utm_source', old('referral_source')) : null)
 <div class="booking-wrap wrap">
     <p class="eyebrow">EGY LÉPÉSSEL KÖZELEBB</p>
@@ -43,7 +44,7 @@
                 <h3 id="booking-terms">Ha közbejön valami</h3>
                 <p class="preserve">{{ $salon->terms }}</p>
                 @if($salon->featureEnabled('no_show_protection'))<p>Online módosítás és lemondás: legalább {{ $salon->cancel_notice_hours }} órával az időpont előtt. Egyeztetés: <a href="tel:{{ preg_replace('/[^+0-9]/', '', $salon->phone) }}">{{ $salon->phone }}</a>.</p>@endif
-                @unless($salon->demo)<p class="muted">A visszaigazolást és a foglalásod kezelési linkjét e-mailben küldjük.</p>@endunless
+                @unless($salon->demo)<p class="muted">A visszaigazolást és a kezelési linket e-mailben, e-mail nélkül beállított SMS-kapcsolat esetén SMS-ben küldjük. A visszaigazoló oldalon is megkapod a linket.</p>@endunless
             </aside>
             <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit">
                 @csrf
@@ -65,14 +66,15 @@
                 @else
                     <label>Neved<input name="name" autocomplete="name" maxlength="120" value="{{ old('name') }}" required></label>
                     <div class="form-grid">
-                        <label>E-mail-cím<input type="email" name="email" autocomplete="email" value="{{ old('email') }}" required></label>
-                        <label>Telefonszám <span class="muted">(opcionális)</span><input type="tel" name="phone" autocomplete="tel" value="{{ old('phone') }}" maxlength="40"></label>
+                        <label>E-mail-cím @if($contactMode === 'phone')<span class="muted">(opcionális)</span>@endif<input type="email" inputmode="email" name="email" autocomplete="email" value="{{ old('email') }}" @required($contactMode !== 'phone')></label>
+                        <label>Telefonszám @if($contactMode === 'email')<span class="muted">(opcionális)</span>@endif<input type="tel" inputmode="tel" name="phone" autocomplete="tel" value="{{ old('phone') }}" maxlength="40" @required($contactMode !== 'email')></label>
                     </div>
                 @endif
                 @if($smsReady && (!$rebookingGuest || $rebookingGuest->phone))<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>SMS-emlékeztetőt kérek a megadott telefonszámra.</span></label>@endif
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
                 <p class="muted">A választott időpont mellett láthatod a szakember nevét. A foglalás a véglegesítéskor válik érvényessé.</p>
-                <button class="button full" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button>
+                @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif
+                <button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button>
             </form>
         </div>
     @endif

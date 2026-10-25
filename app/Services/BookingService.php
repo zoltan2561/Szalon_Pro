@@ -66,7 +66,7 @@ class BookingService
             }
             if ($rebookingGuest) {
                 $guest = Guest::findOrFail($rebookingGuest->id);
-                abort_if($guest->anonymized_at || ! $guest->email || mb_strtolower((string) ($data['email'] ?? '')) !== mb_strtolower($guest->email), 422);
+                abort_if($guest->anonymized_at || (! $guest->email && (! $salon->featureEnabled('phone_booking') || ! $guest->phone_normalized)) || mb_strtolower((string) ($data['email'] ?? '')) !== mb_strtolower((string) $guest->email), 422);
             } elseif (! empty($data['guest_id']) && $actor) {
                 $guest = Guest::findOrFail($data['guest_id']);
                 abort_unless($actor->role === 'owner' || $guest->bookings()->visibleTo($actor)->exists() || $waitlistEntry?->staff_id === $actor->staff_id, 403);
@@ -153,9 +153,7 @@ class BookingService
             SmsOutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             if (in_array($data['action'], ['move', 'cancel'])) {
                 $this->notify($booking, $data['action'] === 'move' ? 'changed' : 'cancelled');
-                if ($data['action'] === 'move') {
-                    $this->smsNotifications->queue($booking, 'changed');
-                }
+                $this->smsNotifications->queue($booking, $data['action'] === 'move' ? 'changed' : 'cancelled');
             }
 
             return $booking;

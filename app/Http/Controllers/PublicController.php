@@ -95,8 +95,8 @@ class PublicController extends Controller
             return redirect()->route('booking.form')->with('error', 'Az újrafoglalási link lejárt. Kérj új időpontot, vagy keresd a szalont.');
         }
         $data = $this->bookingData($request);
-        if (mb_strtolower(trim($data['email'])) !== mb_strtolower((string) $source->guest->email)
-            || trim($data['name']) !== $source->guest->name) {
+        if (mb_strtolower(trim((string) ($data['email'] ?? ''))) !== mb_strtolower((string) $source->guest->email)
+            || trim($data['name']) !== $source->guest->name || (! $source->guest->email && ($data['phone'] ?? null) !== $source->guest->phone)) {
             throw ValidationException::withMessages(['email' => 'A korábbi vendégadatok megváltoztak. Kérjük, keresd a szalont.']);
         }
         $booking = $bookings->create($data, null, $source->guest);
@@ -138,9 +138,15 @@ class PublicController extends Controller
 
     public function bookingData(Request $request, bool $manual = false): array
     {
+        $mode = Salon::current()->featureEnabled('phone_booking') ? Salon::current()->contact_mode : 'email';
+        $emailRequired = ! $manual && in_array($mode, ['email', 'both'], true);
+        $phoneRequired = ! $manual && in_array($mode, ['phone', 'both'], true);
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
-            'email' => ($manual ? 'nullable' : 'required').'|email:rfc|max:200', 'phone' => 'nullable|string|max:40', 'request_key' => 'required|uuid',
+            'email' => ($emailRequired ? 'required' : 'nullable').'|email:rfc|max:200', 'phone' => ($phoneRequired ? 'required' : 'nullable').'|string|max:40', 'request_key' => 'required|uuid',
             'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
+        if ($phoneRequired && ! app(SmsGateway::class)->normalizeNumber($data['phone'] ?? null)) {
+            throw ValidationException::withMessages(['phone' => '?rv?nyes, orsz?gk?ddal megadhat? telefonsz?m sz?ks?ges.']);
+        }
         $data['referral_source'] = Salon::current()->featureEnabled('sharing')
             ? ($request->validate(['referral_source' => ['nullable', Rule::in(BookingLinks::Sources)]])['referral_source'] ?? null) : null;
         [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
@@ -169,6 +175,6 @@ class PublicController extends Controller
             return null;
         }
 
-        return Booking::with('guest')->where('token_hash', hash('sha256', $token))->where('token_expires_at', '>', now())->whereHas('guest', fn ($query) => $query->whereNull('anonymized_at')->whereNotNull('email'))->first();
+        return Booking::with('guest')->where('token_hash', hash('sha256', $token))->where('token_expires_at', '>', now())->whereHas('guest', fn ($query) => $query->whereNull('anonymized_at')->where(fn ($contact) => $contact->whereNotNull('email')->when(Salon::current()->featureEnabled('phone_booking'), fn ($phone) => $phone->orWhereNotNull('phone_normalized'))))->first();
     }
 }

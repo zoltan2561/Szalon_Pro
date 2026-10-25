@@ -15,11 +15,14 @@ class SmsNotificationSender
     public function queue(Booking $booking, string $kind): void
     {
         $salon = Salon::current();
-        if (! in_array($kind, ['confirmation', 'changed'], true) || ! $booking->sms_opt_in || ! $salon->featureEnabled('sms') || ! $this->gateway->configured() || ! $this->gateway->normalizeNumber($booking->guest->phone)) {
+        if (! in_array($kind, ['confirmation', 'changed', 'cancelled'], true) || ! $salon->featureEnabled('sms') || ! $this->gateway->configured() || ! $this->gateway->normalizeNumber($booking->guest->phone)) {
             return;
         }
+        if ($salon->featureEnabled('phone_booking') && ! $booking->guest->email) {
+            SmsOutboxMessage::firstOrCreate(['booking_id' => $booking->id, 'revision' => $booking->revision, 'kind' => $kind], ['scheduled_at' => now()]);
+        }
         $due = $booking->starts_at->subHours($salon->reminder_hours);
-        if ($booking->status === 'confirmed' && $salon->reminder_hours > 0 && $due->isFuture()) {
+        if ($booking->sms_opt_in && $booking->status === 'confirmed' && $salon->reminder_hours > 0 && $due->isFuture()) {
             SmsOutboxMessage::firstOrCreate(
                 ['booking_id' => $booking->id, 'revision' => $booking->revision, 'kind' => 'reminder'],
                 ['scheduled_at' => $due]
@@ -90,11 +93,16 @@ class SmsNotificationSender
 
     private function current(SmsOutboxMessage $message, Booking $booking): bool
     {
-        if (! Salon::current()->featureEnabled('sms') || ! $booking->sms_opt_in || $message->revision !== $booking->revision) {
+        if (! Salon::current()->featureEnabled('sms') || $booking->guest->anonymized_at || $message->revision !== $booking->revision) {
             return false;
         }
 
-        return $message->kind === 'reminder' && $booking->status === 'confirmed' && $booking->starts_at->isFuture();
+        return match ($message->kind) {
+            'reminder' => $booking->sms_opt_in && $booking->status === 'confirmed' && $booking->starts_at->isFuture(),
+            'confirmation', 'changed' => Salon::current()->featureEnabled('phone_booking') && ! $booking->guest->email && $booking->status === 'confirmed',
+            'cancelled' => Salon::current()->featureEnabled('phone_booking') && ! $booking->guest->email && $booking->status === 'cancelled',
+            default => false,
+        };
     }
 
     private function messageBody(SmsOutboxMessage $message, Booking $booking): string
@@ -103,7 +111,12 @@ class SmsNotificationSender
         $name = preg_replace('/\s+/u', ' ', mb_substr($salon->name, 0, 24));
         $time = $booking->starts_at->setTimezone($salon->timezone)->format('Y.m.d. H:i');
 
-        return $name.': időpont-emlékeztető '.$time.'.';
+        if ($message->kind === 'reminder') {
+            return $name.': időpont-emlékeztető '.$time.'.';
+        }
+        $label = ['confirmation' => 'Foglalás visszaigazolva', 'changed' => 'Időpont módosult', 'cancelled' => 'Foglalás lemondva'][$message->kind];
+
+        return $name.': '.$label.' '.$time.'. Bizalmas kezelési link: '.route('booking.manage', $booking->manage_token);
     }
 
     /** @param array<string, mixed> $values */

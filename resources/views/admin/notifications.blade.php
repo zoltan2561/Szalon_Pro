@@ -45,7 +45,7 @@
     <div class="history-row">
         <div>
             <a href="{{ route('admin.booking', $message->booking_id) }}">Foglalás #{{ $message->booking_id }}</a>
-            <p>Emlékeztető · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
+            <p>{{ ['confirmation'=>'Visszaigazolás','changed'=>'Módosítás','cancelled'=>'Lemondás','reminder'=>'Emlékeztető','review'=>'Értékeléskérés'][$message->kind] ?? $message->kind }} · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
             <small>{{ $message->attempts }} próbálkozás @if($message->error_code)· {{ $message->error_code }}@endif</small>
         </div>
         <span class="badge">{{ ['pending' => 'Sorban áll', 'sending' => 'Küldés folyamatban', 'retry' => 'Újrapróbálkozásra vár', 'sent' => 'Szolgáltató átvette', 'failed' => 'Sikertelen', 'uncertain' => 'Bizonytalan — ellenőrzés szükséges', 'obsolete' => 'Elavult, nem küldhető'][$message->status] ?? $message->status }}</span>

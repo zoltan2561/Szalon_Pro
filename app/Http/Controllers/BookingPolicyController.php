@@ -5,9 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Salon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BookingPolicyController extends Controller
 {
+    public function contact(Request $request): RedirectResponse
+    {
+        abort_unless(Salon::current()->featureEnabled('phone_booking'), 404);
+        Salon::current()->update($request->validate(['contact_mode' => ['required', Rule::in(['email', 'phone', 'both'])]]));
+
+        return back()->with('success', 'A kötelező elérhetőséget elmentettük.');
+    }
+
     public function noShow(Request $request): RedirectResponse
     {
         abort_unless(Salon::current()->featureEnabled('no_show_protection'), 404);
