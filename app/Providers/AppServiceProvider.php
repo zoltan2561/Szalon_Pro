@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Salon;
 use App\Services\Branding;
+use App\Services\OperationsHealth;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        View::composer('layouts.admin', function ($view): void {
+            $view->with('operationWarnings', auth()->user()?->role === 'owner' ? app(OperationsHealth::class)->warnings() : []);
+        });
         RateLimiter::for('login', fn (Request $r) => [Limit::perMinute(5)->by($r->ip()), Limit::perMinute(5)->by(strtolower($r->input('email', '')).'|'.$r->ip())]);
         RateLimiter::for('booking', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
         View::composer(['layouts.*', 'public.*', 'admin.*', 'auth.*'], function ($view): void {

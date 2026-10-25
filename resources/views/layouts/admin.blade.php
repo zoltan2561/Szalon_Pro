@@ -34,7 +34,9 @@
 <div><span class="live-dot" aria-hidden="true"></span>{{ $salon->demo ? 'Bemutató környezet':'Munkafelület' }}</div>
 <form class="mobile-logout" method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kilépés</button></form>
 </header>
-<main id="main" class="admin-content">@include('components.flash')@yield('content')</main>
+<main id="main" class="admin-content">@include('components.flash')
+@if(!empty($operationWarnings))<aside class="notice" aria-label="Működési figyelmeztetések"><strong>A rendszer működése figyelmet igényel</strong><ul>@foreach($operationWarnings as $warning)<li>{{ $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Értesítések és feldolgozási állapot →</a></aside>@endif
+@yield('content')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>
 <script src="{{ asset('salon.js') }}" defer></script>
