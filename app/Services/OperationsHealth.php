@@ -71,6 +71,14 @@ class OperationsHealth
     public function warnings(): array
     {
         $warnings = [];
+        if (Schema::hasTable('fiscal_documents')) {
+            $billingIssues = DB::table('fiscal_documents')->where(function ($query): void {
+                $query->whereIn('status', ['failed', 'uncertain', 'pending'])->orWhere(fn ($stale) => $stale->where('status', 'sending')->where('last_attempt_at', '<', now()->subMinutes(5)));
+            })->count();
+            if ($billingIssues) {
+                $warnings['billing_documents'] = $billingIssues.' bizonylatkérés egyeztetésre vagy javításra vár.';
+            }
+        }
         if (! $this->schemaReady()) {
             $warnings['schema'] = 'Adatbázis-frissítés szükséges. Kérd az üzemeltető segítségét; a foglalási adatok megmaradnak.';
         }
@@ -102,6 +110,9 @@ class OperationsHealth
         }
         if (Schema::hasTable('salons') && Salon::current()->featureEnabled('sms') && ! app(SmsGateway::class)->configured()) {
             $warnings['sms'] = 'Az SMS-modul aktív, de a szolgáltató nincs beállítva.';
+        }
+        if (Schema::hasColumn('salons', 'billing_agent_key') && Salon::current()->featureEnabled('billing') && ! app(BillingService::class)->configured()) {
+            $warnings['billing_configuration'] = 'A bizonylatküldés még nincs beállítva vagy engedélyezve.';
         }
 
         return $warnings;

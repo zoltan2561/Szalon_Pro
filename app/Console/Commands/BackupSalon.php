@@ -20,7 +20,7 @@ class BackupSalon extends Command
         'guest_passes', 'pass_uses', 'loyalty_entries',
     ];
 
-    public const TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions'];
+    public const TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
 
     protected $signature = 'salon:backup {--path= : Titkosított mentés célfájlja}';
 

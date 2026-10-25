@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BenefitsController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ModuleSettingsController;
@@ -44,6 +45,11 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::get('/bizonylatok', [BillingController::class, 'index'])->name('billing.index');
+        Route::post('/bizonylatok/beallitasok', [BillingController::class, 'settings'])->name('billing.settings');
+        Route::post('/foglalas/{booking}/bizonylat', [BillingController::class, 'issue'])->name('billing.issue');
+        Route::post('/bizonylatok/{document}/egyeztetes', [BillingController::class, 'reconcile'])->name('billing.reconcile');
+        Route::get('/bizonylatok/{document}/pdf', [BillingController::class, 'pdf'])->name('billing.pdf');
         Route::get('/statisztika', [StatisticsController::class, 'index'])->name('statistics.index');
         Route::get('/utalvanyok', [VoucherController::class, 'index'])->name('vouchers.index');
         Route::post('/utalvanyok', [VoucherController::class, 'store'])->name('vouchers.store');

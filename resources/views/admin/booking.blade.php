@@ -14,4 +14,8 @@
 @endif
 </aside></div>
 @if(auth()->user()->role === 'owner' && $booking->status === 'completed' && $salon->featureEnabled('vouchers'))@include('admin.booking-vouchers')@endif
+@yield('billing-panel')
+@endsection
+@section('billing-panel')
+@if(auth()->user()->role === 'owner' && $booking->status === 'completed' && $salon->featureEnabled('billing'))@include('admin.booking-billing')@endif
 @endsection

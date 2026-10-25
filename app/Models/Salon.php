@@ -13,9 +13,11 @@ class Salon extends Model
 
     protected $guarded = ['id'];
 
+    protected $hidden = ['billing_agent_key'];
+
     protected function casts(): array
     {
-        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'features' => 'array', 'published' => 'boolean', 'demo' => 'boolean'];
+        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'features' => 'array', 'published' => 'boolean', 'demo' => 'boolean', 'billing_agent_key' => 'encrypted', 'billing_sending_enabled' => 'boolean', 'billing_approved_at' => 'immutable_datetime'];
     }
 
     public function featureEnabled(string $key): bool

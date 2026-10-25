@@ -15,5 +15,5 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: ['ertekeles/lemondas/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'new_password', 'token']);
+        $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'new_password', 'token', 'billing_agent_key']);
     })->create();
