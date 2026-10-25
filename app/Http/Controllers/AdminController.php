@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\GoogleCalendarBusy;
 use App\Models\Guest;
+use App\Models\GuestPass;
+use App\Models\LoyaltyEntry;
 use App\Models\OutboxMessage;
 use App\Models\PassUse;
 use App\Models\Salon;
