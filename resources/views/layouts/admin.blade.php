@@ -8,19 +8,9 @@
 <p class="workspace-label">{{ $salon->name }}</p>
 <nav aria-label="Munkafelület">
 @foreach(['today'=>['clock','Mai nap'],'calendar'=>['calendar-blank','Naptár'],'guests'=>['users','Vendégeim']] as $key=>$item)
-<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
+<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
-@if($salon->featureEnabled('waitlist'))
-<a class="{{ request()->routeIs('admin.waitlist.*') ? 'active':'' }}" href="{{ route('admin.waitlist.index') }}"><x-icon name="list" />Várólista</a>
-@endif
-@if(auth()->user()->role==='owner')
-@if($salon->featureEnabled('passes') || $salon->featureEnabled('loyalty'))
-<a class="{{ request()->routeIs('admin.benefits.*') ? 'active':'' }}" href="{{ route('admin.benefits.index') }}"><x-icon name="sparkle" />Bérletek és hűségpontok</a>
-@endif
-@foreach(['services'=>['scissors','Szolgáltatások'],'staff'=>['user','Munkatársak'],'google.index'=>['calendar-blank','Google Naptár'],'notifications'=>['envelope-simple','Értesítések'],'modules.index'=>['squares-four','Modulok'],'settings'=>['gear-six','Beállítások']] as $key=>$item)
-<a class="{{ request()->routeIs('admin.'.$key) ? 'active':'' }}" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" />{{ $item[1] }}</a>
-@endforeach
-@endif
+@include('components.admin-links')
 </nav>
 <div class="sidebar-bottom">
 <a href="{{ route('home') }}" target="_blank" rel="noopener">Weboldal előnézete ↗</a>
@@ -39,5 +29,14 @@
 @yield('content')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>
+<nav class="mobile-admin-tabs" aria-label="Mobil munkafelület">
+@foreach(['today'=>['clock','Ma'],'calendar'=>['calendar-blank','Naptár']] as $key=>$item)
+<a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" /><span>{{ $item[1] }}</span></a>
+@endforeach
+@if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="mobile-new-booking" href="{{ route('admin.create') }}" aria-label="Új foglalás" @if(request()->routeIs('admin.create','admin.booking*')) aria-current="page" @endif><x-icon name="calendar-blank" /><span>+ Új</span></a>@else<span class="mobile-tab-disabled" aria-label="Új foglaláshoz nincs jogosultság">Új foglalás</span>@endif
+<a href="{{ route('admin.guests') }}" @if(request()->routeIs('admin.guests','admin.guest')) aria-current="page" @endif><x-icon name="users" /><span>Vendégeim</span></a>
+<button type="button" data-open-more aria-controls="admin-more-menu" aria-expanded="false" @if(!request()->routeIs('admin.today','admin.calendar','admin.guests','admin.guest','admin.create','admin.booking*')) aria-current="page" @endif><x-icon name="list" /><span>Több</span></button>
+</nav>
+<dialog id="admin-more-menu" class="admin-more-sheet" aria-labelledby="admin-more-title"><div class="section-heading"><h2 id="admin-more-title">További lehetőségek</h2><form method="dialog"><button class="button secondary" aria-label="Menü bezárása">Bezárás</button></form></div><nav aria-label="További menüpontok">@include('components.admin-links')<a href="{{ route('home') }}">Weboldal előnézete ↗</a></nav><form method="post" action="{{ route('logout') }}">@csrf<button class="button secondary full">Kijelentkezés</button></form></dialog>
 <script src="{{ asset('salon.js') }}" defer></script>
 </body></html>

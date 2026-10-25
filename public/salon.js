@@ -1,3 +1,24 @@
+const moreButton = document.querySelector('[data-open-more]');
+const moreSheet = document.querySelector('#admin-more-menu');
+if (moreButton && moreSheet instanceof HTMLDialogElement) {
+    moreButton.addEventListener('click', () => {
+        moreSheet.showModal();
+        moreButton.setAttribute('aria-expanded', 'true');
+    });
+    moreSheet.addEventListener('close', () => {
+        moreButton.setAttribute('aria-expanded', 'false');
+        moreButton.focus();
+    });
+    moreSheet.addEventListener('click', event => {
+        if (event.target === moreSheet) {
+            const box = moreSheet.getBoundingClientRect();
+            if (event.clientY < box.top || event.clientX < box.left || event.clientX > box.right) {
+                moreSheet.close();
+            }
+        }
+    });
+}
+
 document.querySelectorAll('.booking-submit').forEach(form => {
     form.addEventListener('submit', () => {
         if (form.checkValidity()) {
