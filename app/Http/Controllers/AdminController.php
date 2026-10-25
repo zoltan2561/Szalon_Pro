@@ -27,6 +27,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -193,7 +194,7 @@ class AdminController extends Controller
                 throw ValidationException::withMessages(['confirm' => 'Előbb rendezd a vendég jövőbeli foglalásait.']);
             }
             $guest->update(['name' => 'Törölt vendég #'.$guest->id, 'email' => 'deleted-'.$guest->id.'@example.invalid', 'phone' => null, 'notes' => null, 'anonymized_at' => now()]);
-            $guest->bookings()->update(['token_expires_at' => now(), 'manage_token' => bin2hex(random_bytes(32))]);
+            $guest->bookings()->update(['token_expires_at' => now(), 'manage_token' => Crypt::encryptString(bin2hex(random_bytes(32)))]);
             OutboxMessage::whereIn('booking_id', $guest->bookings()->select('id'))->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             SmsOutboxMessage::whereIn('booking_id', $guest->bookings()->select('id'))->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             WaitlistEntry::where('guest_id', $guest->id)->where('status', 'waiting')->update(['status' => 'cancelled']);
