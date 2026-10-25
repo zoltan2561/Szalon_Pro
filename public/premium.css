@@ -154,7 +154,7 @@
 .premium.layout-split .service-meta strong{font:400 21px/1.4 'Playfair Display',Georgia,serif}
 
 /* A szerkesztő ugyanazokat a mentett profilokat használja, mint a vendégoldal. */
-.premium-admin{font-family:'DM Sans',Arial,sans-serif}
+.premium-admin{font-family:'DM Sans',Arial,sans-serif;--muted:#52634f}
 .premium-admin .admin-content{max-width:1550px;margin:auto}
 .premium-admin .preset-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:26px 0 32px}
 .premium-admin .preset-card{border:1px solid var(--line);border-radius:14px;background:white;overflow:hidden;display:flex;flex-direction:column;position:relative}
