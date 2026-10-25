@@ -148,7 +148,7 @@ class PublicController extends Controller
             'email' => ($emailRequired ? 'required' : 'nullable').'|email:rfc|max:200', 'phone' => ($phoneRequired ? 'required' : 'nullable').'|string|max:40', 'request_key' => 'required|uuid',
             'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
         if ($phoneRequired && ! app(SmsGateway::class)->normalizeNumber($data['phone'] ?? null)) {
-            throw ValidationException::withMessages(['phone' => '?rv?nyes, orsz?gk?ddal megadhat? telefonsz?m sz?ks?ges.']);
+            throw ValidationException::withMessages(['phone' => 'Érvényes, országkóddal megadható telefonszám szükséges.']);
         }
         $data['referral_source'] = Salon::current()->featureEnabled('sharing')
             ? ($request->validate(['referral_source' => ['nullable', Rule::in(BookingLinks::Sources)]])['referral_source'] ?? null) : null;

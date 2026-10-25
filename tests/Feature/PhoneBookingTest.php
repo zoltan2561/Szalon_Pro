@@ -47,6 +47,20 @@ class PhoneBookingTest extends TestCase
         $response->assertJsonValidationErrors('email');
     }
 
+    public function test_invalid_required_phone_has_the_exact_hungarian_validation_message(): void
+    {
+        Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => 'phone']);
+        $service = Service::factory()->create();
+        $response = $this->postJson(route('booking.store'), [
+            'service_id' => $service->id, 'slot' => $service->staff()->first()->id.'|2026-10-26T10:00:00+01:00',
+            'name' => 'Telefonos próba', 'phone' => 'abc', 'terms' => 1, 'request_key' => Str::uuid()->toString(),
+        ]);
+        $response->assertUnprocessable()->assertJsonValidationErrors('phone');
+        $this->assertSame('Érvényes, országkóddal megadható telefonszám szükséges.', $response->json('errors.phone.0'));
+        $this->assertStringNotContainsString('?', $response->json('errors.phone.0'));
+        $this->assertDatabaseCount('bookings', 0);
+    }
+
     public function test_phone_booking_without_queued_confirmation_still_exposes_its_private_management_link_to_its_session(): void
     {
         Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => 'phone']);
