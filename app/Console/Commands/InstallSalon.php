@@ -26,7 +26,7 @@ class InstallSalon extends Command
 
             return self::FAILURE;
         }
-        $password = env('SALON_ADMIN_PASSWORD');
+        $password = config('salon.admin_password');
         $email = $this->option('email');
         $demo = $this->option('demo');
         if (! $email || ! filter_var($email, FILTER_VALIDATE_EMAIL) || ! $password || strlen($password) < 12 || ($demo && ! in_array($demo, ['salon', 'barber', 'nails']))) {

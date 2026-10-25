@@ -2,6 +2,7 @@
 
 return [
     'version' => '1.2.0',
+    'admin_password' => env('SALON_ADMIN_PASSWORD'),
     'demo_urls' => [
         'salon' => env('SALON_DEMO_SALON_URL'),
         'barber' => env('SALON_DEMO_BARBER_URL'),

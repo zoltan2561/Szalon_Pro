@@ -230,8 +230,8 @@ class BrandingTest extends TestCase
 
     public function test_nails_demo_installs_a_dedicated_catalog_and_resists_reinstallation(): void
     {
-        putenv('SALON_ADMIN_PASSWORD=temporary-demo-password');
-        $_ENV['SALON_ADMIN_PASSWORD'] = 'temporary-demo-password';
+        $originalPassword = config('salon.admin_password');
+        config(['salon.admin_password' => 'temporary-demo-password']);
         try {
             $this->artisan('salon:install', ['--demo' => 'nails', '--email' => 'nails@example.test'])->assertSuccessful();
             $this->assertSame('nails', Salon::current()->theme);
@@ -242,15 +242,14 @@ class BrandingTest extends TestCase
             $this->artisan('salon:install', ['--demo' => 'barber', '--email' => 'barber@example.test'])->assertFailed();
             $this->assertSame('nails', Salon::current()->theme);
         } finally {
-            putenv('SALON_ADMIN_PASSWORD');
-            unset($_ENV['SALON_ADMIN_PASSWORD']);
+            config(['salon.admin_password' => $originalPassword]);
         }
     }
 
     public function test_barber_demo_installs_its_own_catalog_and_team(): void
     {
-        putenv('SALON_ADMIN_PASSWORD=temporary-demo-password');
-        $_ENV['SALON_ADMIN_PASSWORD'] = 'temporary-demo-password';
+        $originalPassword = config('salon.admin_password');
+        config(['salon.admin_password' => 'temporary-demo-password']);
         try {
             $this->artisan('salon:install', ['--demo' => 'barber', '--email' => 'barber@example.test'])->assertSuccessful();
             $this->assertSame('barber', Salon::current()->theme);
@@ -259,15 +258,14 @@ class BrandingTest extends TestCase
             $this->assertDatabaseHas('staff', ['name' => 'Kovács Bence']);
             $this->get(route('home'))->assertOk()->assertSee('Vágás. Szakáll. Karakter.')->assertSee('Tiszta kontúr és ápolt forma.');
         } finally {
-            putenv('SALON_ADMIN_PASSWORD');
-            unset($_ENV['SALON_ADMIN_PASSWORD']);
+            config(['salon.admin_password' => $originalPassword]);
         }
     }
 
     public function test_hairdresser_demo_installs_its_own_catalog_and_team(): void
     {
-        putenv('SALON_ADMIN_PASSWORD=temporary-demo-password');
-        $_ENV['SALON_ADMIN_PASSWORD'] = 'temporary-demo-password';
+        $originalPassword = config('salon.admin_password');
+        config(['salon.admin_password' => 'temporary-demo-password']);
         try {
             $this->artisan('salon:install', ['--demo' => 'salon', '--email' => 'salon@example.test'])->assertSuccessful();
             $this->assertSame('salon', Salon::current()->theme);
@@ -276,8 +274,7 @@ class BrandingTest extends TestCase
             $this->assertDatabaseHas('staff', ['name' => 'Hajnal Luca']);
             $this->get(route('home'))->assertOk()->assertSee('A hajad, a te elképzelésed.')->assertSee('Formázás különleges alkalmakra.');
         } finally {
-            putenv('SALON_ADMIN_PASSWORD');
-            unset($_ENV['SALON_ADMIN_PASSWORD']);
+            config(['salon.admin_password' => $originalPassword]);
         }
     }
 }
