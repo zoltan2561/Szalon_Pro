@@ -100,7 +100,7 @@
         <div class="calendar-day-layout">
             <div class="calendar-timeline" aria-label="Szakemberek napi idősávjai">
                 @if($calendarStaff->isNotEmpty())
-                    <div class="calendar-timeline-scroll"><div class="calendar-timeline-inner" style="min-width: {{ 64 + $calendarStaff->count() * 190 }}px">
+                    <div class="calendar-timeline-scroll" tabindex="0" aria-label="Idővonal"><div class="calendar-timeline-inner" style="min-width: {{ 64 + $calendarStaff->count() * 190 }}px">
                         <div class="calendar-timeline-head" style="grid-template-columns: 64px repeat({{ $calendarStaff->count() }}, minmax(0, 1fr))">
                             <span>Idő</span>
                             @foreach($calendarStaff as $person)

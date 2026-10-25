@@ -11,6 +11,9 @@
     @if(!$ready || !$salon->published)
         <div class="notice">Az online foglalás még nem aktív. Kérjük, keresd a szalont az elérhetőségein.</div>
     @else
+        @if($date < now($salon->timezone)->toDateString())
+            <div class="notice">Ez a nap már elmúlt. Válassz mai vagy későbbi időpontot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId, 'utm_source' => $referralSource])) }}">Következő szabad nap keresése</a></div>
+        @endif
         <div class="booking-grid">
             <form method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
                 <p class="eyebrow">01 · VÁLASSZ</p>

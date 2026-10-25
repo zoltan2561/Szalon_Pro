@@ -137,6 +137,16 @@ class BrandingTest extends TestCase
         return $salon->only(['name', 'tagline', 'about', 'email', 'phone', 'address', 'theme', 'accent', 'font', 'terms', 'privacy', 'min_notice_minutes', 'horizon_days', 'cancel_notice_hours', 'reminder_hours', 'retention_days']) + ['hours' => array_fill(1, 7, ['start' => '09:00', 'end' => '18:00']), 'content_rights' => 1, 'appearance' => $appearance, 'current_password' => '', 'new_password' => ''];
     }
 
+    public function test_past_booking_date_has_an_explanation_and_no_bookable_times(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-25 12:00', 'Europe/Budapest'));
+        Salon::factory()->create();
+        Service::factory()->create();
+        $this->get(route('booking.form', ['date' => '2026-10-19']))->assertOk()
+            ->assertSee('Ez a nap már elmúlt. Válassz mai vagy későbbi időpontot.')
+            ->assertSee('Következő szabad nap keresése')->assertDontSee('type="radio"', false);
+    }
+
     public function test_three_presets_persist_and_preserve_business_content_and_custom_media(): void
     {
         $salon = Salon::factory()->create(['name' => 'Saját márkanév', 'hero_image' => 'branding/own.webp', 'logo' => 'branding/logo.png']);

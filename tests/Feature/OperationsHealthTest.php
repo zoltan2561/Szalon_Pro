@@ -59,7 +59,8 @@ class OperationsHealthTest extends TestCase
         DB::table('migrations')->where('migration', '2026_10_23_064701_create_sms_outbox_messages_table')->delete();
         $this->artisan('salon:doctor')->expectsOutputToContain('schema:')->assertFailed();
         foreach (['admin.today', 'admin.guests', 'admin.notifications'] as $route) {
-            $this->actingAs($owner)->get(route($route))->assertStatus(503)->assertSee('Rendszerfrissítés szükséges');
+            $response = $this->actingAs($owner)->get(route($route))->assertStatus(503)->assertSee('Rendszerfrissítés szükséges');
+            $this->assertSame(1, substr_count($response->getContent(), '<main'));
         }
         Schema::drop('sms_outbox_messages');
         $this->artisan('salon:doctor')->assertFailed();

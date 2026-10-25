@@ -32,7 +32,8 @@ class ReviewRequestsTest extends TestCase
         Mail::shouldReceive('send')->never();
         $this->assertSame(0, app(NotificationSender::class)->sendDue());
         $url = $reviews->unsubscribeUrl($guest);
-        $this->get($url)->assertOk();
+        $response = $this->get($url)->assertOk();
+        $this->assertSame(1, substr_count($response->getContent(), '<main'));
         $this->assertNull($guest->fresh()->review_opt_out_at);
         $this->post($url)->assertOk()->assertSee('Leiratkoztál');
         $this->assertSame('obsolete', $message->fresh()->status);

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\BookingEvent;
 use App\Models\Guest;
 use App\Models\Salon;
 use App\Models\Staff;
@@ -49,6 +50,7 @@ class CalendarWorkspaceTest extends TestCase
             ->assertSee('calendar-agenda-item confirmed', false)
             ->assertSee('Kiss Anna')
             ->assertSee('Nagy Eszter')
+            ->assertSee('tabindex="0" aria-label="Idővonal"', false)
             ->assertSee('Napi naptár');
 
         $this->get(route('admin.calendar', ['date' => '2026-10-23', 'view' => 'week']))
@@ -81,5 +83,16 @@ class CalendarWorkspaceTest extends TestCase
         $this->get(route('admin.today'))
             ->assertOk()
             ->assertSee('Elvégzett szolgáltatások összege');
+    }
+
+    public function test_booking_header_names_its_referral_source_and_history_actor(): void
+    {
+        Salon::factory()->create();
+        $owner = User::factory()->create(['role' => 'owner', 'name' => 'Kiss Anna']);
+        $booking = Booking::factory()->create(['source' => 'online', 'referral_source' => 'instagram']);
+        BookingEvent::create(['booking_id' => $booking->id, 'actor_id' => $owner->id, 'action' => 'created', 'changes' => []]);
+        $this->actingAs($owner)->get(route('admin.booking', $booking))->assertOk()
+            ->assertSee('Foglalás #'.$booking->id.' · Online · Instagram')
+            ->assertSee('Kiss Anna')->assertDontSee('Munkatárs #'.$owner->id);
     }
 }
