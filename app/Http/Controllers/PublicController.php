@@ -147,7 +147,7 @@ class PublicController extends Controller
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
             'email' => ($emailRequired ? 'required' : 'nullable').'|email:rfc|max:200', 'phone' => ($phoneRequired ? 'required' : 'nullable').'|string|max:40', 'request_key' => 'required|uuid',
             'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
-        if ($phoneRequired && ! app(SmsGateway::class)->normalizeNumber($data['phone'] ?? null)) {
+        if (($phoneRequired || filled($data['phone'] ?? null)) && ! app(SmsGateway::class)->normalizeNumber($data['phone'] ?? null)) {
             throw ValidationException::withMessages(['phone' => 'Érvényes, országkóddal megadható telefonszám szükséges.']);
         }
         $data['referral_source'] = Salon::current()->featureEnabled('sharing')

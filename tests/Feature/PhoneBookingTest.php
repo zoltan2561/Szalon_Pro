@@ -11,6 +11,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class PhoneBookingTest extends TestCase
@@ -47,13 +48,20 @@ class PhoneBookingTest extends TestCase
         $response->assertJsonValidationErrors('email');
     }
 
-    public function test_invalid_required_phone_has_the_exact_hungarian_validation_message(): void
+    /** @return array<string, array{string}> */
+    public static function contactModes(): array
     {
-        Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => 'phone']);
+        return ['phone' => ['phone'], 'both' => ['both'], 'email' => ['email']];
+    }
+
+    #[DataProvider('contactModes')]
+    public function test_invalid_provided_phone_has_the_exact_hungarian_validation_message(string $mode): void
+    {
+        Salon::factory()->create(['features' => ['phone_booking' => true], 'contact_mode' => $mode]);
         $service = Service::factory()->create();
         $response = $this->postJson(route('booking.store'), [
             'service_id' => $service->id, 'slot' => $service->staff()->first()->id.'|2026-10-26T10:00:00+01:00',
-            'name' => 'Telefonos próba', 'phone' => 'abc', 'terms' => 1, 'request_key' => Str::uuid()->toString(),
+            'name' => 'Telefonos próba', 'email' => 'qa@example.test', 'phone' => 'abc', 'terms' => 1, 'request_key' => Str::uuid()->toString(),
         ]);
         $response->assertUnprocessable()->assertJsonValidationErrors('phone');
         $this->assertSame('Érvényes, országkóddal megadható telefonszám szükséges.', $response->json('errors.phone.0'));
