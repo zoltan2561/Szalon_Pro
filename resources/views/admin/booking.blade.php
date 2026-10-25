@@ -13,4 +13,5 @@
 </section></div><aside class="panel booking-summary"><p class="eyebrow">VENDÉGKARTON</p><h2>{{ $booking->guest->name }}</h2><p>{{ $booking->guest->email ?: 'Nincs e-mail' }}<br>{{ $booking->guest->phone }}</p><a href="{{ route('admin.guest',$booking->guest) }}">Látogatási előzmények ↗</a><hr><a class="button secondary full" href="{{ route('admin.create',['guest_id'=>$booking->guest_id,'service_id'=>$booking->service_id,'staff_id'=>$booking->staff_id]) }}">Újrafoglalás</a>@if($booking->status==='completed' && $salon->featureEnabled('financials') && $booking->actual_amount !== null)<hr><small>Rögzített szolgáltatási összeg</small><h2>{{ number_format($booking->actual_amount,0,',',' ') }} Ft</h2>
 @endif
 </aside></div>
+@if(auth()->user()->role === 'owner' && $booking->status === 'completed' && $salon->featureEnabled('vouchers'))@include('admin.booking-vouchers')@endif
 @endsection

@@ -69,3 +69,5 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         }
     });
 });
+
+document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));

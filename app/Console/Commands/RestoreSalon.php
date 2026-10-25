@@ -28,7 +28,8 @@ class RestoreSalon extends Command
             $snapshot = json_decode(Crypt::decryptString($raw), true, 512, JSON_THROW_ON_ERROR);
             $tables = match ($snapshot['format'] ?? null) {
                 1 => BackupSalon::LEGACY_TABLES,
-                2 => BackupSalon::TABLES,
+                2 => BackupSalon::V2_TABLES,
+                3 => BackupSalon::TABLES,
                 default => null,
             };
             if ($tables === null || ! isset($snapshot['tables']) || array_keys($snapshot['tables']) !== $tables) {

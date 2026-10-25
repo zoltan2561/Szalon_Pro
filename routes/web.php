@@ -9,10 +9,12 @@ use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ReviewConsentController;
 use App\Http\Controllers\SharingController;
+use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/ajandek/{token}', [VoucherController::class, 'show'])->middleware('throttle:booking')->name('vouchers.show');
 Route::get('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'show'])->middleware('signed')->name('reviews.unsubscribe');
 Route::post('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'unsubscribe'])->middleware('signed')->name('reviews.unsubscribe.update');
 Route::get('/adatkezeles', fn () => view('public.privacy'))->name('privacy');
@@ -41,6 +43,11 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
     Route::middleware('admin:owner')->group(function (): void {
+        Route::get('/utalvanyok', [VoucherController::class, 'index'])->name('vouchers.index');
+        Route::post('/utalvanyok', [VoucherController::class, 'store'])->name('vouchers.store');
+        Route::get('/utalvanyok/{voucher}/qr', [VoucherController::class, 'qr'])->name('vouchers.qr');
+        Route::post('/foglalas/{booking}/utalvany', [VoucherController::class, 'redeem'])->name('vouchers.redeem');
+        Route::post('/utalvany-bevaltas/{redemption}/sztorno', [VoucherController::class, 'reverse'])->name('vouchers.reverse');
         Route::post('/ertekeles-beallitasok', [BookingPolicyController::class, 'reviews'])->name('policy.reviews');
         Route::post('/foglalasi-szabalyok/elerhetoseg', [BookingPolicyController::class, 'contact'])->name('policy.contact');
         Route::post('/foglalasi-szabalyok/no-show', [BookingPolicyController::class, 'noShow'])->name('policy.no-show');

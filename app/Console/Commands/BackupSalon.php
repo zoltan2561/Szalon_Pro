@@ -13,12 +13,14 @@ class BackupSalon extends Command
 {
     public const LEGACY_TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'work_exceptions', 'outbox_messages', 'booking_events'];
 
-    public const TABLES = [
+    public const V2_TABLES = [
         ...self::LEGACY_TABLES,
         'google_calendar_connections', 'google_calendar_events', 'google_calendar_busies',
         'sms_outbox_messages', 'waitlist_entries', 'benefit_settings', 'pass_plans',
         'guest_passes', 'pass_uses', 'loyalty_entries',
     ];
+
+    public const TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions'];
 
     protected $signature = 'salon:backup {--path= : Titkosított mentés célfájlja}';
 
@@ -47,7 +49,7 @@ class BackupSalon extends Command
                 $media[$file] = base64_encode(Storage::disk('public')->get($file));
             }
 
-            return ['format' => 2, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media];
+            return ['format' => 3, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media];
         }, 5);
         File::ensureDirectoryExists(dirname($path));
         if (file_put_contents($path, Crypt::encryptString(json_encode($snapshot, JSON_THROW_ON_ERROR)), LOCK_EX) === false) {
