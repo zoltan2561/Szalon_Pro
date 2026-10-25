@@ -126,4 +126,12 @@ A prémium arculat képernyőképei és összehasonlításai: `output/design/`. 
 4. Percenkénti időzítő, tényleges SMTP-próba, külső mentéstároló és helyreállítási próba.
 5. Valós szolgáltatói tartalom, jogosított képek, ellenőrzött adatkezelési/foglalási feltételek, és valós pilot. A demó adatkezelési szövege nem éles dokumentum.
 
-Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott tárhely telepítési próbája élesítés előtt szükséges. Fizetés, SMS, készlet, számlázás, piactér, több telephely és közös kezelőhelyiség kapacitáskezelése a Slack-terv szerint későbbi modul.
+Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott tárhely telepítési próbája élesítés előtt szükséges. Fizetés, készlet, piactér, több telephely és közös kezelőhelyiség kapacitáskezelése későbbi modul.
+
+## Opcionális SMS (Twilio)
+
+A tulajdonosi Modulok oldalon kapcsolható be. Az üzemeltető állítsa be a `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` és `TWILIO_SENDER` konfigurációt; a titkos értékeket ne küldje dokumentációba vagy naplóba. A feladó és a célország legyen engedélyezve a Twilio-fiókban. A `salon:sms-notify` parancsot az időzítő percenként futtatja. A foglalásban külön hozzájárulás kell az SMS-emlékeztetőhöz. Az „átvette” állapot nem kézbesítés: valódi telefonszámos próba külön szükséges. Bizonytalan kimenetelnél előbb a szolgáltatónál egyeztess, ne küldj vakon újra.
+
+## Működési ellenőrzés
+
+A kiadás verziójának egyetlen forrása a `config/salon.php`. A `php artisan salon:doctor` módosítás és küldés nélkül ellenőrzi a sémát, a feldolgozási szívverést, az esedékes sorokat és az értesítési konfigurációt. Hibánál nem nulla kilépési kódot ad. A hiányzó vagy öt percnél régebbi szívverés figyelmeztetés; a parancs helyi levélpróbánál is jelez. Ez nem külső szolgáltatói készültségi igazolás. Az Értesítések oldalon az utolsó feldolgozás budapesti időben látható. Frissítés előtt készíts mentést, majd minden külön telepítésen futtasd a migrációkat.

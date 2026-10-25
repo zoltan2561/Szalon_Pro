@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => '0.2.0',
+    'version' => '1.2.0',
     'demo_urls' => [
         'salon' => env('SALON_DEMO_SALON_URL'),
         'barber' => env('SALON_DEMO_BARBER_URL'),
