@@ -42,12 +42,33 @@ class Availability
         if (! $day || $day->format('Y-m-d') !== $date || ! $service->active) {
             return [];
         }
-        $staff = $service->staff()->where('active', true)->when($staffId, fn ($q) => $q->where('staff.id', $staffId))->get();
+        $staff = $service->staff()->where('active', true)->when($staffId, fn ($q) => $q->where('staff.id', $staffId))->with('googleCalendarConnection')->get();
+        $staffIds = $staff->modelKeys();
+        $exceptions = WorkException::whereIn('staff_id', $staffIds)->where('date', $date)->get()->keyBy('staff_id');
+        $blocks = TimeBlock::whereIn('staff_id', $staffIds)->where('starts_at', '<', $day->addDay()->utc())->where('ends_at', '>', $day->utc())->get()->groupBy('staff_id');
+        $bookings = Booking::whereIn('staff_id', $staffIds)->whereIn('status', ['confirmed', 'completed', 'no_show'])->when($ignore, fn ($query) => $query->where('id', '!=', $ignore->id))
+            ->where('busy_from', '<', $day->addDay()->utc())->where('busy_until', '>', $day->utc())->get()->groupBy('staff_id');
+        $connectionIds = $staff->map(fn (Staff $person) => $person->googleCalendarConnection?->id)->filter()->all();
+        $googleBusy = GoogleCalendarBusy::whereIn('google_calendar_connection_id', $connectionIds)->where('starts_at', '<', $day->addDay()->utc())->where('ends_at', '>', $day->utc())->get()->groupBy('google_calendar_connection_id');
+        $minimumStart = CarbonImmutable::now()->addMinutes($salon->min_notice_minutes);
+        $lastDay = CarbonImmutable::now($salon->timezone)->addDays($salon->horizon_days)->toDateString();
         $slots = [];
         foreach ($staff as $person) {
+            $connection = $person->googleCalendarConnection;
+            if ($connection && ($connection->sync_status !== 'connected' || ! $connection->last_imported_at || $connection->last_imported_at->lt(now()->subMinutes(15)))) {
+                continue;
+            }
+            $work = $exceptions->has($person->id) ? $exceptions[$person->id]->hours : ($person->weekly_hours[$day->isoWeekday()] ?? []);
+            $open = $salon->opening_hours[$day->isoWeekday()] ?? [];
             for ($time = $day->utc(); $time->lt($day->addDay()->utc()); $time = $time->addMinutes(15)) {
-                if ($this->canBook($service, $person, $time, $ignore)) {
-                    $local = $time->setTimezone($salon->timezone);
+                $local = $time->setTimezone($salon->timezone);
+                $from = $time->subMinutes($service->buffer_before);
+                $until = $time->addMinutes($service->duration_minutes + $service->buffer_after);
+                if ($time->gte($minimumStart) && $date <= $lastDay && $local->minute % 15 === 0
+                    && $this->inside($from, $until, $work, $local) && $this->inside($from, $until, $open, $local)
+                    && ! $blocks->get($person->id, collect())->contains(fn ($block) => $block->starts_at->lt($until) && $block->ends_at->gt($from))
+                    && ! $bookings->get($person->id, collect())->contains(fn ($booking) => $booking->busy_from->lt($until) && $booking->busy_until->gt($from))
+                    && ! $googleBusy->get($connection?->id, collect())->contains(fn ($busy) => $busy->starts_at->lt($until) && $busy->ends_at->gt($from))) {
                     $slots[] = ['starts_at' => $local->format('Y-m-d\TH:i:sP'), 'staff_id' => $person->id, 'staff_name' => $person->name, 'label' => $local->format('H:i'), 'offset' => $local->format('P')];
                 }
             }
@@ -60,7 +81,7 @@ class Availability
     public function canBook(Service $service, Staff $staff, CarbonImmutable $start, ?Booking $ignore = null): bool
     {
         $start = $start->utc();
-        $salon = Salon::current();
+        $salon = Salon::query()->findOrFail(1);
         $local = $start->setTimezone($salon->timezone);
         if (! $service->active || ! $staff->active || ! $service->staff()->whereKey($staff->id)->exists()
             || $start->lt(CarbonImmutable::now()->addMinutes($salon->min_notice_minutes))

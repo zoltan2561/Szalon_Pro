@@ -25,6 +25,25 @@ class Salon extends Model
 
     public static function current(): self
     {
-        return self::findOrFail(1);
+        if (app()->runningInConsole()) {
+            return self::findOrFail(1);
+        }
+        $request = request();
+        $salon = $request->attributes->get('current_salon');
+        if (! $salon instanceof self) {
+            $salon = self::findOrFail(1);
+            $request->attributes->set('current_salon', $salon);
+        }
+
+        return $salon;
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (): void {
+            if (! app()->runningInConsole()) {
+                request()->attributes->remove('current_salon');
+            }
+        });
     }
 }
