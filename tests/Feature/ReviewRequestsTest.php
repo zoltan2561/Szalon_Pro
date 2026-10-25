@@ -54,6 +54,23 @@ class ReviewRequestsTest extends TestCase
         $this->post(route('reviews.unsubscribe.update', $booking->guest))->assertForbidden();
     }
 
+    public function test_duplicate_cards_share_contact_frequency_limit_and_opt_out_without_merging(): void
+    {
+        Salon::factory()->create(['features' => ['reviews' => true], 'review_url' => 'https://g.page/r/test/review']);
+        $first = Guest::factory()->create(['email' => 'same@example.test', 'review_opt_in_at' => now()]);
+        $second = Guest::factory()->create(['email' => 'SAME@example.test', 'review_opt_in_at' => now()]);
+        $one = Booking::factory()->create(['guest_id' => $first->id, 'status' => 'completed']);
+        $two = Booking::factory()->create(['guest_id' => $second->id, 'status' => 'completed']);
+        $reviews = app(ReviewRequests::class);
+        $reviews->queue($one);
+        $reviews->queue($two);
+        $this->assertDatabaseCount('outbox_messages', 1);
+        $reviews->unsubscribe($second);
+        $this->assertNotNull($first->fresh()->review_opt_out_at);
+        $this->assertDatabaseCount('guests', 2);
+        $this->assertSame('obsolete', OutboxMessage::firstOrFail()->status);
+    }
+
     public function test_due_review_uses_neutral_template_and_one_click_unsubscribe_headers(): void
     {
         Salon::factory()->create(['features' => ['reviews' => true], 'review_url' => 'https://g.page/r/test/review', 'review_delay_hours' => 0]);

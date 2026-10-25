@@ -91,7 +91,7 @@ class SmsNotificationSender
         }, 5);
     }
 
-    private function current(SmsOutboxMessage $message, Booking $booking): bool
+    public function current(SmsOutboxMessage $message, Booking $booking): bool
     {
         if (! Salon::current()->featureEnabled('sms') || $booking->guest->anonymized_at || $message->revision !== $booking->revision) {
             return false;

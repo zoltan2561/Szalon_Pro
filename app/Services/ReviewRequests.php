@@ -7,6 +7,7 @@ use App\Models\Guest;
 use App\Models\OutboxMessage;
 use App\Models\Salon;
 use App\Models\SmsOutboxMessage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
@@ -18,7 +19,7 @@ class ReviewRequests
             Salon::whereKey(1)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             $guest = $booking->guest()->lockForUpdate()->firstOrFail();
-            if (! $this->eligible($booking, $guest) || ($guest->last_review_requested_at && $guest->last_review_requested_at->gt(now()->subDays(90)))) {
+            if (! $this->eligible($booking, $guest) || $this->contactGuests($guest)->where('last_review_requested_at', '>', now()->subDays(90))->exists()) {
                 return;
             }
             $scheduled = now()->addHours(Salon::current()->review_delay_hours);
@@ -38,7 +39,8 @@ class ReviewRequests
         $salon = Salon::current();
 
         return $salon->featureEnabled('reviews') && filled($salon->review_url) && $booking->status === 'completed'
-            && ! $guest->anonymized_at && $guest->review_opt_in_at && ! $guest->review_opt_out_at;
+            && ! $guest->anonymized_at && $guest->review_opt_in_at && ! $guest->review_opt_out_at
+            && ! $this->contactGuests($guest)->where('review_opt_out_at', '>=', $guest->review_opt_in_at)->exists();
     }
 
     public function unsubscribeUrl(Guest $guest): string
@@ -50,10 +52,24 @@ class ReviewRequests
     {
         DB::transaction(function () use ($guest): void {
             Salon::whereKey(1)->increment('lock_version');
-            $guest->update(['review_opt_in_at' => null, 'review_opt_out_at' => now()]);
+            $contactIds = $this->contactGuests($guest)->pluck('id');
+            Guest::whereIn('id', $contactIds)->update(['review_opt_in_at' => null, 'review_opt_out_at' => now()]);
             foreach ([OutboxMessage::class, SmsOutboxMessage::class] as $model) {
-                $model::whereIn('booking_id', $guest->bookings()->select('id'))->where('kind', 'review')->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
+                $model::whereIn('booking_id', Booking::whereIn('guest_id', $contactIds)->select('id'))->where('kind', 'review')->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             }
         }, 5);
+    }
+
+    private function contactGuests(Guest $guest): Builder
+    {
+        return Guest::whereNull('anonymized_at')->where(function (Builder $query) use ($guest): void {
+            $query->whereKey($guest->id);
+            if ($guest->email) {
+                $query->orWhereRaw('lower(email) = ?', [mb_strtolower($guest->email)]);
+            }
+            if ($guest->phone_normalized) {
+                $query->orWhere('phone_normalized', $guest->phone_normalized);
+            }
+        });
     }
 }

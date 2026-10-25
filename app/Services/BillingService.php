@@ -85,7 +85,8 @@ class BillingService
     /** @param array{status: string, number: ?string, pdf: ?string, error: ?string} $result */
     private function finish(FiscalDocument $document, array $result): void
     {
-        $document->update(['status' => $result['status'], 'document_number' => $result['number'], 'pdf' => $result['pdf'], 'pdf_link' => $result['pdf'] ? route('admin.billing.pdf', $document, false) : null, 'error_code' => $result['error'], 'issued_at' => $result['status'] === 'issued' ? now() : null]);
+        $pdf = $result['pdf'] ?? ($document->status === 'issued' ? $document->pdf : null);
+        $document->update(['status' => $result['status'], 'document_number' => $result['number'], 'pdf' => $pdf, 'pdf_link' => $pdf ? route('admin.billing.pdf', $document, false) : null, 'error_code' => $result['error'], 'issued_at' => $result['status'] === 'issued' ? ($document->issued_at ?? now()) : null]);
     }
 
     private function error(string $message): never

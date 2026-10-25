@@ -111,4 +111,17 @@ class BillingDocumentsTest extends TestCase
     {
         return '<xmlszamlavalasz><sikeres>true</sikeres><szamlaszam>'.$number.'</szamlaszam><pdf>'.base64_encode('%PDF-1.4 test').'</pdf></xmlszamlavalasz>';
     }
+
+    public function test_reconciliation_cannot_erase_existing_pdf_or_issue_timestamp(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        Http::fakeSequence()->push($this->success('TEST-KEEP'), 200)->push('<xmlszamlavalasz><sikeres>true</sikeres><szamlaszam>TEST-KEEP</szamlaszam></xmlszamlavalasz>', 200);
+        $document = app(BillingService::class)->issue(Booking::factory()->create(['status' => 'completed']), $this->invoiceData(), $owner);
+        $originalPdf = $document->pdf;
+        $issuedAt = $document->issued_at->toIso8601String();
+        $this->travel(1)->hours();
+        $document = app(BillingService::class)->reconcile($document, $owner);
+        $this->assertSame($originalPdf, $document->pdf);
+        $this->assertSame($issuedAt, $document->issued_at->toIso8601String());
+    }
 }

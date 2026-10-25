@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\FiscalDocument;
 use App\Models\GoogleCalendarBusy;
 use App\Models\Guest;
 use App\Models\GuestPass;
@@ -15,6 +16,7 @@ use App\Models\SmsOutboxMessage;
 use App\Models\Staff;
 use App\Models\TimeBlock;
 use App\Models\User;
+use App\Models\VoucherRedemption;
 use App\Models\WaitlistEntry;
 use App\Models\WorkException;
 use App\Services\Availability;
@@ -23,6 +25,7 @@ use App\Services\BookingService;
 use App\Services\Branding;
 use App\Services\OperationsHealth;
 use App\Services\SmsGateway;
+use App\Services\SmsNotificationSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -183,6 +186,8 @@ class AdminController extends Controller
                 'loyalty_entries' => LoyaltyEntry::where('guest_id', $guest->id)->get()->toArray(),
                 'email_notifications' => OutboxMessage::whereIn('booking_id', $bookingIds)->get()->toArray(),
                 'sms_notifications' => SmsOutboxMessage::whereIn('booking_id', $bookingIds)->get()->toArray(),
+                'voucher_redemptions' => VoucherRedemption::whereIn('booking_id', $bookingIds)->get()->toArray(),
+                'fiscal_documents' => FiscalDocument::whereIn('booking_id', $bookingIds)->get()->toArray(),
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }, 'vendeg-'.$guest->id.'.json', ['Content-Type' => 'application/json']);
     }
@@ -387,10 +392,7 @@ class AdminController extends Controller
             $message->refresh();
             $booking = $message->booking()->with('guest')->firstOrFail();
             abort_unless(in_array($message->status, ['failed', 'retry'], true)
-                && $message->kind === 'reminder'
-                && $booking->status === 'confirmed'
-                && $booking->starts_at->isFuture()
-                && $booking->revision === $message->revision
+                  && app(SmsNotificationSender::class)->current($message, $booking)
                 && $smsGateway->normalizeNumber($booking->guest->phone), 422);
             $message->update(['status' => 'pending', 'attempts' => 0, 'scheduled_at' => now(), 'error_code' => null]);
         });
