@@ -80,7 +80,7 @@ class SalonWorkflowTest extends TestCase
 
     private function data(array $overrides = []): array
     {
-        return array_merge(['service_id' => $this->service->id, 'staff_id' => $this->staff->id, 'starts_at' => '2026-10-19T10:00:00+02:00', 'name' => 'Teszt Vendég', 'email' => 'guest@example.test', 'phone' => '123456', 'request_key' => Str::uuid()->toString()], $overrides);
+        return array_merge(['service_id' => $this->service->id, 'staff_id' => $this->staff->id, 'starts_at' => '2026-10-19T10:00:00+02:00', 'name' => 'Teszt Vendég', 'email' => 'guest@example.test', 'phone' => '+36305550001', 'request_key' => Str::uuid()->toString()], $overrides);
     }
 
     private function create(array $overrides = []): Booking
