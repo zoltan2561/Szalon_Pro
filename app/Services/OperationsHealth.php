@@ -56,6 +56,11 @@ class OperationsHealth
         return is_string($value) ? CarbonImmutable::parse($value) : null;
     }
 
+    public function recordPasswordResetFailure(): void
+    {
+        Cache::put($this->heartbeatKey('password_reset_failure'), now()->toIso8601String(), now()->addHour());
+    }
+
     /** @return array{email: int, sms: int} */
     public function dueCounts(): array
     {
@@ -86,6 +91,18 @@ class OperationsHealth
         }
         if (! $this->schemaReady()) {
             $warnings['schema'] = 'Adatbázis-frissítés szükséges. Kérd az üzemeltető segítségét; a foglalási adatok megmaradnak.';
+        }
+        $queueConnection = DB::connection(config('queue.connections.database.connection'));
+        $queueTable = config('queue.connections.database.table', 'jobs');
+        if ($queueConnection->getSchemaBuilder()->hasTable($queueTable)) {
+            $stalePasswordRequests = $queueConnection->table($queueTable)->where('queue', 'password-resets')->where('created_at', '<', now()->subMinutes(5)->timestamp)->where('available_at', '<=', now()->timestamp)->count();
+            if ($stalePasswordRequests > 0) {
+                $warnings['password_reset_queue'] = $stalePasswordRequests.' jelszó-visszaállítási kérés több mint öt perce feldolgozásra vár. Ellenőrizd az időzítőt és a password-resets feldolgozót.';
+            }
+        }
+        $lastPasswordResetFailure = $this->lastRun('password_reset_failure');
+        if ($lastPasswordResetFailure && $lastPasswordResetFailure->gte(now()->subHour())) {
+            $warnings['password_reset_delivery'] = 'Az elmúlt órában sikertelen jelszó-visszaállító levélküldés történt. Ellenőrizd a levélküldést; szükség esetén kérj új visszaállító hivatkozást.';
         }
         if (app()->environment('production') && config('app.debug')) {
             $warnings['debug'] = 'Az éles környezet hibakeresési módja bekapcsolva maradt.';

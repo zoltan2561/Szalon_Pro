@@ -48,7 +48,7 @@ class PasswordResetController extends Controller
 
     public function update(Request $request, OperationsHealth $health): RedirectResponse
     {
-        $data = $request->validate(['email' => 'required|string|email|max:200', 'token' => 'required|string|max:200', 'password' => 'required|string|min:12|max:200|confirmed', 'password_confirmation' => 'required|string|max:200'], ['password_confirmation.required' => 'Add meg újra az új jelszót.']);
+        $data = $request->validate(['email' => 'required|string|email|max:200', 'token' => 'required|string|max:200', 'password' => 'required|string|min:12|max:200'.($request->filled('password_confirmation') ? '|confirmed' : ''), 'password_confirmation' => 'required|string|max:200'], ['password_confirmation.required' => 'Add meg újra az új jelszót.']);
         $user = $this->findUser($data['email']);
         $data['email'] = $user?->email ?? $data['email'];
         $changedUser = null;

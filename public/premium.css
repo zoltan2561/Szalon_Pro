@@ -12,7 +12,7 @@
 .premium a{transition:opacity .16s,background-color .16s}
 .premium .eyebrow{font:500 11px/1.6 'DM Sans',Arial,sans-serif;letter-spacing:.18em;color:var(--muted)}
 .premium .button{font:600 15px/1.35 'DM Sans',Arial,sans-serif;min-height:52px;gap:28px;padding:16px 24px;border-radius:var(--radius);background:var(--accent);color:var(--on-accent);border:1px solid transparent;letter-spacing:0;white-space:normal;text-align:center}
-.premium .button:hover{background:var(--accent);filter:brightness(.92);text-decoration:none}
+.premium .button:hover{background:var(--accent);filter:none;box-shadow:inset 0 0 0 2px currentColor;text-decoration:none}
 .premium .button.secondary{background:transparent;color:var(--ink);border-color:var(--line)}
 .premium .button.secondary:hover{background:var(--soft);filter:none}
 .premium :focus-visible,.admin.premium-admin :focus-visible{outline:3px solid currentColor;outline-offset:5px}
@@ -207,7 +207,7 @@
 .premium .journey-grid article{padding:30px 34px 8px 0;border-top:1px solid var(--line);min-width:0}
 .premium .journey-grid article+article{border-left:1px solid var(--line);padding-left:34px}
 .premium .journey-number{display:block;font:400 18px/1.2 'Playfair Display',Georgia,serif;color:var(--muted);margin-bottom:28px}
-.premium .journey-grid .icon{width:27px;height:27px;color:var(--accent);margin-bottom:20px}
+.premium .journey-grid .icon{width:27px;height:27px;color:var(--ink);margin-bottom:20px}
 .premium .journey-grid h3{font-size:21px;line-height:1.3;margin:0 0 12px;letter-spacing:-.025em}
 .premium .journey-grid p{font-size:14px;line-height:1.7;color:var(--muted);max-width:290px;margin:0}
 .premium .system-section{background:#24302d;color:#f8f1e8;padding:90px 0 84px}

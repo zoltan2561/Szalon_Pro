@@ -62,7 +62,7 @@ class Branding
 
     public function foreground(string $background): string
     {
-        return $this->contrast($background, '#FFFFFF') >= $this->contrast($background, '#171A18') ? '#FFFFFF' : '#171A18';
+        return $this->contrast($background, '#FFFFFF') >= $this->contrast($background, '#000000') ? '#FFFFFF' : '#000000';
     }
 
     public function contrast(string $first, string $second): float

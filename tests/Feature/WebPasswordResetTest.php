@@ -159,7 +159,7 @@ class WebPasswordResetTest extends TestCase
         }
         $limited = $this->post(route('password.email'), ['email' => $user->email])->assertStatus(429)->assertSee('Túl sok kérés érkezett')->assertSee('Vissza a jelszókérő űrlapra');
         $this->assertGreaterThan(0, (int) $limited->headers->get('Retry-After'));
-        $limited->assertSee('Próbáld újra '.$limited->headers->get('Retry-After').' másodperc múlva.');
+        $limited->assertSee('Próbáld újra '.(int) ceil((int) $limited->headers->get('Retry-After') / 60).' perc múlva.');
         Notification::assertNothingSent();
     }
 

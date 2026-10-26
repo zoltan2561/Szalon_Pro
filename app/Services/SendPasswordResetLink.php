@@ -32,6 +32,7 @@ class SendPasswordResetLink implements ShouldBeEncrypted, ShouldQueue
                 $user->notify(new PasswordResetLink($token));
             });
         } catch (Throwable) {
+            $health->recordPasswordResetFailure();
             Log::warning('A jelszó-visszaállító levél küldése sikertelen. Ellenőrizd a levélküldő beállításait.');
         }
     }
