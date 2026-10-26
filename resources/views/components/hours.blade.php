@@ -1,5 +1,19 @@
-@php($days=[1=>'Hétfő',2=>'Kedd',3=>'Szerda',4=>'Csütörtök',5=>'Péntek',6=>'Szombat',7=>'Vasárnap'])
+@php
+    $days = [1=>'Hétfő',2=>'Kedd',3=>'Szerda',4=>'Csütörtök',5=>'Péntek',6=>'Szombat',7=>'Vasárnap'];
+    $restoreHours = old('_hours_context') === ($hoursContext ?? 'salon') && session()->hasOldInput('hours');
+@endphp
 <div class="hours-table"><div class="hours-head"><span>Nap</span><span>Kezdés</span><span>Zárás</span><span>Szünet eleje</span><span>Szünet vége</span><span>Zárva</span></div>
-@foreach($days as $day=>$label)@php($ranges=$hours[$day] ?? [])<div class="hours-row"><strong>{{ $label }}</strong><input aria-label="{{ $label }} kezdés" type="time" name="hours[{{ $day }}][start]" value="{{ $ranges[0][0] ?? '' }}"><input aria-label="{{ $label }} zárás" type="time" name="hours[{{ $day }}][end]" value="{{ count($ranges)>1 ? $ranges[1][1]:($ranges[0][1] ?? '') }}"><input aria-label="{{ $label }} szünet eleje" type="time" name="hours[{{ $day }}][break_start]" value="{{ count($ranges)>1 ? $ranges[0][1]:'' }}"><input aria-label="{{ $label }} szünet vége" type="time" name="hours[{{ $day }}][break_end]" value="{{ count($ranges)>1 ? $ranges[1][0]:'' }}"><label class="check"><input aria-label="{{ $label }} zárva" type="checkbox" name="hours[{{ $day }}][closed]" value="1" @checked(!$ranges)></label></div>
+@foreach($days as $day=>$label)
+    @php
+        $ranges = $hours[$day] ?? [];
+        $row = $restoreHours ? old('hours.'.$day, []) : [
+            'start' => $ranges[0][0] ?? '',
+            'end' => count($ranges)>1 ? $ranges[1][1] : ($ranges[0][1] ?? ''),
+            'break_start' => count($ranges)>1 ? $ranges[0][1] : '',
+            'break_end' => count($ranges)>1 ? $ranges[1][0] : '',
+            'closed' => !$ranges,
+        ];
+    @endphp
+    <div class="hours-row"><strong>{{ $label }}</strong><input aria-label="{{ $label }} kezdés" type="time" name="hours[{{ $day }}][start]" value="{{ $row['start'] ?? '' }}"><input aria-label="{{ $label }} zárás" type="time" name="hours[{{ $day }}][end]" value="{{ $row['end'] ?? '' }}"><input aria-label="{{ $label }} szünet eleje" type="time" name="hours[{{ $day }}][break_start]" value="{{ $row['break_start'] ?? '' }}"><input aria-label="{{ $label }} szünet vége" type="time" name="hours[{{ $day }}][break_end]" value="{{ $row['break_end'] ?? '' }}"><label class="check"><input aria-label="{{ $label }} zárva" type="checkbox" name="hours[{{ $day }}][closed]" value="1" @checked(!empty($row['closed']))></label></div>
 @endforeach
 </div>

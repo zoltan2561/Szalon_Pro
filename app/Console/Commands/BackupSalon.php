@@ -28,7 +28,7 @@ class BackupSalon extends Command
 
     public function handle(): int
     {
-        $path = $this->option('path') ?: storage_path('app/private/backups/'.now()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.backup');
+        $path = $this->option('path') ?: config('salon.backup_directory').'/'.now()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.backup';
         if (file_exists($path)) {
             $this->error('A célfájl már létezik.');
 

@@ -1,8 +1,8 @@
-<section class="studio-section wrap" id="rolunk">
-    <div class="studio-image">
+<section class="studio-section wrap {{ $brand['show_hero'] ? '' : 'studio-without-image' }}" id="rolunk">
+    @if($brand['show_hero'])<div class="studio-image">
         <img src="{{ $brand['studio'] }}" alt="{{ $salon->name }} – részletkép" width="800" height="500" loading="lazy">
-        @unless($brand['custom_hero'])<small>AI-generált bemutató részletkép</small>@endunless
-    </div>
+        @if($salon->demo && !$brand['custom_hero'])<small>AI-generált bemutató részletkép</small>@endif
+    </div>@endif
     <div class="studio-copy">
         <p class="eyebrow">JÓ HELYEN VAGY</p>
         @if($salon->demo)

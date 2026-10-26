@@ -15,10 +15,10 @@
     <div class="form-grid"><label>Rövid felirat a fő üzenet fölött<input name="appearance[eyebrow]" maxlength="100" value="{{ $appearance['eyebrow'] }}" required></label><label>Foglalási gomb szövege<input name="appearance[cta_label]" maxlength="40" value="{{ $appearance['cta_label'] }}" required></label></div>
     <label class="check"><input type="checkbox" name="appearance[show_team]" value="1" @checked($appearance['show_team'] ?? false)><span>Szakemberek megjelenítése a főoldalon</span></label>
     <label class="check"><input type="checkbox" name="appearance[show_gallery]" value="1" @checked($appearance['show_gallery'] ?? false)><span>Referenciafotók megjelenítése a főoldalon</span></label>
-    <hr><h3>Logó és képek</h3><p class="settings-note">A három profil saját generált hangulatképet és közös SP-logót tartalmaz. Saját fotóval és logóval személyessé teheted az oldalt.</p>
-    <img class="upload-preview" src="{{ $brand['hero_mobile'] }}" alt="Jelenlegi nyitókép" width="800" height="500" loading="lazy">
+    <hr><h3>Logó és képek</h3><p class="settings-note">{{ $salon->demo ? 'A bemutató profil generált hangulatképet használ.' : 'A nyilvános oldalon kizárólag a saját feltöltött fotód jelenik meg. Kép nélkül szöveges nyitóoldalt használunk.' }} Saját fotóval és logóval személyessé teheted az oldalt.</p>
+    @if($brand['show_hero'])<img class="upload-preview" src="{{ $brand['hero_mobile'] }}" alt="Jelenlegi nyitókép" width="800" height="500" loading="lazy">@endif
     <label>Nyitókép (fekvő JPG, PNG, WebP; legfeljebb 4 MB)<input type="file" name="hero_image" accept="image/png,image/jpeg,image/webp"></label>
-    @if($salon->hero_image)<label class="check"><input type="checkbox" name="reset_hero" value="1"><span>A profil eredeti hangulatképét használom</span></label>@endif
+    @if($salon->hero_image)<label class="check"><input type="checkbox" name="reset_hero" value="1"><span>{{ $salon->demo ? 'A profil eredeti hangulatképét használom' : 'A saját nyitóképet eltávolítom' }}</span></label>@endif
     <label>Saját logó (JPG, PNG, WebP; legfeljebb 2 MB)<input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
     @if($salon->logo)<label class="check"><input type="checkbox" name="reset_logo" value="1"><span>A mellékelt SP-logót használom</span></label>@endif
     <label>Referenciafotók (legfeljebb 8 kép, képenként 4 MB)<input type="file" name="gallery[]" accept="image/png,image/jpeg,image/webp" multiple></label>

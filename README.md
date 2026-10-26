@@ -73,9 +73,9 @@ php artisan serve --host=127.0.0.1 --port=8095
 
 A `salon:install` nem ír felül meglévő telepítést. Demóhoz új, üres adatbázisban add meg a `--demo=salon`, `--demo=barber` vagy `--demo=nails` kapcsolót. Demót ne telepíts éles ügyféladatbázisba.
 
-A belépés után a Beállítások induló lépései vezetnek végig az adatokon, arculaton, munkatársakon, szolgáltatásokon, tesztfoglaláson és előnézeten. Aktív szolgáltatás, alkalmas szakember és elegendő közös munkaidő nélkül nem engedélyezhető a közzététel.
+A belépés után a Beállítások induló lépései vezetnek végig az adatokon, arculaton, munkatársakon, szolgáltatásokon, tesztfoglaláson és előnézeten. Aktív szolgáltatás, alkalmas szakember és elegendő közös munkaidő nélkül nem engedélyezhető a közzététel. Nem demó telepítésnél a bemutató adatkezelési jelölő és a helyőrző telefonszám is megakadályozza a közzétételt; saját tartalom és valódi telefonszám szükséges. Ez tartalmi alapellenőrzés, nem az adatkezelési tájékoztató jogi jóváhagyása. Saját nyitókép nélkül a valódi szalon szöveges nyitóoldalt kap; a generált bemutató fotók nem jelennek meg.
 
-Tulajdonosi vagy munkatársi jelszó helyreállítása operátori hozzáféréssel: állítsd be a `SALON_ADMIN_PASSWORD` környezeti értéket, majd `php artisan salon:password email@example.hu`. Ez megszünteti az érintett felhasználó adatbázisos munkameneteit.
+Tulajdonosi vagy munkatársi jelszó helyreállítása operátori hozzáféréssel: állíts be egy 12–200 karakteres `SALON_ADMIN_PASSWORD` környezeti értéket, frissítsd az alkalmazás konfigurációs gyorsítótárát, majd futtasd: `php artisan salon:reset-password email@example.hu --no-interaction`. A régi `salon:password` név is működik. A jelszó nem parancssori argumentum és nem kerül kimenetbe. A művelet visszavonja az érintett felhasználó emlékező tokenjét és adatbázisos munkameneteit; más felhasználóét megőrzi. A telepítés alapértelmezett munkamenet-kezelője adatbázisos; más munkamenet-tárolót az üzemeltetőnek külön kell érvénytelenítenie. A helyreállítás után szüntesd meg az ideiglenes jelszóbeállítást, és frissítsd újra a konfigurációs gyorsítótárat.
 
 ## Értesítések
 
@@ -85,6 +85,8 @@ php artisan schedule:work
 ```
 
 A demó `MAIL_MAILER=array` beállítása nem küld valódi e-mailt, és nem írja naplóba a kezelési linket. Az „helyi próba feldolgozva” állapot nem kézbesítési igazolás.
+
+A foglalási és értékeléskérő levél HTML- és egyszerű szöveges részt is tartalmaz. A feladó megjelenített neve a szalon neve, a Reply-To a szalon e-mail-címe; a hitelesített küldőcím továbbra is a `MAIL_FROM_ADDRESS`. A `salon:notify` az adott futás sikeres és hibás küldési próbálkozásainak számát is kiírja.
 
 Élesben `MAIL_MAILER=smtp` és a szolgáltató paraméterei szükségesek; a `log` levélküldőt és azt tartalmazó failovert ne használd, mert bizalmas kezelési link kerülhetne naplóba. A feladó domain SPF/DKIM/DMARC beállítása és a tényleges postaládás próba külön üzemeltetési feladat.
 
@@ -100,6 +102,8 @@ php artisan salon:restore "D:\mentesek\szalon.backup"
 ```
 
 A mentés alaphelye `storage/app/private/backups`; az időzítő naponta 02:15 UTC-kor futtatja. Az export az alkalmazás adatait, arculati beállításait és az aktuális logó/nyitókép/galéria hivatkozott képeit tartalmazza, APP_KEY-vel titkosítva. A mellékelt generált képek a kiadási csomag részei. Az APP_KEY külön, biztonságos megőrzése nélkül nincs visszaállítás. A mentést másik tárolóra is másolni kell; ezt a helyi projekt nem állította be.
+
+A régi, automatikusan elnevezett mentések takarítása külön operátori parancs. Előnézet: `php artisan salon:prune-backups --days=30 --dry-run --no-interaction`; törlés ugyanígy a `--dry-run` nélkül. Csak a mentési könyvtár időbélyeges `.backup` fájljait érinti, a legutóbbi mentést korától függetlenül megtartja, az egyedi nevű exportokhoz nem nyúl. Automatikus törlést ez a kiadás nem ütemez.
 
 Visszaállítás kizárólag azonos verziójú migrációkkal előkészített, üres adatbázisba lehetséges. Meglévő adatot vagy képfájlt nem ír felül. A helyreállítás alatt a webes forgalom és az időzítő álljon; újraindítás előtt ellenőrizd az értesítési sort, mert a mentés óta már elküldött üzenet újra esedékes lehet. A korábbi mentések személyes adatainak életciklusát is kezeld a saját megőrzési szabályzatodban.
 
@@ -130,6 +134,7 @@ Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott t
 
 ## Változásnapló
 
+- 1.2.3 (2026-10-26): javított nyitvatartás-visszatöltés hibás szalon- és munkatársmentésnél; bemutató adatok közzétételének tiltása valódi telepítésen; közelgő vendég kontrasztja és nagyobb adminfeliratok; dokumentált jelszó-helyreállítás; magyar hibaoldalak; saját fotó vagy kép nélküli valódi szalonoldal; személyesebb, szöveges változatot is tartalmazó levelek, vendégüzenetek, ingyenes árjelölés, foglalási horizont magyarázata, értesítési hibaszám és külön mentéstakarító parancs.
 - 1.2.2 (2026-10-26): javított admin kontraszt az időpontválasztóban, vendéglistában, foglalásrészletekben és értesítésekben; olvashatóbb vendégmonogramok és lemondott státuszjelölők, 12 px-es szakembernevek és vendégkarton-feliratok.
 - 1.2.1 (2026-10-25): javított magyar telefonszám- és mezővalidáció, konfigurációval elszigetelt telepítőtesztek, olvashatóbb adminszövegek, kikapcsolt SMS-modulhoz igazított diagnosztika, névvel és forrással kiegészített foglalásrészletek, billentyűzettel elérhető idővonal és múltbeli dátum magyarázata.
 

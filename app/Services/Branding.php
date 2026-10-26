@@ -17,6 +17,7 @@ class Branding
         $preset = $this->preset($salon->theme);
         $appearance = array_replace($preset['appearance'], $salon->appearance ?? []);
         $accent = $salon->accent ?: $preset['accent'];
+        $showHero = (bool) $salon->hero_image || $salon->demo;
 
         return $appearance + [
             'theme' => $salon->theme,
@@ -25,9 +26,10 @@ class Branding
             'accent' => $accent,
             'on_accent' => $this->foreground($accent),
             'font' => $salon->font,
-            'hero' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-hero.webp'),
-            'hero_mobile' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-hero-mobile.webp'),
-            'studio' => $salon->hero_image ? Storage::url($salon->hero_image) : asset('assets/branding/'.$preset['image'].'-studio.webp'),
+            'show_hero' => $showHero,
+            'hero' => $salon->hero_image ? Storage::url($salon->hero_image) : ($salon->demo ? asset('assets/branding/'.$preset['image'].'-hero.webp') : null),
+            'hero_mobile' => $salon->hero_image ? Storage::url($salon->hero_image) : ($salon->demo ? asset('assets/branding/'.$preset['image'].'-hero-mobile.webp') : null),
+            'studio' => $salon->hero_image ? Storage::url($salon->hero_image) : ($salon->demo ? asset('assets/branding/'.$preset['image'].'-studio.webp') : null),
             'custom_hero' => (bool) $salon->hero_image,
             'logo' => $salon->logo ? Storage::url($salon->logo) : asset('assets/branding/sp-mark.png'),
             'custom_logo' => (bool) $salon->logo,

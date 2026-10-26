@@ -77,12 +77,11 @@ class ReviewRequestsTest extends TestCase
         Salon::factory()->create(['features' => ['reviews' => true], 'review_url' => 'https://g.page/r/test/review', 'review_delay_hours' => 0]);
         $booking = Booking::factory()->create(['status' => 'completed', 'guest_id' => Guest::factory()->create(['review_opt_in_at' => now()])->id]);
         app(ReviewRequests::class)->queue($booking);
-        Mail::shouldReceive('send')->once()->withArgs(function ($view, $data, $callback): bool {
-            $this->assertSame('emails.review', $view);
-            $this->assertStringContainsString('/ertekeles/lemondas/', $data['unsubscribeUrl']);
-
-            return true;
-        });
         $this->assertSame(1, app(NotificationSender::class)->sendDue());
+        $mail = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $this->assertStringContainsString('/ertekeles/lemondas/', $mail->getHeaders()->get('List-Unsubscribe')->getBodyAsString());
+        $this->assertSame('List-Unsubscribe=One-Click', $mail->getHeaders()->get('List-Unsubscribe-Post')->getBodyAsString());
+        $this->assertStringContainsString('Minden őszinte visszajelzés egyformán értékes.', $mail->getTextBody());
+        $this->assertStringContainsString('/ertekeles/lemondas/', $mail->getTextBody());
     }
 }

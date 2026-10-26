@@ -18,7 +18,7 @@
         <h2>{{ $booking->service_name }}</h2>
         <p>{{ $booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $booking->duration_minutes }} perc</p>
         <p>{{ $booking->staff->name }} · {{ $salon->address }}</p>
-        <strong>{{ number_format($booking->price,0,',',' ') }} Ft{{ $booking->price_kind==='from' ? '-tól':'' }}{{ $booking->price_kind==='indicative' ? ' · tájékoztató ár':'' }}</strong>
+        <strong>@include('components.price', ['amount'=>$booking->price, 'kind'=>$booking->price_kind]){{ $booking->price_kind==='indicative' ? ' · tájékoztató ár':'' }}</strong>
     </div>
     <p>A saját foglalásodat ezen a bizalmas linken kezelheted. Őrizd meg, és ne oszd meg másokkal.</p>
     <p><a class="button secondary" href="{{ route('booking.manage', $booking->manage_token) }}">Foglalásom kezelése</a></p>

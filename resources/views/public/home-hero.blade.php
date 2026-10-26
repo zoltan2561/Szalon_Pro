@@ -1,5 +1,5 @@
-<section class="hero">
-    <picture class="hero-picture"><source media="(max-width: 640px)" srcset="{{ $brand['hero_mobile'] }}"><img src="{{ $brand['hero'] }}" alt="{{ $brand['custom_hero'] ? $salon->name.' – szalonfotó' : $brand['label'].' – hangulatkép' }}" width="1586" height="992" fetchpriority="high"></picture>
+<section class="hero {{ $brand['show_hero'] ? '' : 'hero-without-image' }}">
+    @if($brand['show_hero'])<picture class="hero-picture"><source media="(max-width: 640px)" srcset="{{ $brand['hero_mobile'] }}"><img src="{{ $brand['hero'] }}" alt="{{ $brand['custom_hero'] ? $salon->name.' – szalonfotó' : $brand['label'].' – hangulatkép' }}" width="1586" height="992" fetchpriority="high"></picture>@endif
     <div class="hero-content wrap"><div class="hero-text"><p class="eyebrow">{{ $brand['eyebrow'] }}</p><h1>{{ $salon->tagline }}</h1><p class="hero-copy">{{ $salon->about }}</p><div class="hero-actions"><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a><a class="hero-secondary" href="#szolgaltatasok">Szolgáltatásaink</a></div><p class="hero-note">{{ $salon->demo ? $brand['demo_copy']['hero_note'] : 'Szolgáltatás, szakember és szabad időpont egy helyen.' }}</p></div></div>
-    @unless($brand['custom_hero'])<span class="image-caption">{{ $salon->demo ? 'AI-generált hangulatkép' : 'Hangulatkép' }}</span>@endunless
+    @if($salon->demo && !$brand['custom_hero'])<span class="image-caption">AI-generált hangulatkép</span>@endif
 </section>

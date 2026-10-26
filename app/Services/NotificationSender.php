@@ -5,13 +5,22 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\OutboxMessage;
 use App\Models\Salon;
+use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class NotificationSender
 {
+    private int $failures = 0;
+
+    public function failedCount(): int
+    {
+        return $this->failures;
+    }
+
     public function sendDue(): int
     {
+        $this->failures = 0;
         OutboxMessage::where('status', 'sending')->where('updated_at', '<', now()->subMinutes(5))
             ->update(['status' => 'retry', 'error_code' => 'InterruptedSend', 'scheduled_at' => now()]);
         $count = 0;
@@ -33,9 +42,11 @@ class NotificationSender
                     throw new \LogicException('Private links require a direct, non-logging transport.');
                 }
                 $unsubscribeUrl = $message->kind === 'review' ? app(ReviewRequests::class)->unsubscribeUrl($booking->guest) : null;
-                Mail::send($message->kind === 'review' ? 'emails.review' : 'emails.booking', ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl], function ($mail) use ($booking, $message, $unsubscribeUrl): void {
+                $view = $message->kind === 'review' ? 'emails.review' : 'emails.booking';
+                Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl], function (Message $mail) use ($booking, $message, $unsubscribeUrl): void {
                     $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?'];
                     $mail->to($booking->guest->email)->subject($titles[$message->kind].' – '.Salon::current()->name);
+                    $mail->from(config('mail.from.address'), Salon::current()->name)->replyTo(Salon::current()->email, Salon::current()->name);
                     $mail->getSymfonyMessage()->getHeaders()->addIdHeader('Message-ID', 'booking-'.$booking->id.'-'.$message->revision.'-'.$message->kind.'@'.parse_url(config('app.url'), PHP_URL_HOST));
                     if ($unsubscribeUrl) {
                         $mail->getSymfonyMessage()->getHeaders()->addTextHeader('List-Unsubscribe', '<'.$unsubscribeUrl.'>');
@@ -46,6 +57,9 @@ class NotificationSender
                 $count++;
             } catch (\Throwable $e) {
                 $obsolete = ! $this->current($message, $booking->fresh());
+                if (! $obsolete) {
+                    $this->failures++;
+                }
                 $this->finish($message, ['status' => $obsolete ? 'obsolete' : ($message->attempts >= 5 ? 'failed' : 'retry'), 'error_code' => class_basename($e), 'scheduled_at' => now()->addMinutes(2 ** $message->attempts)]);
             }
         }
@@ -68,6 +82,7 @@ class NotificationSender
             }
             if ($message->attempts >= 5) {
                 $message->update(['status' => 'failed']);
+                $this->failures++;
 
                 return null;
             }

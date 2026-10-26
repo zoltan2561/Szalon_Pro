@@ -212,3 +212,10 @@
  .premium.barber.public-inner .slots,.premium.nails.public-inner .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
  .premium.nails.public-inner .booking-submit .slots{max-height:none;overflow:visible}
 }
+
+body.public.premium.public-home .hero.hero-without-image{display:block;min-height:0;background:var(--paper);color:var(--ink);padding:0}
+body.public.premium.public-home .hero.hero-without-image .hero-content{padding-top:80px;padding-bottom:80px}
+body.public.premium.public-home .hero.hero-without-image :is(h1,.eyebrow,.hero-copy,.hero-note,.hero-secondary){color:var(--ink)}
+body.public.premium.public-home:has(.hero-without-image) .public-header{position:relative;top:auto;background:var(--paper);color:var(--ink)}
+body.public.premium.public-home .studio-section.studio-without-image{grid-template-columns:1fr}
+@media(max-width:640px){body.public.premium.public-home .hero.hero-without-image .hero-content{padding-top:40px;padding-bottom:40px}}

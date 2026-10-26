@@ -197,7 +197,7 @@ class BrandingTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('layout-immersive')->assertSee('--paper:#FFFFFF', false)->assertSee('Foglalok magamnak')->assertSee('storage/'.$salon->hero_image)->assertDontSee('Akik várnak rád');
         $this->post(route('admin.settings.save'), $this->settingsData($salon, $appearance) + ['published' => 1, 'reset_hero' => 1])->assertSessionHasNoErrors();
         $this->assertNull($salon->fresh()->hero_image);
-        $this->get(route('home'))->assertSee('hair-hero.webp');
+        $this->get(route('home'))->assertSee('hero-without-image')->assertDontSee('hair-hero.webp');
     }
 
     public function test_unsafe_css_and_low_contrast_changes_are_rejected_without_changing_saved_theme(): void

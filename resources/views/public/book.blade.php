@@ -13,6 +13,8 @@
     @else
         @if($date < now($salon->timezone)->toDateString())
             <div class="notice">Ez a nap már elmúlt. Válassz mai vagy későbbi időpontot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId, 'utm_source' => $referralSource])) }}">Következő szabad nap keresése</a></div>
+        @elseif($date > now($salon->timezone)->addDays($salon->horizon_days)->toDateString())
+            <div class="notice">Legfeljebb {{ $salon->horizon_days }} napra előre, {{ now($salon->timezone)->addDays($salon->horizon_days)->format('Y. m. d.') }} napjáig foglalhatsz. Válassz egy korábbi napot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId])) }}">Foglalható nap keresése</a></div>
         @endif
         <div class="booking-grid">
             <form method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
@@ -38,7 +40,7 @@
                 <span class="eyebrow">A FOGLALÁSOD</span>
                 <h2>{{ $service?->name }}</h2>
                 @if($service?->description && ! ($salon->demo && Str::startsWith($service->description, 'Bemutató szolgáltatás')))<p>{{ $service->description }}</p>@endif
-                <div class="summary-price">{{ number_format($service?->price ?? 0, 0, ',', ' ') }} Ft{{ $service?->price_kind === 'from' ? '-tól' : '' }}</div>
+                <div class="summary-price">@include('components.price', ['amount'=>$service?->price ?? 0, 'kind'=>$service?->price_kind])</div>
                 <p>{{ $service?->duration_minutes }} perc @if($service?->price_kind === 'indicative') · Tájékoztató ár @endif</p>
                 <hr>
                 <strong>{{ $salon->name }}</strong>

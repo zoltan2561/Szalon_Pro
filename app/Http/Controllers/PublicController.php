@@ -135,7 +135,7 @@ class PublicController extends Controller
         }
         $bookings->change($booking, $data);
 
-        return back()->with('success', 'A foglalást módosítottuk.');
+        return back()->with('success', $data['action'] === 'cancel' ? 'A foglalásodat lemondtad. Várunk egy másik időpontban!' : 'A foglalásodat áthelyeztük. Az új időpontot alább találod.');
     }
 
     public function bookingData(Request $request, bool $manual = false): array
