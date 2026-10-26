@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => '1.2.1',
+    'version' => '1.2.2',
     'admin_password' => env('SALON_ADMIN_PASSWORD'),
     'demo_urls' => [
         'salon' => env('SALON_DEMO_SALON_URL'),

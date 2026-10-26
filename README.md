@@ -130,6 +130,7 @@ Helyben SQLite-on történt az ellenőrzés; a MySQL/MariaDB és a választott t
 
 ## Változásnapló
 
+- 1.2.2 (2026-10-26): javított admin kontraszt az időpontválasztóban, vendéglistában, foglalásrészletekben és értesítésekben; olvashatóbb vendégmonogramok és lemondott státuszjelölők, 12 px-es szakembernevek és vendégkarton-feliratok.
 - 1.2.1 (2026-10-25): javított magyar telefonszám- és mezővalidáció, konfigurációval elszigetelt telepítőtesztek, olvashatóbb adminszövegek, kikapcsolt SMS-modulhoz igazított diagnosztika, névvel és forrással kiegészített foglalásrészletek, billentyűzettel elérhető idővonal és múltbeli dátum magyarázata.
 
 ## Opcionális SMS (Twilio)

@@ -11,7 +11,7 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}}
 
 
-.admin .muted,.admin .workspace-label,.admin .page-heading .eyebrow,.admin .admin-top .eyebrow,.admin .admin-top>div,.admin .stats article>span,.admin .stats article>small,.admin .source-label,.admin .appointment-main span,.admin .appointment-staff,.admin .appointment-time small,.admin .calendar-foot,.admin .detail-grid small,.admin .history-row p,.admin .audit-row small,.admin .hours-head{color:#52634f}.admin .sidebar nav a{font-size:13px;color:#52634f}.admin .stats article>small{font-size:11px}.admin .appointment-main a{font-size:14px}.admin .appointment-main span,.admin .appointment-staff{font-size:11px}
+.admin .muted,.admin .workspace-label,.admin .page-heading .eyebrow,.admin .admin-top .eyebrow,.admin .admin-top>div,.admin .stats article>span,.admin .stats article>small,.admin .source-label,.admin .appointment-main span,.admin .appointment-staff,.admin .appointment-time small,.admin .calendar-foot,.admin .detail-grid small,.admin .history-row p,.admin .history-row small,.admin .audit-row small,.admin .hours-head,.admin .slot small,.admin .guest-card p,.admin .guest-card .eyebrow,.admin .guest-card .avatar,.admin .booking-summary p{color:#52634f}.admin .sidebar nav a{font-size:13px;color:#52634f}.admin .stats article>small{font-size:11px}.admin .appointment-main a{font-size:14px}.admin .appointment-main span,.admin .appointment-staff{font-size:11px}.admin .slot small,.admin .guest-card .eyebrow{font-size:12px}.admin .badge.cancelled{color:#7d4f43}
 
 .mobile-logout{display:none}@media(max-width:900px){.mobile-logout{display:block}.mobile-logout .text-button{font-size:10px;min-height:40px}.admin-top{gap:12px}.admin-top>.eyebrow{display:none}}
 
