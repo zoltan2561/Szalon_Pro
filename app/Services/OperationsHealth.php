@@ -100,17 +100,9 @@ class OperationsHealth
                 $warnings['due_'.$channel] = ($channel === 'sms' ? 'SMS' : 'E-mail').': '.$count.' esedékes értesítés feldolgozásra vagy ellenőrzésre vár.';
             }
         }
-        $transport = config('mail.mailers.'.config('mail.default').'.transport');
-        $mailReady = match ($transport) {
-            'smtp' => filled(config('mail.mailers.smtp.host')) && ! in_array(config('mail.mailers.smtp.host'), ['127.0.0.1', 'localhost']),
-            'sendmail' => filled(config('mail.mailers.sendmail.path')),
-            'postmark' => filled(config('services.postmark.key')),
-            'resend' => filled(config('services.resend.key')),
-            'ses', 'ses-v2' => filled(config('services.ses.key')) && filled(config('services.ses.secret')),
-            default => false,
-        };
-        if (! $mailReady || ! filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL)) {
+        if (! $this->mailReady()) {
             $warnings['mail'] = 'A valódi e-mail-küldés nincs beállítva. A helyi levélpróba nem kézbesítés.';
+            $warnings['password_reset'] = 'A webes jelszó-visszaállítás valódi levélküldés nélkül nem jut el a felhasználóhoz. Az operátori salon:reset-password parancs használható.';
         }
         if ($smsEnabled && ! app(SmsGateway::class)->configured()) {
             $warnings['sms'] = 'Az SMS-modul aktív, de a szolgáltató nincs beállítva.';
@@ -120,5 +112,20 @@ class OperationsHealth
         }
 
         return $warnings;
+    }
+
+    public function mailReady(): bool
+    {
+        $transport = config('mail.mailers.'.config('mail.default').'.transport');
+        $configured = match ($transport) {
+            'smtp' => filled(config('mail.mailers.smtp.host')) && ! in_array(config('mail.mailers.smtp.host'), ['127.0.0.1', 'localhost']),
+            'sendmail' => filled(config('mail.mailers.sendmail.path')),
+            'postmark' => filled(config('services.postmark.key')),
+            'resend' => filled(config('services.resend.key')),
+            'ses', 'ses-v2' => filled(config('services.ses.key')) && filled(config('services.ses.secret')),
+            default => false,
+        };
+
+        return $configured && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL) !== false;
     }
 }

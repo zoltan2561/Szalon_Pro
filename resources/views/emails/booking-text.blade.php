@@ -16,6 +16,6 @@ Foglalás kezelése: {!! route('booking.manage', $booking->manage_token) !!}
 Új időpont foglalása: {!! route('booking.rebook.form', $booking->manage_token) !!}
 A hivatkozások bizalmasak és {{ $booking->token_expires_at->setTimezone($salon->timezone)->format('Y. m. d.') }} napjáig érvényesek. A megnyitás önmagában nem módosít foglalást.
 
-{!! $salon->terms !!}
+@if($kind!=='cancelled'){!! $salon->terms !!}@endif
 
 Kérdésed van? {!! $salon->phone !!} · {!! $salon->email !!}

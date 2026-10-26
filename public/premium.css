@@ -304,3 +304,5 @@
 .voucher-print h1{font-size:clamp(28px,7vw,48px)}
 @media print{.voucher-print{max-width:180mm;margin:auto;padding:10mm}.voucher-print .panel{box-shadow:none;border:1px solid #333}.public-header,.public-footer,.demo-strip,[data-print],.mobile-booking-bar{display:none!important}.voucher-print img{display:block;margin:20px auto}.voucher-print a{color:#000}body{background:#fff!important}}
 .statistics-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:16px}.statistics-cards article{padding:18px;border:1px solid var(--line);border-radius:12px;min-width:0}.statistics-cards h3{font-size:16px}.statistics-cards meter{display:block;width:100%;height:14px;margin-top:12px;accent-color:#314c42}.statistics-cards p{overflow-wrap:anywhere}
+
+.premium .login-wrap .page-title{overflow-wrap:anywhere;font-size:clamp(30px,7vw,42px)}.premium .login-wrap .button{gap:10px}.premium .login-wrap p{overflow-wrap:anywhere}.premium .auth-return{margin-top:24px;margin-bottom:0}.premium .auth-return a{text-decoration:underline}

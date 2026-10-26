@@ -219,3 +219,12 @@ body.public.premium.public-home .hero.hero-without-image :is(h1,.eyebrow,.hero-c
 body.public.premium.public-home:has(.hero-without-image) .public-header{position:relative;top:auto;background:var(--paper);color:var(--ink)}
 body.public.premium.public-home .studio-section.studio-without-image{grid-template-columns:1fr}
 @media(max-width:640px){body.public.premium.public-home .hero.hero-without-image .hero-content{padding-top:40px;padding-bottom:40px}}
+
+body.public.premium.public-home .hero.hero-without-image .hero-text{max-width:1050px;margin-inline:auto;text-align:center}
+body.public.premium.public-home .hero.hero-without-image h1{max-width:100%;margin-inline:auto}
+body.public.premium.public-home .hero.hero-without-image .hero-copy{max-width:720px;margin-inline:auto}
+body.public.premium.public-home .hero.hero-without-image .hero-actions{justify-content:center;align-items:center}
+body.public.premium.public-home .hero.hero-without-image .hero-note{justify-content:center;margin-inline:auto;max-width:720px}
+
+body.public.premium.public-home .hero.hero-without-image .hero-content{padding-inline:clamp(24px,7.5vw,108px)}
+.premium.barber.public-inner .button:not(.secondary),.premium.nails.public-inner .button:not(.secondary){color:var(--on-accent)}

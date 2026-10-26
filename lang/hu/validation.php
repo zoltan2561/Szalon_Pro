@@ -34,7 +34,7 @@ return [
     'max' => ['numeric' => 'A(z) :attribute maximuma :max.', 'string' => 'A(z) :attribute legfeljebb :max karakter legyen.', 'file' => 'A(z) :attribute legfeljebb :max kB lehet.', 'array' => 'Legfeljebb :max elem adható meg.'],
     'attributes' => [
         'name' => 'név', 'email' => 'e-mail-cím', 'phone' => 'telefonszám',
-        'password' => 'jelszó', 'new_password' => 'új jelszó', 'current_password' => 'jelenlegi jelszó',
+        'password' => 'jelszó', 'password_confirmation' => 'jelszó megerősítése', 'token' => 'visszaállító hivatkozás', 'new_password' => 'új jelszó', 'current_password' => 'jelenlegi jelszó',
         'terms' => 'foglalási feltételek', 'privacy' => 'adatkezelési tájékoztató',
         'slot' => 'időpont', 'starts_at' => 'kezdés', 'ends_at' => 'befejezés', 'start' => 'kezdés', 'end' => 'befejezés',
         'staff_id' => 'szakember', 'service_id' => 'szolgáltatás', 'guest_id' => 'vendég', 'revision' => 'foglalási változat',

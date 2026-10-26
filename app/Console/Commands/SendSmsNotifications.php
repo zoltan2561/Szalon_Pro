@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('salon:sms-notify')]
-#[Description('Send due SMS reminders when the optional SMS module is enabled')]
+#[Description('Esedékes SMS-emlékeztetők küldése bekapcsolt SMS-modulnál')]
 class SendSmsNotifications extends Command
 {
     public function handle(SmsNotificationSender $sender, OperationsHealth $health): int

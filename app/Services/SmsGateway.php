@@ -35,6 +35,17 @@ class SmsGateway
         return preg_match('/^\+[1-9]\d{7,14}$/', $number) ? $number : null;
     }
 
+    public function isPlaceholderNumber(?string $phone): bool
+    {
+        $normalized = $this->normalizeNumber($phone);
+        if (! $normalized) {
+            return true;
+        }
+        $national = str_starts_with($normalized, '+36') ? substr($normalized, 3) : '';
+
+        return in_array(strlen($national), [8, 9], true) && str_ends_with($national, '0000000');
+    }
+
     /** @return array{outcome: string, provider_id: ?string, error_code: ?string} */
     public function send(string $recipient, string $body): array
     {

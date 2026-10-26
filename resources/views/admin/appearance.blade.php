@@ -23,5 +23,6 @@
     @if($salon->logo)<label class="check"><input type="checkbox" name="reset_logo" value="1"><span>A mellékelt SP-logót használom</span></label>@endif
     <label>Referenciafotók (legfeljebb 8 kép, képenként 4 MB)<input type="file" name="gallery[]" accept="image/png,image/jpeg,image/webp" multiple></label>
     <label class="check"><input type="checkbox" name="clear_gallery" value="1"><span>Korábbi referenciafotók eltávolítása a weboldalról</span></label>
-    <label class="check"><input type="checkbox" name="content_rights" value="1" required><span>A megadott szövegek és képek felhasználására jogosult vagyok.</span></label>
+    <label class="check"><input type="checkbox" name="content_rights" value="1" @checked(old('content_rights')) @required(!$salon->content_rights_accepted_at)><span>A megadott szövegek és képek felhasználására jogosult vagyok.</span></label>
+@if($salon->content_rights_accepted_at)<p class="settings-note">A felhasználási jogokat korábban elfogadtad. Új képfeltöltésnél kérjük, erősítsd meg újra.</p>@endif
 </section>

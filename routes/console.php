@@ -16,3 +16,4 @@ Schedule::command('salon:notify')->everyMinute()->withoutOverlapping();
 Schedule::command('salon:sms-notify')->everyMinute()->withoutOverlapping();
 Schedule::command('salon:google-sync')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('salon:backup')->dailyAt('02:15')->withoutOverlapping();
+Schedule::command('salon:prune-backups --days=30')->weeklyOn(7, '03:15')->timezone('UTC')->withoutOverlapping();

@@ -16,6 +16,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => 'Az e-mail-cím vagy a jelszó hibás.']);
         }
         $request->session()->regenerate();
+        $request->session()->put('password_hash_web', Auth::guard()->hashPasswordForCookie($request->user()->getAuthPassword()));
 
         return redirect()->intended(route('admin.today'));
     }

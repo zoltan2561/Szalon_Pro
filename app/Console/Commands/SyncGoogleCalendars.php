@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Throwable;
 
 #[Signature('salon:google-sync')]
-#[Description('Connected Google calendars: export bookings and refresh external busy periods')]
+#[Description('Kapcsolt Google-naptárak foglalásainak és külső foglaltságának frissítése')]
 class SyncGoogleCalendars extends Command
 {
     public function handle(GoogleCalendarSync $sync): int

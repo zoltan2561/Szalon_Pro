@@ -7,19 +7,25 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\ModuleSettingsController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ReviewConsentController;
 use App\Http\Controllers\SharingController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WaitlistController;
+use App\Models\Salon;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/ajandek/{token}', [VoucherController::class, 'show'])->middleware('throttle:booking')->name('vouchers.show');
 Route::get('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'show'])->middleware('signed')->name('reviews.unsubscribe');
 Route::post('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'unsubscribe'])->middleware('signed')->name('reviews.unsubscribe.update');
-Route::get('/adatkezeles', fn () => view('public.privacy'))->name('privacy');
+Route::get('/adatkezeles', function () {
+    abort_unless(Salon::current()->published || auth()->user()?->role === 'owner', 404);
+
+    return view('public.privacy');
+})->name('privacy');
 Route::get('/foglalas', [PublicController::class, 'book'])->name('booking.form');
 Route::post('/foglalas', [PublicController::class, 'store'])->middleware('throttle:booking')->name('booking.store');
 Route::get('/foglalas/kesz', [PublicController::class, 'success'])->name('booking.success');
@@ -29,6 +35,10 @@ Route::get('/kezeles/{token}/ujra', [PublicController::class, 'rebook'])->middle
 Route::post('/kezeles/{token}/ujra', [PublicController::class, 'storeRebooking'])->middleware('throttle:booking')->name('booking.rebook.store');
 Route::get('/belepes', fn () => view('auth.login'))->name('login');
 Route::post('/belepes', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
+Route::get('/elfelejtett-jelszo', [PasswordResetController::class, 'request'])->name('password.request');
+Route::post('/elfelejtett-jelszo', [PasswordResetController::class, 'send'])->middleware('throttle:password-reset-link')->name('password.email');
+Route::get('/uj-jelszo/{token}', [PasswordResetController::class, 'edit'])->where('token', '[a-fA-F0-9]{64}')->name('password.reset');
+Route::post('/uj-jelszo', [PasswordResetController::class, 'update'])->middleware('throttle:password-reset-save')->name('password.update');
 Route::post('/kilepes', [AuthController::class, 'logout'])->name('logout');
 Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): void {
     Route::get('/', [AdminController::class, 'today'])->name('today');

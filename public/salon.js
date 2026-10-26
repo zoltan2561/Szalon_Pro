@@ -71,3 +71,16 @@ document.querySelectorAll('.booking-submit').forEach(form => {
 });
 
 document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
+
+const settingsForm = document.querySelector('.admin-settings');
+if (settingsForm) {
+    const rights = settingsForm.querySelector('input[name="content_rights"]');
+    const uploads = Array.from(settingsForm.querySelectorAll('input[type="file"]'));
+    const updateRightsRequirement = () => {
+        if (rights) {
+            rights.required = settingsForm.dataset.contentRightsAccepted !== '1' || uploads.some(input => input.files.length > 0);
+        }
+    };
+    uploads.forEach(input => input.addEventListener('change', updateRightsRequirement));
+    updateRightsRequirement();
+}
