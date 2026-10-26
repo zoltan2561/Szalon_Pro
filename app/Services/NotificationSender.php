@@ -43,7 +43,9 @@ class NotificationSender
                 }
                 $unsubscribeUrl = $message->kind === 'review' ? app(ReviewRequests::class)->unsubscribeUrl($booking->guest) : null;
                 $view = $message->kind === 'review' ? 'emails.review' : 'emails.booking';
-                Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl], function (Message $mail) use ($booking, $message, $unsubscribeUrl): void {
+                $cancellation = $message->kind === 'cancelled' ? $booking->events()->where('action', 'cancel')->latest('id')->first() : null;
+                $guestCancelled = $cancellation && $cancellation->actor_id === null;
+                Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl, 'guestCancelled' => $guestCancelled], function (Message $mail) use ($booking, $message, $unsubscribeUrl): void {
                     $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?'];
                     $mail->to($booking->guest->email)->subject($titles[$message->kind].' – '.Salon::current()->name);
                     $mail->from(config('mail.from.address'), Salon::current()->name)->replyTo(Salon::current()->email, Salon::current()->name);

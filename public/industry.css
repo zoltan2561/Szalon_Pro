@@ -228,3 +228,8 @@ body.public.premium.public-home .hero.hero-without-image .hero-note{justify-cont
 
 body.public.premium.public-home .hero.hero-without-image .hero-content{padding-inline:clamp(24px,7.5vw,108px)}
 .premium.barber.public-inner .button:not(.secondary),.premium.nails.public-inner .button:not(.secondary){color:var(--on-accent)}
+
+.premium.public-home .desktop-nav .button:not(.secondary){background:var(--accent);color:var(--on-accent)}
+.premium .team-heading .eyebrow{color:var(--ink)}
+
+.premium.barber.public-home .service-number,.premium.barber.public-home .service-meta strong{color:var(--ink)}

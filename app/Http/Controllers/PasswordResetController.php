@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Notifications\PasswordChanged;
-use App\Notifications\PasswordResetLink;
 use App\Services\OperationsHealth;
+use App\Services\SendPasswordResetLink;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -28,19 +28,10 @@ class PasswordResetController extends Controller
         return view('auth.forgot-password');
     }
 
-    public function send(Request $request, OperationsHealth $health): RedirectResponse
+    public function send(Request $request): RedirectResponse
     {
         $data = $request->validate(['email' => 'required|string|email|max:200']);
-        $user = $this->findUser($data['email']);
-        if ($this->canSend($health)) {
-            try {
-                Password::broker()->sendResetLink(['email' => $user?->email ?? trim($data['email'])], function (User $user, string $token): void {
-                    $user->notify(new PasswordResetLink($token));
-                });
-            } catch (Throwable) {
-                Log::warning('A jelszó-visszaállító levél küldése sikertelen. Ellenőrizd a levélküldő beállításait.');
-            }
-        }
+        SendPasswordResetLink::dispatch(trim($data['email']));
 
         return redirect()->route('password.request')->with('success', self::RequestedMessage);
     }
@@ -57,7 +48,7 @@ class PasswordResetController extends Controller
 
     public function update(Request $request, OperationsHealth $health): RedirectResponse
     {
-        $data = $request->validate(['email' => 'required|string|email|max:200', 'token' => 'required|string|max:200', 'password' => 'required|string|min:12|max:200|confirmed', 'password_confirmation' => 'required|string|max:200']);
+        $data = $request->validate(['email' => 'required|string|email|max:200', 'token' => 'required|string|max:200', 'password' => 'required|string|min:12|max:200|confirmed', 'password_confirmation' => 'required|string|max:200'], ['password_confirmation.required' => 'Add meg újra az új jelszót.']);
         $user = $this->findUser($data['email']);
         $data['email'] = $user?->email ?? $data['email'];
         $changedUser = null;

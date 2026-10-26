@@ -71,6 +71,10 @@ class OperationsHealth
     public function warnings(): array
     {
         $warnings = [];
+        $connection = DB::connection();
+        if ($connection->getDriverName() === 'sqlite' && $connection->getDatabaseName() !== ':memory:' && strtolower($connection->selectOne('PRAGMA journal_mode')->journal_mode) !== 'wal') {
+            $warnings['sqlite_wal'] = 'Az SQLite adatbázis nem WAL módban fut. A párhuzamos foglalásokhoz kérd az üzemeltetőtől a WAL mód bekapcsolását.';
+        }
         $smsEnabled = Schema::hasTable('salons') && (Salon::find(1)?->featureEnabled('sms') ?? false);
         if (Schema::hasTable('fiscal_documents')) {
             $billingIssues = DB::table('fiscal_documents')->where(function ($query): void {

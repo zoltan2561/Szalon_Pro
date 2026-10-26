@@ -13,6 +13,7 @@ Artisan::command('salon:notify', function (NotificationSender $sender, Operation
     }
 })->purpose('Esedékes tartós értesítési sor feldolgozása');
 Schedule::command('salon:notify')->everyMinute()->withoutOverlapping();
+Schedule::command('queue:work database --queue=password-resets --stop-when-empty --max-time=50 --tries=1')->everyMinute()->withoutOverlapping();
 Schedule::command('salon:sms-notify')->everyMinute()->withoutOverlapping();
 Schedule::command('salon:google-sync')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('salon:backup')->dailyAt('02:15')->withoutOverlapping();

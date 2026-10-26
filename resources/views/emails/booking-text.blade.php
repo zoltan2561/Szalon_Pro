@@ -1,5 +1,5 @@
 {!! $salon->name !!}
-{{ ['confirmation'=>'A foglalásod visszaigazolva','changed'=>'Az időpontod módosult','cancelled'=>'A foglalásod lemondva','reminder'=>'Hamarosan találkozunk'][$kind] }}
+{{ ['confirmation'=>'A foglalásod visszaigazolva','changed'=>'Az időpontod módosult','cancelled'=>(($guestCancelled ?? false) ? 'Lemondtad a foglalásodat' : 'A foglalásodat lemondtuk'),'reminder'=>'Hamarosan találkozunk'][$kind] }}
 
 Kedves {!! $booking->guest->name !!}!
 

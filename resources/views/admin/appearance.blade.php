@@ -25,4 +25,5 @@
     <label class="check"><input type="checkbox" name="clear_gallery" value="1"><span>Korábbi referenciafotók eltávolítása a weboldalról</span></label>
     <label class="check"><input type="checkbox" name="content_rights" value="1" @checked(old('content_rights')) @required(!$salon->content_rights_accepted_at)><span>A megadott szövegek és képek felhasználására jogosult vagyok.</span></label>
 @if($salon->content_rights_accepted_at)<p class="settings-note">A felhasználási jogokat korábban elfogadtad. Új képfeltöltésnél kérjük, erősítsd meg újra.</p>@endif
+@error('content_rights')<p class="settings-note">A böngésző nem őrzi meg a fájlválasztást. Válaszd ki újra a feltöltendő képeket.</p>@enderror
 </section>

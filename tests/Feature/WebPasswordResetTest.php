@@ -9,13 +9,16 @@ use App\Models\User;
 use App\Notifications\PasswordChanged;
 use App\Notifications\PasswordResetLink;
 use App\Services\OperationsHealth;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -35,6 +38,8 @@ class WebPasswordResetTest extends TestCase
         Notification::fake();
         $user = User::factory()->create(['email' => 'Owner@example.test']);
         $known = $this->post(route('password.email'), ['email' => 'OWNER@example.test'])->assertRedirect(route('password.request'))->assertSessionHas('success', PasswordResetController::RequestedMessage);
+        Notification::assertNothingSent();
+        $this->processResetRequests();
         Notification::assertSentTo($user, PasswordResetLink::class, function (PasswordResetLink $notification) use ($user): bool {
             $stored = DB::table('password_reset_tokens')->where('email', $user->email)->value('token');
             $this->assertNotSame($notification->token, $stored);
@@ -43,9 +48,50 @@ class WebPasswordResetTest extends TestCase
             return true;
         });
         $this->post(route('password.email'), ['email' => 'missing@example.test'])->assertStatus($known->status())->assertSessionHas('success', PasswordResetController::RequestedMessage);
+        $this->processResetRequests();
         Notification::assertCount(1);
         $this->get(route('login'))->assertOk()->assertSee('Elfelejtetted a jelszavad?');
         $this->get(route('password.request'))->assertOk()->assertSee('Visszaállító hivatkozást kérek');
+    }
+
+    public function test_account_lookup_token_and_notification_are_all_queued_outside_the_request_worker(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create(['email' => 'Owner@example.test']);
+        $kernel = app(Kernel::class);
+        $responses = [];
+        foreach (['OWNER@example.test', 'missing@example.test'] as $email) {
+            $queries = [];
+            DB::listen(function ($query) use (&$queries): void {
+                $queries[] = $query->sql;
+            });
+            $request = Request::create(route('password.email'), 'POST', ['email' => $email]);
+            $response = $kernel->handle($request);
+            $this->assertSame(302, $response->getStatusCode());
+            $this->assertSame(route('password.request'), $response->headers->get('Location'));
+            $this->assertSame(PasswordResetController::RequestedMessage, $request->session()->get('success'));
+            $this->assertSame([], array_values(array_filter($queries, fn (string $sql): bool => str_contains(strtolower($sql), 'lower(email)'))));
+            if ($email === 'OWNER@example.test') {
+                Notification::assertNothingSent();
+                $this->assertDatabaseCount('password_reset_tokens', 0);
+            }
+            $responses[] = $response->getContent();
+            $kernel->terminate($request, $response);
+            $this->assertDatabaseCount('jobs', 1);
+            $payload = DB::table('jobs')->value('payload');
+            $this->assertStringNotContainsString($email, $payload);
+            if ($email === 'OWNER@example.test') {
+                Notification::assertNothingSent();
+                $this->assertDatabaseCount('password_reset_tokens', 0);
+            }
+            $this->processResetRequests();
+        }
+        $this->assertSame($responses[0], $responses[1]);
+        Notification::assertSentToTimes($user, PasswordResetLink::class, 1);
+        $this->assertDatabaseCount('password_reset_tokens', 1);
+        $this->post(route('password.email'), ['email' => $user->email])->assertRedirect();
+        $this->processResetRequests();
+        Notification::assertCount(1);
     }
 
     /** @return array<string, array{string}> */
@@ -111,7 +157,9 @@ class WebPasswordResetTest extends TestCase
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $this->post(route('password.email'), ['email' => 'missing-'.$attempt.'@example.test'])->assertRedirect()->assertSessionHas('success', PasswordResetController::RequestedMessage);
         }
-        $this->post(route('password.email'), ['email' => $user->email])->assertStatus(429)->assertSee('Túl sok kérés érkezett');
+        $limited = $this->post(route('password.email'), ['email' => $user->email])->assertStatus(429)->assertSee('Túl sok kérés érkezett')->assertSee('Vissza a jelszókérő űrlapra');
+        $this->assertGreaterThan(0, (int) $limited->headers->get('Retry-After'));
+        $limited->assertSee('Próbáld újra '.$limited->headers->get('Retry-After').' másodperc múlva.');
         Notification::assertNothingSent();
     }
 
@@ -146,6 +194,7 @@ class WebPasswordResetTest extends TestCase
         $user = User::factory()->create();
         config(['app.url' => 'https://trusted.example.test', 'mail.from.address' => 'verified@example.test']);
         $this->withHeaders(['Host' => 'untrusted.example.test'])->post(route('password.email'), ['email' => $user->email])->assertRedirect();
+        $this->processResetRequests();
         $mail = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
         $this->assertSame('Rózsa & Fésű', $mail->getFrom()[0]->getName());
         $this->assertSame('verified@example.test', $mail->getFrom()[0]->getAddress());
@@ -162,9 +211,18 @@ class WebPasswordResetTest extends TestCase
         $user = User::factory()->create();
         config(['mail.default' => 'log']);
         $this->post(route('password.email'), ['email' => $user->email])->assertRedirect()->assertSessionHas('success', PasswordResetController::RequestedMessage);
+        $this->processResetRequests();
         Notification::assertNothingSent();
         $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
         $this->assertArrayHasKey('password_reset', app(OperationsHealth::class)->warnings());
         $this->artisan('salon:doctor')->expectsOutputToContain('A webes jelszó-visszaállítás')->assertFailed();
+    }
+
+    private function processResetRequests(): void
+    {
+        while ($job = Queue::connection('database')->pop('password-resets')) {
+            $job->fire();
+            $job->delete();
+        }
     }
 }
