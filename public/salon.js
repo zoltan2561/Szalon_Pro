@@ -239,7 +239,7 @@ document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
         submit.disabled = true;
         preview.textContent = 'Szabad időpont keresése…';
         try {
-            const params = new URLSearchParams({service_id: service.value, quick_time: time.value});
+            const params = new URLSearchParams({quick_preview: '1', service_id: service.value, quick_time: time.value});
             const response = await fetch(`${form.dataset.quickPreviewUrl}?${params}`, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
             const result = await response.json();
             if (sequence !== latestPreview) return;

@@ -66,8 +66,11 @@ class AdminController extends Controller
         return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['quickServices' => Service::where('active', true)->when($request->user()->role !== 'owner', fn ($query) => $query->whereHas('staff', fn ($query) => $query->where('staff.id', $request->user()->staff_id)))->get(), 'requestKey' => old('request_key', Str::uuid()->toString()), 'failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
-    public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View
+    public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View|JsonResponse
     {
+        if ($request->boolean('quick_preview')) {
+            return $this->quickPreview($request, $availability);
+        }
         $request->validate(['date' => 'nullable|date_format:Y-m-d']);
         $services = Service::where('active', true)->when($request->user()->role !== 'owner', fn ($q) => $q->whereHas('staff', fn ($q) => $q->where('staff.id', $request->user()->staff_id)))->with('staff')->get();
         $service = $services->firstWhere('id', $request->integer('service_id')) ?? $services->first();

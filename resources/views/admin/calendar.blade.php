@@ -70,7 +70,7 @@
 
 @if($isTodayPage && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))
 <div class="quick-actions">
-<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}" data-quick-preview-url="{{ route('admin.quick-preview') }}">@csrf
+<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}" data-quick-preview-url="{{ route('admin.create') }}">@csrf
 <input type="hidden" name="request_key" value="{{ $requestKey }}">
 <input type="hidden" name="preview_token" value="">
 <label>Szolgáltatás<select name="service_id" required>@foreach($quickServices as $service)<option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>{{ $service->name }} · {{ $service->duration_minutes }} perc</option>@endforeach</select></label>

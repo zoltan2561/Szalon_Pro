@@ -111,7 +111,7 @@ class SalonWorkflowTest extends TestCase
     public function test_quick_booking_uses_the_previewed_slot_and_repeated_submission_is_idempotent(): void
     {
         $data = ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()];
-        $preview = $this->actingAs($this->owner)->getJson(route('admin.quick-preview', ['service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->assertJsonStructure(['label', 'token'])->json();
+        $preview = $this->actingAs($this->owner)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->assertJsonStructure(['label', 'token'])->json();
         $data['preview_token'] = $preview['token'];
         $this->actingAs($this->owner)->from(route('admin.today'))->post(route('admin.store'), $data)->assertSessionHasNoErrors();
         $booking = Booking::sole();
@@ -125,7 +125,7 @@ class SalonWorkflowTest extends TestCase
 
     public function test_quick_booking_rejects_an_occupied_preview_without_silently_selecting_another_slot(): void
     {
-        $preview = $this->actingAs($this->owner)->getJson(route('admin.quick-preview', ['service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
+        $preview = $this->actingAs($this->owner)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
         $slot = json_decode(Crypt::decryptString($preview['token']), true)['slot'];
         $this->post(route('admin.store'), ['service_id' => $this->service->id, 'slot' => $slot, 'name' => 'First', 'request_key' => Str::uuid()->toString()])->assertSessionHasNoErrors();
         $this->from(route('admin.today'))->post(route('admin.store'), ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'preview_token' => $preview['token'], 'name' => 'Second', 'request_key' => Str::uuid()->toString()])->assertSessionHasErrors('starts_at');
@@ -134,7 +134,7 @@ class SalonWorkflowTest extends TestCase
 
     public function test_quick_preview_is_bound_to_the_service_and_actor(): void
     {
-        $preview = $this->actingAs($this->owner)->getJson(route('admin.quick-preview', ['service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
+        $preview = $this->actingAs($this->owner)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
         $other = Service::factory()->create();
         $data = ['service_id' => $other->id, 'quick_time' => 'nearest', 'preview_token' => $preview['token'], 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()];
         $this->post(route('admin.store'), $data)->assertSessionHasErrors('preview_token');
@@ -146,7 +146,7 @@ class SalonWorkflowTest extends TestCase
     public function test_quick_booking_requires_booking_permission(): void
     {
         $user = User::factory()->create(['role' => 'staff', 'staff_id' => $this->staff->id, 'can_manage_bookings' => false]);
-        $this->actingAs($user)->getJson(route('admin.quick-preview', ['service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertForbidden();
+        $this->actingAs($user)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertForbidden();
         $this->actingAs($user)->post(route('admin.store'), ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()])->assertForbidden();
         $this->assertDatabaseCount('bookings', 0);
     }
@@ -155,8 +155,8 @@ class SalonWorkflowTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'staff', 'staff_id' => $this->staff->id, 'can_manage_bookings' => true]);
         $otherService = Service::factory()->create();
-        $this->actingAs($user)->getJson(route('admin.quick-preview', ['service_id' => $otherService->id, 'quick_time' => 'nearest']))->assertForbidden();
-        $preview = $this->getJson(route('admin.quick-preview', ['service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
+        $this->actingAs($user)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $otherService->id, 'quick_time' => 'nearest']))->assertForbidden();
+        $preview = $this->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();
         $payload = json_decode(Crypt::decryptString($preview['token']), true);
         $this->assertStringStartsWith($this->staff->id.'|', $payload['slot']);
     }
