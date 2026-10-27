@@ -16,6 +16,17 @@ class GoogleCalendarSelfServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_google_account_redirect_is_allowed_only_on_calendar_management_page(): void
+    {
+        Salon::factory()->create();
+        $owner = User::factory()->create(['role' => 'owner']);
+        $calendar = $this->actingAs($owner)->get(route('admin.google.index'));
+        $this->assertStringContainsString("form-action 'self' https://accounts.google.com;", $calendar->headers->get('Content-Security-Policy'));
+        $dashboard = $this->get(route('admin.today'));
+        $this->assertStringContainsString("form-action 'self';", $dashboard->headers->get('Content-Security-Policy'));
+        $this->assertStringNotContainsString('https://accounts.google.com', $dashboard->headers->get('Content-Security-Policy'));
+    }
+
     public function test_staff_can_manage_only_their_own_calendar(): void
     {
         Salon::factory()->create();

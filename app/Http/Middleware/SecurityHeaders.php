@@ -14,7 +14,8 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'no-referrer');
         $response->headers->set('X-Frame-Options', 'DENY');
-        $response->headers->set('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+        $formAction = $request->routeIs('admin.google.index') ? "'self' https://accounts.google.com" : "'self'";
+        $response->headers->set('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action {$formAction}; frame-ancestors 'none'");
         if ($request->is('admin*', 'kezeles*', 'foglalas/kesz', 'belepes', 'ajandek*', 'ertekeles/lemondas*')) {
             $response->headers->set('Cache-Control', 'no-store, private');
             $response->headers->set('X-Robots-Tag', 'noindex');
