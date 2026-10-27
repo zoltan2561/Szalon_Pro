@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css') }}"><link rel="stylesheet" href="{{ asset('premium.css') }}"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"></head>
 <body class="admin premium-admin">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 <aside class="sidebar">
@@ -38,5 +38,5 @@
 <button type="button" data-open-more aria-controls="admin-more-menu" aria-expanded="false" @if(!request()->routeIs('admin.today','admin.calendar','admin.guests','admin.guest','admin.create','admin.booking*')) aria-current="page" @endif><x-icon name="list" /><span>Több</span></button>
 </nav>
 <dialog id="admin-more-menu" class="admin-more-sheet" aria-labelledby="admin-more-title"><div class="section-heading"><h2 id="admin-more-title">További lehetőségek</h2><form method="dialog"><button class="button secondary" aria-label="Menü bezárása">Bezárás</button></form></div><nav aria-label="További menüpontok">@include('components.admin-links')<a href="{{ route('home') }}">Weboldal előnézete ↗</a></nav><form method="post" action="{{ route('logout') }}">@csrf<button class="button secondary full">Kijelentkezés</button></form></dialog>
-<script src="{{ asset('salon.js') }}" defer></script>
+<script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 </body></html>

@@ -4,7 +4,7 @@
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="{{ $salon->tagline }}"><meta name="referrer" content="no-referrer">@if($salon->demo)<meta name="robots" content="noindex, nofollow">@endif
     <title>@yield('title', $salon->name) · {{ $salon->name }}</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/branding/favicon.png') }}">
-    <link rel="stylesheet" href="{{ asset('salon.css') }}"><link rel="stylesheet" href="{{ asset('premium.css') }}"><link rel="stylesheet" href="{{ asset('industry.css') }}">
+    <link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('industry.css').'?v='.substr(hash_file('sha256', public_path('industry.css')), 0, 12) }}">
 </head>
 <body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }}"
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['surface'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
@@ -42,5 +42,5 @@
 @unless(request()->routeIs('booking.*', 'vouchers.*', 'login', 'privacy', 'password.*'))
 <div class="mobile-booking-bar"><span>{{ $salon->demo ? $brand['demo_copy']['mobile_cta'] : 'Egy kis idő magadra.' }}</span><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div>
 @endunless
-<script src="{{ asset('salon.js') }}" defer></script>
+<script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 </body></html>
