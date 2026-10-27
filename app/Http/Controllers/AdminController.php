@@ -62,7 +62,7 @@ class AdminController extends Controller
         $exceptions = WorkException::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('date', '>=', $day->toDateString())->where('date', '<', $end->toDateString())->orderBy('date')->get();
         $googleBusy = GoogleCalendarBusy::with('connection.staff')->whereHas('connection', fn ($query) => $query->whereIn('staff_id', $visibleStaffIds))->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
 
-        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
+        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['quickServices' => Service::where('active', true)->when($request->user()->role !== 'owner', fn ($query) => $query->whereHas('staff', fn ($query) => $query->where('staff.id', $request->user()->staff_id)))->get(), 'requestKey' => old('request_key', Str::uuid()->toString()), 'failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View
@@ -84,7 +84,7 @@ class AdminController extends Controller
         }
 
         $slots = $service ? $availability->slots($service, $date, $staffId) : [];
-        if (($request->boolean('nearest') || ! $request->filled('date')) && $service && $staffId) {
+        if (($request->boolean('nearest') || ! $request->filled('date')) && $service) {
             $salon = Salon::current();
             $today = CarbonImmutable::now($salon->timezone)->startOfDay();
             $slots = [];
@@ -104,8 +104,36 @@ class AdminController extends Controller
         return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
-    public function store(Request $request, PublicController $public, BookingService $bookings): RedirectResponse
+    public function store(Request $request, PublicController $public, BookingService $bookings, Availability $availability): RedirectResponse
     {
+        if ($request->filled('quick_time')) {
+            abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
+            $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id', 'request_key' => 'required|uuid']);
+            $service = Service::findOrFail($quick['service_id']);
+            $previous = Booking::where('request_key', 'admin:'.$request->user()->id.':'.$quick['request_key'])->first();
+            if ($previous) {
+                $slot = $previous->staff_id.'|'.$previous->starts_at->setTimezone(Salon::current()->timezone)->format('Y-m-d\TH:i:sP');
+            } else {
+                $salon = Salon::current();
+                $now = CarbonImmutable::now($salon->timezone);
+                $threshold = $quick['quick_time'] === 'plus15' ? $now->addMinutes(15) : $now;
+                $staffId = $request->user()->role === 'owner' ? null : $request->user()->staff_id;
+                $slot = null;
+                $lastDay = $quick['quick_time'] === 'nearest' ? $salon->horizon_days : 0;
+                for ($day = 0; $day <= $lastDay && ! $slot; $day++) {
+                    foreach ($availability->slots($service, $now->addDays($day)->toDateString(), $staffId) as $candidate) {
+                        if (CarbonImmutable::parse($candidate['starts_at'])->gte($threshold)) {
+                            $slot = $candidate['staff_id'].'|'.$candidate['starts_at'];
+                            break;
+                        }
+                    }
+                }
+                if (! $slot) {
+                    throw ValidationException::withMessages(['quick_time' => 'Nem található megfelelő szabad időpont. Válassz másik szolgáltatást vagy időt.']);
+                }
+            }
+            $request->merge(['slot' => $slot]);
+        }
         $booking = $bookings->create($public->bookingData($request, true), $request->user());
 
         return redirect()->route('admin.booking', $booking)->with('success', 'A foglalást elmentettük.');

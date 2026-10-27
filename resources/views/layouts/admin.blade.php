@@ -25,7 +25,7 @@
 <form class="mobile-logout" method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kilépés</button></form>
 </header>
 <main id="main" class="admin-content">@include('components.flash')
-@if(!empty($operationWarnings))<aside class="notice" aria-label="Működési figyelmeztetések"><strong>A rendszer működése figyelmet igényel</strong><ul>@foreach($operationWarnings as $warning)<li>{{ $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Értesítések és feldolgozási állapot →</a></aside>@endif
+@if(!empty($operationWarnings))<details class="notice compact-warning" aria-label="Működési figyelmeztetések"><summary>Figyelem · {{ count($operationWarnings) }} probléma</summary><ul>@foreach($operationWarnings as $warning)<li>{{ $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Értesítések és feldolgozási állapot →</a></details>@endif
 @yield('content')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>

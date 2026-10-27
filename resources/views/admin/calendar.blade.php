@@ -46,11 +46,35 @@
     </div>
 </div>
 
+@if($isTodayPage && (! $salon->published && auth()->user()->role === 'owner' || $failed))
+<details class="notice compact-warning"><summary>Figyelem · {{ (int) (! $salon->published && auth()->user()->role === 'owner') + (int) ($failed > 0) }} probléma</summary>
+@if(! $salon->published && auth()->user()->role === 'owner')<p>A nyilvános oldal még nincs közzétéve. <a href="{{ route('admin.settings') }}">Induló beállítások →</a></p>@endif
+@if($failed)<p>{{ $failed }} értesítés küldése figyelmet igényel. <a href="{{ route('admin.notifications') }}">Küldési napló →</a></p>@endif
+</details>
+@elseif(! $isTodayPage)
 @if(! $salon->published && auth()->user()->role === 'owner')<div class="notice">A nyilvános oldal még nincs közzétéve. <a href="{{ route('admin.settings') }}">Induló beállítások →</a></div>@endif
 @if($failed)<div class="notice error">{{ $failed }} értesítés küldése figyelmet igényel. <a href="{{ route('admin.notifications') }}">Küldési napló →</a></div>@endif
+@endif
 
 @if($isTodayPage && $next)
     <section class="next-guest" aria-labelledby="next-guest-heading"><div><p class="eyebrow">A KÖVETKEZŐ VENDÉG</p><h2 id="next-guest-heading">{{ $next->guest->name }}</h2><p>{{ $next->service_name }} · {{ $next->staff->name }}</p><a href="{{ route('admin.booking', $next) }}">Foglalás megnyitása ↗</a></div><div class="next-time">{{ $next->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $next->starts_at->setTimezone($salon->timezone)->format('m. d.') }} · {{ $next->duration_minutes }} perc</small></div></section>
+@elseif($isTodayPage)
+    <section class="next-guest" aria-labelledby="next-guest-heading"><div><p class="eyebrow">A KÖVETKEZŐ VENDÉG</p><h2 id="next-guest-heading">Nincs következő foglalás</h2><p>Az új időpontok itt jelennek meg.</p></div></section>
+@endif
+
+@if($isTodayPage && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))
+<div class="quick-actions">
+<details class="quick-sheet" @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}">@csrf
+<input type="hidden" name="request_key" value="{{ $requestKey }}">
+<label>Szolgáltatás<select name="service_id" required>@foreach($quickServices as $service)<option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>{{ $service->name }} · {{ $service->duration_minutes }} perc</option>@endforeach</select></label>
+<label>Időpont<select name="quick_time"><option value="now" @selected(old('quick_time') === 'now')>Most – első elérhető időpont ma</option><option value="plus15" @selected(old('quick_time') === 'plus15')>+15 perc – első elérhető időpont ma</option><option value="nearest" @selected(old('quick_time') === 'nearest')>Legközelebbi szabad időpont</option></select></label>
+<label>Vendég neve<input name="name" value="{{ old('name') }}" autocomplete="name" required maxlength="120"></label>
+<label>Telefonszám <span class="muted">(opcionális)</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" value="{{ old('phone') }}" maxlength="40"></label>
+<p class="muted">A szabad időpontot a rendszer számítja ki, a munkarend és a foglalások alapján.</p><button class="button" @disabled($quickServices->isEmpty())>Foglalás mentése</button></form></details>
+@if(auth()->user()->role === 'owner')<details class="quick-sheet"><summary class="button secondary">Blokk vagy szabadság</summary>
+<form method="post" action="{{ route('admin.block') }}">@csrf<h2>Idősáv blokkolása</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Ettől<input type="datetime-local" name="starts_at" required></label><label>Eddig<input type="datetime-local" name="ends_at" required></label><label>Megnevezés<input name="reason" value="Szünet" required maxlength="120"></label><button class="button">Blokkolás mentése</button></form>
+<form method="post" action="{{ route('admin.exception') }}">@csrf<h2>Szabadság</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Nap<input type="date" name="date" value="{{ $date }}" required></label><input type="hidden" name="closed" value="1"><button class="button secondary">Szabadság mentése</button></form></details>@endif
+</div>
 @endif
 
 <section class="calendar-summary" aria-label="Időpontok összesítése">

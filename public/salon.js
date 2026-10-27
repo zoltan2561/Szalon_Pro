@@ -72,6 +72,16 @@ document.querySelectorAll('.booking-submit').forEach(form => {
 
 document.querySelectorAll('[data-print]').forEach(button => button.addEventListener('click', () => window.print()));
 
+document.querySelectorAll('[data-confirm-cancel]').forEach(button => {
+    button.addEventListener('click', event => {
+        if (!window.confirm('Biztosan lemondod ezt a foglalást?')) event.preventDefault();
+    });
+});
+
+if (window.matchMedia('(min-width: 768px)').matches) {
+    document.querySelectorAll('.weekly-hours').forEach(section => { section.open = true; });
+}
+
 const settingsForm = document.querySelector('.admin-settings');
 if (settingsForm) {
     const rights = settingsForm.querySelector('input[name="content_rights"]');
@@ -100,28 +110,15 @@ if (manualGuestSearch && manualGuestSelect) {
 const manualFilters = document.querySelector('[data-manual-filters]');
 const manualStaff = manualFilters?.querySelector('select[name="staff_id"]');
 const manualBooking = document.querySelector('.admin .booking-submit');
-if (manualFilters && manualStaff && manualBooking) {
+if (manualFilters && manualBooking) {
     let latestSearch = 0;
     const manualService = manualFilters.querySelector('select[name="service_id"]');
-    manualService.addEventListener('change', () => {
-        latestSearch++;
-        manualBooking.querySelector('.slots-field').replaceChildren();
-        manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
-        manualFilters.querySelector('[data-nearest-status]').textContent = 'A szolgáltatás módosítása után mutasd meg újra a szabad időpontokat.';
-    });
-    manualFilters.querySelector('input[name="date"]').addEventListener('change', () => {
-        latestSearch++;
-        manualBooking.querySelector('.slots-field').replaceChildren();
-        manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
-        manualFilters.querySelector('[data-nearest-status]').textContent = 'A nap módosítása után mutasd meg újra a szabad időpontokat.';
-    });
-    manualStaff.addEventListener('change', async () => {
+    const manualDate = manualFilters.querySelector('input[name="date"]');
+    const refreshSlots = async (nearest = false) => {
         const search = ++latestSearch;
         const status = manualFilters.querySelector('[data-nearest-status]');
         const params = new URLSearchParams(new FormData(manualFilters));
-        if (manualStaff.value) {
-            params.set('nearest', '1');
-        }
+        if (nearest) params.set('nearest', '1');
         status.textContent = 'Szabad időpontok keresése…';
         manualBooking.querySelector('.slots-field').replaceChildren();
         manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
@@ -136,17 +133,32 @@ if (manualFilters && manualStaff && manualBooking) {
             const newService = page.querySelector('.admin .booking-submit input[name="service_id"]');
             const newSummary = page.querySelector('.booking-grid > aside');
             const currentSlots = manualBooking.querySelector('.slots-field');
-            if (!newSlots || !newDate || !newStaff || !newService || !newSummary || !currentSlots) throw new Error('Availability response incomplete');
+            if (!newSlots || !newDate || !newService || !newSummary || !currentSlots) throw new Error('Availability response incomplete');
             currentSlots.replaceWith(newSlots);
-            manualFilters.querySelector('input[name="date"]').value = newDate.value;
-            manualStaff.innerHTML = newStaff.innerHTML;
-            manualStaff.value = newStaff.value;
+            manualDate.value = newDate.value;
+            if (manualStaff && newStaff) { manualStaff.innerHTML = newStaff.innerHTML; manualStaff.value = newStaff.value; }
             manualBooking.querySelector('input[name="service_id"]').value = newService.value;
             document.querySelector('.booking-grid > aside').replaceWith(newSummary);
             manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = !newSlots.querySelector('input[name="slot"]');
-            status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value}.` : 'A foglalási időszakon belül nincs szabad időpont.';
+            status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value}.` : 'Erre a napra nincs szabad időpont.';
         } catch (error) {
             if (search === latestSearch) status.textContent = 'Nem sikerült betölteni az időpontokat. Használd a Szabad időpontok mutatása gombot.';
         }
+    };
+    manualService.addEventListener('change', () => refreshSlots());
+    manualDate.addEventListener('change', () => refreshSlots());
+    manualStaff?.addEventListener('change', () => refreshSlots(true));
+    manualFilters.addEventListener('submit', event => {
+        if (event.submitter?.name === 'nearest') { event.preventDefault(); refreshSlots(true); }
+    });
+}
+
+const guestSearch = document.querySelector('[data-live-guests]');
+const guestList = document.querySelector('[data-guest-list]');
+if (guestSearch && guestList) {
+    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('hu').trim();
+    guestSearch.addEventListener('input', () => {
+        const query = normalize(guestSearch.value);
+        guestList.querySelectorAll('.guest-card').forEach(card => { card.hidden = !normalize(card.textContent).includes(query); });
     });
 }

@@ -108,6 +108,25 @@ class SalonWorkflowTest extends TestCase
         $this->get(route('booking.success'))->assertOk()->assertSee('Várunk szeretettel!');
     }
 
+    public function test_quick_booking_selects_an_available_slot_and_repeated_submission_is_idempotent(): void
+    {
+        $data = ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()];
+        $this->actingAs($this->owner)->from(route('admin.today'))->post(route('admin.store'), $data)->assertSessionHasNoErrors();
+        $booking = Booking::sole();
+        $this->assertSame($this->staff->id, $booking->staff_id);
+        $this->post(route('admin.store'), $data)->assertRedirect(route('admin.booking', $booking))->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('bookings', 1);
+        $this->post(route('admin.store'), array_merge($data, ['name' => 'Different']))->assertSessionHasErrors();
+        $this->assertDatabaseCount('bookings', 1);
+    }
+
+    public function test_quick_booking_requires_booking_permission(): void
+    {
+        $user = User::factory()->create(['role' => 'staff', 'staff_id' => $this->staff->id, 'can_manage_bookings' => false]);
+        $this->actingAs($user)->post(route('admin.store'), ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()])->assertForbidden();
+        $this->assertDatabaseCount('bookings', 0);
+    }
+
     public function test_reusing_key_for_different_payload_is_rejected(): void
     {
         $data = $this->data();

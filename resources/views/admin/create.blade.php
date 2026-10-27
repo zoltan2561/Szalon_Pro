@@ -10,7 +10,7 @@
     @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
     @if(request()->filled('guest_id'))<input type="hidden" name="guest_id" value="{{ request('guest_id') }}">@endif
     @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
-    <div class="actions"><button class="button secondary">Szabad időpontok mutatása</button><button class="button secondary" name="nearest" value="1">Legközelebbi szabad időpont</button></div><p class="muted" data-nearest-status aria-live="polite"></p></form>
+    <div class="actions"><button class="button secondary">Szabad időpontok mutatása</button><button class="button" name="nearest" value="1">Legközelebbi szabad időpont</button></div><p class="muted" data-nearest-status aria-live="polite"></p></form>
 
     <form class="panel booking-submit" method="post" action="{{ route('admin.store') }}">@csrf
         <input type="hidden" name="service_id" value="{{ $service?->id }}"><input type="hidden" name="request_key" value="{{ $requestKey }}">

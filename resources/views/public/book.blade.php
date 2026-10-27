@@ -6,7 +6,7 @@
 <div class="booking-wrap wrap">
     <p class="eyebrow">EGY LÉPÉSSEL KÖZELEBB</p>
     <h1 class="page-title">{{ $salon->demo ? $brand['demo_copy']['booking_heading'] : 'A következő énidőd.' }}</h1>
-    <ol class="steps"><li>01 <span>Szolgáltatás</span></li><li>02 <span>Időpont</span></li><li>03 <span>Adataid és véglegesítés</span></li></ol>
+    <ol class="steps"><li><a href="#booking-service">01 <span>Szolgáltatás</span></a></li><li><a href="#booking-slots">02 <span>Időpont</span></a></li><li><a href="#booking-guest">03 <span>Adataid és véglegesítés</span></a></li></ol>
     @if($salon->demo)<div class="notice demo-booking-notice">Ez egy bemutató. A foglalás kipróbálható, de kérjük, ne adj meg valódi személyes adatot.</div>@endif
     @if(!$ready || !$salon->published)
         <div class="notice">Az online foglalás még nem aktív. Kérjük, keresd a szalont az elérhetőségein.</div>
@@ -17,7 +17,7 @@
             <div class="notice">Legfeljebb {{ $salon->horizon_days }} napra előre, {{ now($salon->timezone)->addDays($salon->horizon_days)->format('Y. m. d.') }} napjáig foglalhatsz. Válassz egy korábbi napot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId])) }}">Foglalható nap keresése</a></div>
         @endif
         <div class="booking-grid">
-            <form method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
+            <form id="booking-service" method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
                 <p class="eyebrow">01 · VÁLASSZ</p>
                 @if($referralSource)<input type="hidden" name="utm_source" value="{{ $referralSource }}">@endif
                 <h2>Mit választasz?</h2>
@@ -57,13 +57,12 @@
                 <input type="hidden" name="request_key" value="{{ $requestKey }}">
                 @if($referralSource)<input type="hidden" name="referral_source" value="{{ $referralSource }}">@endif
                 <p class="eyebrow">02 · IDŐPONT</p>
-                <h2>Mikor érkezel?</h2>
+                <h2 id="booking-slots">Mikor érkezel?</h2>
                 <p class="booking-date-label">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>
                 @include('components.slots')
                 <hr>
                 <p class="eyebrow">03 · ADATAID</p>
                 <h2 id="booking-guest">Hogyan érhetünk el?</h2>
-                <p class="selected-slot-note" aria-live="polite" hidden></p>
                 @if($rebookingGuest)
                     <p class="muted">A korábbi foglalásod vendégkártyájával foglalunk újra. Elérhetőség módosításához keresd a szalont.</p>
                     <p><strong>{{ $rebookingGuest->name }}</strong><br>{{ $rebookingGuest->email }}{{ $rebookingGuest->phone ? ' · '.$rebookingGuest->phone : '' }}</p>
@@ -80,7 +79,7 @@
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
                 <p class="muted">A választott időpont mellett láthatod a szakember nevét. A foglalás a véglegesítéskor válik érvényessé.</p>
                 @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif
-                <button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button>
+                <div class="booking-finalize-group"><p class="selected-slot-note" aria-live="polite" hidden></p><button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button></div>
             </form>
         </div>
     @endif
