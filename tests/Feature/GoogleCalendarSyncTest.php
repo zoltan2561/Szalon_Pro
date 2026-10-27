@@ -46,7 +46,7 @@ class GoogleCalendarSyncTest extends TestCase
     public function test_owner_connects_with_state_and_tokens_are_encrypted(): void
     {
         $staffUser = User::factory()->create(['role' => 'staff', 'staff_id' => $this->staff->id]);
-        $this->actingAs($staffUser)->get(route('admin.google.index'))->assertForbidden();
+        $this->actingAs($staffUser)->get(route('admin.google.index'))->assertOk();
         $this->actingAs($this->owner)->get(route('admin.google.index'))->assertOk()->assertSee('Google Naptár');
         $redirect = $this->actingAs($this->owner)->post(route('admin.google.connect', $this->staff))->headers->get('Location');
         $this->assertStringStartsWith('https://accounts.google.com/o/oauth2/v2/auth?', $redirect);

@@ -6,6 +6,7 @@ use App\Http\Controllers\BenefitsController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\GoogleCalendarController;
+use App\Http\Controllers\GoogleCalendarRelayController;
 use App\Http\Controllers\ModuleSettingsController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PublicController;
@@ -18,6 +19,7 @@ use App\Models\Salon;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/google-naptar/kozponti-visszateres', GoogleCalendarRelayController::class)->name('google.relay');
 Route::get('/ajandek/{token}', [VoucherController::class, 'show'])->middleware('throttle:booking')->name('vouchers.show');
 Route::get('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'show'])->middleware('signed')->name('reviews.unsubscribe');
 Route::post('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'unsubscribe'])->middleware('signed')->name('reviews.unsubscribe.update');
@@ -54,6 +56,11 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::get('/varolista', [WaitlistController::class, 'index'])->name('waitlist.index');
     Route::post('/varolista', [WaitlistController::class, 'store'])->name('waitlist.store');
     Route::post('/varolista/{entry}/lemondas', [WaitlistController::class, 'cancel'])->name('waitlist.cancel');
+    Route::get('/google-naptar', [GoogleCalendarController::class, 'index'])->name('google.index');
+    Route::post('/google-naptar/{staff}/kapcsolodas', [GoogleCalendarController::class, 'connect'])->name('google.connect');
+    Route::get('/google-naptar/visszateres', [GoogleCalendarController::class, 'callback'])->name('google.callback');
+    Route::post('/google-naptar/{connection}/szinkron', [GoogleCalendarController::class, 'syncNow'])->name('google.sync');
+    Route::post('/google-naptar/{connection}/bontas', [GoogleCalendarController::class, 'disconnect'])->name('google.disconnect');
     Route::middleware('admin:owner')->group(function (): void {
         Route::get('/bizonylatok', [BillingController::class, 'index'])->name('billing.index');
         Route::post('/bizonylatok/beallitasok', [BillingController::class, 'settings'])->name('billing.settings');
@@ -80,11 +87,6 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
         Route::post('/vendegek/{guest}/berlet', [BenefitsController::class, 'issuePass'])->name('benefits.issue');
         Route::post('/vendegek/{guest}/berlet/{guestPass}/visszavonas', [BenefitsController::class, 'voidPass'])->name('benefits.void');
         Route::post('/vendegek/{guest}/jutalom', [BenefitsController::class, 'redeemReward'])->name('benefits.redeem');
-        Route::get('/google-naptar', [GoogleCalendarController::class, 'index'])->name('google.index');
-        Route::post('/google-naptar/{staff}/kapcsolodas', [GoogleCalendarController::class, 'connect'])->name('google.connect');
-        Route::get('/google-naptar/visszateres', [GoogleCalendarController::class, 'callback'])->name('google.callback');
-        Route::post('/google-naptar/{connection}/szinkron', [GoogleCalendarController::class, 'syncNow'])->name('google.sync');
-        Route::post('/google-naptar/{connection}/bontas', [GoogleCalendarController::class, 'disconnect'])->name('google.disconnect');
         Route::get('/vendegek/{guest}/export', [AdminController::class, 'export'])->name('export');
         Route::post('/vendegek/{guest}/torles', [AdminController::class, 'anonymize'])->name('anonymize');
         Route::get('/szolgaltatasok', [AdminController::class, 'services'])->name('services');

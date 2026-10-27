@@ -39,6 +39,9 @@ return [
         'client_id' => env('GOOGLE_CALENDAR_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CALENDAR_CLIENT_SECRET'),
         'redirect_uri' => env('GOOGLE_CALENDAR_REDIRECT_URI'),
+        'relay_key' => env('GOOGLE_CALENDAR_RELAY_KEY'),
+        'relay_callback' => env('GOOGLE_CALENDAR_RELAY_CALLBACK'),
+        'relay_clients' => env('GOOGLE_CALENDAR_RELAY_CLIENTS', '{}'),
     ],
 
     'sms' => [

@@ -6,6 +6,7 @@ use App\Models\GoogleCalendarConnection;
 use App\Models\Salon;
 use App\Models\Staff;
 use App\Services\GoogleCalendarClient;
+use App\Services\GoogleCalendarRelay;
 use App\Services\GoogleCalendarSync;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -16,22 +17,27 @@ use Throwable;
 
 class GoogleCalendarController extends Controller
 {
-    public function index(GoogleCalendarClient $client): View
+    public function index(Request $request, GoogleCalendarClient $client): View
     {
         return view('admin.google-calendar', [
-            'staff' => Staff::orderBy('name')->get(),
-            'connections' => GoogleCalendarConnection::withCount('busyEvents')->get()->keyBy('staff_id'),
+            'staff' => Staff::when($request->user()->role !== 'owner', fn ($query) => $query->whereKey($request->user()->staff_id))->orderBy('name')->get(),
+            'connections' => GoogleCalendarConnection::withCount('busyEvents')->when($request->user()->role !== 'owner', fn ($query) => $query->where('staff_id', $request->user()->staff_id))->get()->keyBy('staff_id'),
             'configured' => $client->configured(),
         ]);
     }
 
-    public function connect(Staff $staff, Request $request, GoogleCalendarClient $client): RedirectResponse
+    public function connect(Staff $staff, Request $request, GoogleCalendarClient $client, GoogleCalendarRelay $relay): RedirectResponse
     {
+        $this->authorizeStaff($request, $staff->id);
         abort_unless($staff->active, 422);
         if (! $client->configured()) {
             return back()->withErrors(['google' => 'A Google Naptár kapcsolódás még nincs beállítva.']);
         }
-        $state = Str::random(64);
+        try {
+            $state = $relay->state(Str::random(64));
+        } catch (\RuntimeException) {
+            return back()->withErrors(['google' => 'A közös Google-kapcsolat beállítása hiányos. Kérd az üzemeltető segítségét.']);
+        }
         $request->session()->put('google_calendar_oauth', ['state' => $state, 'staff_id' => $staff->id, 'user_id' => $request->user()->id, 'started_at' => now()->timestamp]);
 
         return redirect()->away($client->authorizationUrl($state));
@@ -57,6 +63,7 @@ class GoogleCalendarController extends Controller
         if (! $staff) {
             return redirect()->route('admin.google.index')->withErrors(['google' => 'A szakember kapcsolata időközben megváltozott.']);
         }
+        $this->authorizeStaff($request, $staff->id);
         try {
             $token = $client->exchangeCode($code);
             $calendar = $client->primaryCalendar($token['access_token']);
@@ -96,8 +103,9 @@ class GoogleCalendarController extends Controller
         return redirect()->route('admin.google.index')->with('success', $staff->name.' Google Naptára kapcsolódott.');
     }
 
-    public function syncNow(GoogleCalendarConnection $connection, GoogleCalendarSync $sync): RedirectResponse
+    public function syncNow(GoogleCalendarConnection $connection, Request $request, GoogleCalendarSync $sync): RedirectResponse
     {
+        $this->authorizeStaff($request, $connection->staff_id);
         try {
             $sync->sync($connection);
         } catch (Throwable) {
@@ -109,6 +117,7 @@ class GoogleCalendarController extends Controller
 
     public function disconnect(GoogleCalendarConnection $connection, Request $request, GoogleCalendarClient $client): RedirectResponse
     {
+        $this->authorizeStaff($request, $connection->staff_id);
         $request->validate(['confirm' => 'accepted', 'leave_events' => 'sometimes|accepted']);
         $lock = Cache::lock('google-calendar-sync-'.$connection->id, 600);
         if (! $lock->get()) {
@@ -128,5 +137,10 @@ class GoogleCalendarController extends Controller
         }
 
         return back()->with('success', $request->boolean('leave_events') ? 'A helyi kapcsolat megszűnt. A korábbi Google-eseményeket ott külön töröld.' : 'A kapcsolat és a kivitt Google-események törlődtek.');
+    }
+
+    private function authorizeStaff(Request $request, int $staffId): void
+    {
+        abort_unless($request->user()->role === 'owner' || (int) $request->user()->staff_id === $staffId, 403);
     }
 }

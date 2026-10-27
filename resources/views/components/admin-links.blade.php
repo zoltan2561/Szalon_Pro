@@ -1,6 +1,7 @@
 @if($salon->featureEnabled('waitlist'))
 <a href="{{ route('admin.waitlist.index') }}" @if(request()->routeIs('admin.waitlist.*')) aria-current="page" @endif><x-icon name="list" />Várólista</a>
 @endif
+@if(auth()->user()->role !== 'owner')<a href="{{ route('admin.google.index') }}" @if(request()->routeIs('admin.google.*')) aria-current="page" @endif><x-icon name="calendar-blank" />Saját Google Naptár</a>@endif
 @if(auth()->user()->role === 'owner')
 @if($salon->featureEnabled('billing'))<a href="{{ route('admin.billing.index') }}" @if(request()->routeIs('admin.billing.*')) aria-current="page" @endif><x-icon name="list" />Bizonylatok</a>@endif
 @if($salon->featureEnabled('statistics'))<a href="{{ route('admin.statistics.index') }}" @if(request()->routeIs('admin.statistics.*')) aria-current="page" @endif><x-icon name="squares-four" />Statisztika</a>@endif

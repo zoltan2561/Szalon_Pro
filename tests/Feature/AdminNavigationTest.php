@@ -17,7 +17,7 @@ class AdminNavigationTest extends TestCase
         $salon = Salon::factory()->create(['features' => ['waitlist' => true, 'passes' => true]]);
         $staff = User::factory()->create(['role' => 'staff', 'staff_id' => Staff::factory(), 'can_manage_bookings' => false]);
         $this->actingAs($staff)->get(route('admin.today'))->assertOk()->assertSee('admin-more-menu')->assertSee('Várólista')
-            ->assertDontSee('Beállítások')->assertDontSee('Google Naptár</a>', false)->assertDontSee('Bérletek és hűségpontok')
+            ->assertDontSee('Beállítások')->assertSee('Saját Google Naptár')->assertDontSee('Bérletek és hűségpontok')
             ->assertDontSee('aria-label="Új foglalás"', false);
         $salon->update(['features' => ['waitlist' => false]]);
         $this->get(route('admin.today'))->assertDontSee('Várólista');
