@@ -29,6 +29,7 @@ use App\Services\SmsNotificationSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -104,35 +105,48 @@ class AdminController extends Controller
         return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
-    public function store(Request $request, PublicController $public, BookingService $bookings, Availability $availability): RedirectResponse
+    public function quickPreview(Request $request, Availability $availability): JsonResponse
+    {
+        abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
+        $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id']);
+        $service = Service::findOrFail($quick['service_id']);
+        $staffId = $request->user()->role === 'owner' ? null : $request->user()->staff_id;
+        if ($request->user()->role !== 'owner') {
+            abort_unless($staffId && $service->staff()->whereKey($staffId)->exists(), 403);
+        }
+        $salon = Salon::current();
+        $now = CarbonImmutable::now($salon->timezone);
+        $threshold = $quick['quick_time'] === 'plus15' ? $now->addMinutes(15) : $now;
+        $lastDay = $quick['quick_time'] === 'nearest' ? $salon->horizon_days : 0;
+        for ($day = 0; $day <= $lastDay; $day++) {
+            foreach ($availability->slots($service, $now->addDays($day)->toDateString(), $staffId) as $candidate) {
+                if (CarbonImmutable::parse($candidate['starts_at'])->gte($threshold)) {
+                    $slot = $candidate['staff_id'].'|'.$candidate['starts_at'];
+                    $token = Crypt::encryptString(json_encode(['actor' => $request->user()->id, 'service' => $service->id, 'time' => $quick['quick_time'], 'slot' => $slot], JSON_THROW_ON_ERROR));
+                    $local = CarbonImmutable::parse($candidate['starts_at'])->setTimezone($salon->timezone);
+
+                    return response()->json(['token' => $token, 'label' => $local->locale('hu')->isoFormat('YYYY. MMMM D., dddd').' · '.$local->format('H:i').' · '.$candidate['staff_name']])->header('Cache-Control', 'no-store');
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Nem található megfelelő szabad időpont. Válassz másik szolgáltatást vagy időt.'], 422)->header('Cache-Control', 'no-store');
+    }
+
+    public function store(Request $request, PublicController $public, BookingService $bookings): RedirectResponse
     {
         if ($request->filled('quick_time')) {
             abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
-            $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id', 'request_key' => 'required|uuid']);
-            $service = Service::findOrFail($quick['service_id']);
-            $previous = Booking::where('request_key', 'admin:'.$request->user()->id.':'.$quick['request_key'])->first();
-            if ($previous) {
-                $slot = $previous->staff_id.'|'.$previous->starts_at->setTimezone(Salon::current()->timezone)->format('Y-m-d\TH:i:sP');
-            } else {
-                $salon = Salon::current();
-                $now = CarbonImmutable::now($salon->timezone);
-                $threshold = $quick['quick_time'] === 'plus15' ? $now->addMinutes(15) : $now;
-                $staffId = $request->user()->role === 'owner' ? null : $request->user()->staff_id;
-                $slot = null;
-                $lastDay = $quick['quick_time'] === 'nearest' ? $salon->horizon_days : 0;
-                for ($day = 0; $day <= $lastDay && ! $slot; $day++) {
-                    foreach ($availability->slots($service, $now->addDays($day)->toDateString(), $staffId) as $candidate) {
-                        if (CarbonImmutable::parse($candidate['starts_at'])->gte($threshold)) {
-                            $slot = $candidate['staff_id'].'|'.$candidate['starts_at'];
-                            break;
-                        }
-                    }
-                }
-                if (! $slot) {
-                    throw ValidationException::withMessages(['quick_time' => 'Nem található megfelelő szabad időpont. Válassz másik szolgáltatást vagy időt.']);
-                }
+            $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id', 'preview_token' => 'required|string']);
+            try {
+                $preview = json_decode(Crypt::decryptString($quick['preview_token']), true, flags: JSON_THROW_ON_ERROR);
+            } catch (\Throwable) {
+                throw ValidationException::withMessages(['preview_token' => 'Az előnézet lejárt vagy érvénytelen. Keresd meg újra az időpontot.']);
             }
-            $request->merge(['slot' => $slot]);
+            if (! is_array($preview) || ($preview['actor'] ?? null) !== $request->user()->id || ($preview['service'] ?? null) !== (int) $quick['service_id'] || ($preview['time'] ?? null) !== $quick['quick_time'] || ! is_string($preview['slot'] ?? null)) {
+                throw ValidationException::withMessages(['preview_token' => 'Az előnézet megváltozott. Keresd meg újra az időpontot.']);
+            }
+            $request->merge(['slot' => $preview['slot']]);
         }
         $booking = $bookings->create($public->bookingData($request, true), $request->user());
 

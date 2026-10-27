@@ -18,12 +18,13 @@
         <h2>Válassz időpontot</h2>@include('components.slots')<hr>
         <h2 id="manual-booking-guest">Ki érkezik?</h2>
         <p class="manual-selection" data-manual-selection aria-live="polite" hidden></p>
-        <label>Vendég keresése név, e-mail vagy telefonszám alapján<input type="search" data-guest-search autocomplete="off" aria-controls="manual-guest"></label>
-        <label>Meglévő vendég<select id="manual-guest" name="guest_id"><option value="">Új vendég adatait adom meg</option>@foreach($guests as $guest)<option value="{{ $guest->id }}" @selected(old('guest_id', request('guest_id')) == $guest->id)>{{ $guest->name }} · {{ $guest->email ?: 'nincs e-mail' }}{{ $guest->phone ? ' · '.$guest->phone : '' }}</option>@endforeach</select></label>
-        <p class="muted">Meglévő vendég választásakor az alábbi újvendég-mezőket hagyd üresen.</p>
-        <label>Új vendég neve<input name="name" value="{{ old('name') }}" maxlength="120"></label>
-        <div class="form-grid"><label>E-mail-cím <span class="muted">(opcionális)</span><input name="email" type="email" value="{{ old('email') }}" maxlength="200"></label><label>Telefonszám <span class="muted">(opcionális)</span><input name="phone" type="tel" value="{{ old('phone') }}" maxlength="40"></label></div>
-        <p class="muted">Telefonos vagy betérő vendéghez elég a név. E-mail visszaigazolás csak megadott e-mail-címre indul.</p>
+        <label>Vendég keresése név, e-mail vagy telefonszám alapján<input type="search" data-guest-search autocomplete="off" aria-controls="manual-guest-results"></label>
+        <div id="manual-guest-results" class="manual-guest-results" data-guest-results hidden></div><p class="muted" data-guest-search-status aria-live="polite"></p>
+        <div data-guest-fallback><label>Meglévő vendég<select id="manual-guest" name="guest_id"><option value="">Új vendég adatait adom meg</option>@foreach($guests as $guest)<option value="{{ $guest->id }}" @selected(old('guest_id', request('guest_id')) == $guest->id)>{{ $guest->name }} · {{ $guest->email ?: 'nincs e-mail' }}{{ $guest->phone ? ' · '.$guest->phone : '' }}</option>@endforeach</select></label><p class="muted">Meglévő vendég választásakor az alábbi újvendég-mezőket hagyd üresen.</p></div>
+        <div class="manual-selected-guest" data-selected-guest hidden><strong data-selected-guest-name></strong><button type="button" class="text-button" data-clear-guest>Másik vendég / új vendég</button></div>
+        <div data-new-guest-fields><label>Új vendég neve<input name="name" value="{{ old('name') }}" maxlength="120"></label>
+        <details class="manual-contact" @if(old('email') || old('phone')) open @endif><summary>E-mail vagy telefonszám megadása (opcionális)</summary><div class="form-grid"><label>E-mail-cím<input name="email" type="email" value="{{ old('email') }}" maxlength="200"></label><label>Telefonszám<input name="phone" type="tel" inputmode="tel" value="{{ old('phone') }}" maxlength="40"></label></div></details>
+        <p class="muted">Telefonos vagy betérő vendéghez elég a név. E-mail visszaigazolás csak megadott e-mail-címre indul.</p></div>
         @if($smsReady)<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>A vendég SMS-emlékeztetőt kér a megadott telefonszámra.</span></label>@endif
         <button class="button full" @disabled(!$slots)>Foglalás mentése</button>
     </form>

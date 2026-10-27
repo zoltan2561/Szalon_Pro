@@ -336,3 +336,27 @@
  .admin .next-guest h2 { overflow-wrap:anywhere; }
  .admin .next-time { flex-shrink:0; }
 }
+
+/* Appointment review and daily work on small screens. */
+.admin .quick-preview { background:#edf4ea; border-left:3px solid #315443; border-radius:6px; color:#24412c; padding:12px 14px; font-weight:600; }
+.admin .manual-guest-results:not([hidden]) { display:grid; gap:6px; margin:-5px 0 12px; }
+.admin .manual-guest-result { display:block; width:100%; min-height:48px; padding:10px 12px; text-align:left; border:1px solid #c3d2c2; border-radius:8px; background:#f7faf6; color:#203b2b; font:inherit; cursor:pointer; overflow-wrap:anywhere; }
+.admin .manual-guest-result:hover,.admin .manual-guest-result:focus-visible { background:#e7f1e4; outline:2px solid #315443; outline-offset:1px; }
+.admin .manual-selected-guest:not([hidden]) { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; border:1px solid #c3d2c2; background:#edf4ea; border-radius:8px; padding:12px; margin-bottom:16px; }
+.admin .manual-selected-guest button { min-height:44px; color:#244a31; }
+.admin .manual-contact > summary { min-height:44px; display:flex; align-items:center; color:#244a31; font-size:14px; font-weight:600; }
+.admin .badge.confirmed { color:#304b2d; }
+.admin .badge.completed { color:#20583d; }
+.admin .badge.cancelled { color:#6b362a; }
+.admin .badge.no_show { color:#67450d; }
+.admin .detail-grid small,.admin .calendar-agenda-detail small,.admin .calendar-agenda-time small { color:#344d39; font-size:12px; }
+@media(max-width:700px) {
+ .admin .booking-grid > .booking-summary { grid-row:auto; }
+ .admin .calendar-overview { display:flex; flex-direction:column; }
+ .admin .calendar-overview > .calendar-workspace { order:0; }
+ .admin .calendar-overview > .calendar-summary { order:1; }
+ .admin .calendar-toolbar { padding:12px 15px; }
+ .admin .calendar-toolbar .eyebrow { display:none; }
+ .admin .calendar-toolbar h2 { margin:0; }
+ .admin .calendar-agenda-heading { padding:12px 15px; }
+}

@@ -70,20 +70,21 @@
 
 @if($isTodayPage && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))
 <div class="quick-actions">
-<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}">@csrf
+<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}" data-quick-preview-url="{{ route('admin.quick-preview') }}">@csrf
 <input type="hidden" name="request_key" value="{{ $requestKey }}">
+<input type="hidden" name="preview_token" value="">
 <label>Szolgáltatás<select name="service_id" required>@foreach($quickServices as $service)<option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>{{ $service->name }} · {{ $service->duration_minutes }} perc</option>@endforeach</select></label>
 <label>Időpont<select name="quick_time"><option value="now" @selected(old('quick_time') === 'now')>Most · első szabad ma</option><option value="plus15" @selected(old('quick_time') === 'plus15')>+15 perc · első szabad ma</option><option value="nearest" @selected(old('quick_time') === 'nearest')>Legközelebbi szabad időpont</option></select></label>
 <label>Vendég neve<input name="name" value="{{ old('name') }}" autocomplete="name" required maxlength="120"></label>
 <details class="quick-contact" @if(old('phone')) open @endif><summary>Telefonszám megadása (opcionális)</summary><label>Telefonszám<input name="phone" type="tel" inputmode="tel" autocomplete="tel" value="{{ old('phone') }}" maxlength="40"></label></details>
-<p class="muted">A rendszer a választott lehetőségnek megfelelő első szabad időpontot foglalja le.</p><button class="button" @disabled($quickServices->isEmpty())>Foglalás mentése</button></form></details>
+<p class="quick-preview" data-quick-preview aria-live="polite">A választott szabad időpontot itt mutatjuk meg.</p><button class="button" type="submit" disabled>Foglalás mentése</button><noscript><p>Az előnézethez JavaScript szükséges. <a href="{{ route('admin.create') }}">Foglalás az időpontlistából</a></p></noscript></form></details>
 @if(auth()->user()->role === 'owner')<details class="quick-sheet"><summary class="button secondary">Blokk vagy szabadság</summary>
 <form method="post" action="{{ route('admin.block') }}">@csrf<h2>Idősáv blokkolása</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Ettől<input type="datetime-local" name="starts_at" required></label><label>Eddig<input type="datetime-local" name="ends_at" required></label><label>Megnevezés<input name="reason" value="Szünet" required maxlength="120"></label><button class="button">Blokkolás mentése</button></form>
 <form method="post" action="{{ route('admin.exception') }}">@csrf<h2>Szabadság</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Nap<input type="date" name="date" value="{{ $date }}" required></label><input type="hidden" name="closed" value="1"><button class="button secondary">Szabadság mentése</button></form></details>@endif
 </div>
 @endif
 
-<section class="calendar-summary" aria-label="Időpontok összesítése">
+<div class="calendar-overview"><section class="calendar-summary" aria-label="Időpontok összesítése">
     <article><span>{{ $week ? 'Heti foglalások' : 'Napi foglalások' }}</span><strong>{{ $bookings->whereIn('status', ['confirmed', 'completed', 'no_show'])->count() }}</strong><small>{{ $bookings->where('status', 'cancelled')->count() }} lemondás</small></article>
     <article><span>Visszaigazolt</span><strong>{{ $confirmedBookings->count() }}</strong><small>{{ $isActualToday && ! $week ? $confirmedBookings->filter(fn ($booking) => $booking->starts_at->isAfter(now()))->count().' még hátravan' : 'tervezett időpont' }}</small></article>
     <article><span>Elvégezve</span><strong>{{ $completedBookings->count() }}</strong><small>{{ $bookings->where('status', 'no_show')->count() }} meg nem jelenés</small></article>
@@ -205,4 +206,5 @@
     @endif
     <div class="calendar-foot"><span>{{ $salon->timezone }} · Online és kézi foglalások</span><a href="{{ route('admin.create', ['date' => $date]) }}">Szabad időpontok keresése ↗</a></div>
 </section>
+</div>
 @endsection

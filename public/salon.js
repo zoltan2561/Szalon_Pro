@@ -97,13 +97,57 @@ if (settingsForm) {
 
 const manualGuestSearch = document.querySelector('[data-guest-search]');
 const manualGuestSelect = document.querySelector('#manual-guest');
-if (manualGuestSearch && manualGuestSelect) {
+const manualGuestResults = document.querySelector('[data-guest-results]');
+const manualGuestFallback = document.querySelector('[data-guest-fallback]');
+const manualSelectedGuest = document.querySelector('[data-selected-guest]');
+const manualNewGuestFields = document.querySelector('[data-new-guest-fields]');
+const manualGuestStatus = document.querySelector('[data-guest-search-status]');
+if (manualGuestSearch && manualGuestSelect && manualGuestResults && manualGuestFallback && manualSelectedGuest && manualNewGuestFields && manualGuestStatus) {
     const normalizeGuest = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('hu').trim();
+    const updateGuestSelection = () => {
+        const selected = Boolean(manualGuestSelect.value);
+        manualSelectedGuest.hidden = !selected;
+        manualSelectedGuest.querySelector('[data-selected-guest-name]').textContent = selected ? manualGuestSelect.selectedOptions[0].textContent : '';
+        manualNewGuestFields.hidden = selected;
+        manualNewGuestFields.querySelectorAll('input').forEach(input => { input.disabled = selected; });
+    };
+    manualGuestFallback.hidden = true;
+    updateGuestSelection();
+    manualSelectedGuest.querySelector('[data-clear-guest]').addEventListener('click', () => {
+        manualGuestSelect.value = '';
+        manualGuestSearch.value = '';
+        manualGuestResults.replaceChildren();
+        manualGuestResults.hidden = true;
+        manualGuestStatus.textContent = '';
+        updateGuestSelection();
+        manualGuestSearch.focus();
+    });
     manualGuestSearch.addEventListener('input', () => {
+        if (manualGuestSelect.value) {
+            manualGuestSelect.value = '';
+            updateGuestSelection();
+        }
         const query = normalizeGuest(manualGuestSearch.value);
-        Array.from(manualGuestSelect.options).forEach(option => {
-            option.hidden = Boolean(option.value) && !option.selected && !normalizeGuest(option.textContent).includes(query);
+        const matches = query ? Array.from(manualGuestSelect.options).filter(option => option.value && normalizeGuest(option.textContent).includes(query)) : [];
+        manualGuestResults.replaceChildren();
+        matches.slice(0, 8).forEach(option => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'manual-guest-result';
+            button.textContent = option.textContent;
+            button.addEventListener('click', () => {
+                manualGuestSelect.value = option.value;
+                manualGuestSearch.value = '';
+                manualGuestResults.replaceChildren();
+                manualGuestResults.hidden = true;
+                manualGuestStatus.textContent = 'Vendég kiválasztva.';
+                updateGuestSelection();
+                manualSelectedGuest.querySelector('[data-clear-guest]').focus();
+            });
+            manualGuestResults.append(button);
         });
+        manualGuestResults.hidden = matches.length === 0;
+        manualGuestStatus.textContent = query ? (matches.length ? `${matches.length} találat${matches.length > 8 ? ', pontosítsd a keresést' : ''}.` : 'Nincs találat. Új vendéget az alábbi mezőben adhatsz meg.') : '';
     });
 }
 
@@ -181,12 +225,43 @@ if (manualFilters && manualBooking) {
 }
 
 document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
+    const form = sheet.querySelector('form[data-quick-preview-url]');
+    const service = form?.querySelector('select[name="service_id"]');
+    const time = form?.querySelector('select[name="quick_time"]');
+    const token = form?.querySelector('input[name="preview_token"]');
+    const preview = form?.querySelector('[data-quick-preview]');
+    const submit = form?.querySelector('button[type="submit"]');
+    let latestPreview = 0;
+    const refreshPreview = async () => {
+        if (!form || !service || !time || !token || !preview || !submit || !service.value) return;
+        const sequence = ++latestPreview;
+        token.value = '';
+        submit.disabled = true;
+        preview.textContent = 'Szabad időpont keresése…';
+        try {
+            const params = new URLSearchParams({service_id: service.value, quick_time: time.value});
+            const response = await fetch(`${form.dataset.quickPreviewUrl}?${params}`, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
+            const result = await response.json();
+            if (sequence !== latestPreview) return;
+            if (!response.ok || !result.token || !result.label) throw new Error(result.message || 'Nem sikerült megkeresni az időpontot.');
+            token.value = result.token;
+            preview.textContent = `Foglalható: ${result.label}`;
+            submit.disabled = false;
+        } catch (error) {
+            if (sequence === latestPreview) preview.textContent = error.message || 'Nem sikerült megkeresni az időpontot.';
+        }
+    };
+    service?.addEventListener('change', refreshPreview);
+    time?.addEventListener('change', refreshPreview);
+    form?.addEventListener('submit', () => { if (form.checkValidity()) submit.disabled = true; });
     sheet.addEventListener('toggle', () => {
+        if (sheet.open) refreshPreview();
         if (sheet.open && window.matchMedia('(max-width: 640px)').matches) {
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             sheet.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
         }
     });
+    if (sheet.open) refreshPreview();
 });
 
 const guestSearch = document.querySelector('[data-live-guests]');

@@ -46,6 +46,7 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::get('/', [AdminController::class, 'today'])->name('today');
     Route::get('/naptar', [AdminController::class, 'today'])->name('calendar');
     Route::get('/uj-foglalas', [AdminController::class, 'create'])->name('create');
+    Route::get('/gyorsfoglalas-elonezet', [AdminController::class, 'quickPreview'])->name('quick-preview');
     Route::post('/foglalas', [AdminController::class, 'store'])->name('store');
     Route::get('/foglalas/{booking}', [AdminController::class, 'booking'])->name('booking');
     Route::post('/foglalas/{booking}', [AdminController::class, 'updateBooking'])->name('booking.update');
