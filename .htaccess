@@ -1,0 +1,27 @@
+# SzalonPRO: a Laravel gyoker a document root, ezert minden kerest a public/ mappaba iranyitunk,
+# az erzekeny fajlokat/konyvtarakat pedig tiltjuk (403).
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Rejtett fajlok: .env*, .git* (barhol)
+    RewriteRule (^|/)\.(env|git) - [F,L,NC]
+
+    # Erzekeny konyvtarak
+    RewriteRule ^storage/(app|framework|logs)(/|$) - [F,L,NC]
+    RewriteRule ^(vendor|bootstrap|app|config|database|routes|resources|tests|lang|docs|node_modules|\.builds)(/|$) - [F,L,NC]
+
+    # Erzekeny fajlok a gyokerben
+    RewriteRule \.md$ - [F,L,NC]
+    RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|vite\.config\.js|\.editorconfig|\.npmrc|\.gitattributes|\.gitignore)$ - [F,L,NC]
+
+    # Zaro perjel eltavolitasa itt, mert a public/.htaccess a public/ elotagot tenne a redirectbe
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Minden mas a public/ mappaba (a public/.htaccess Laravel szabalyai veszik at)
+    RewriteCond %{REQUEST_URI} !^/public(/|$) [NC]
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
