@@ -114,12 +114,39 @@ if (manualFilters && manualBooking) {
     let latestSearch = 0;
     const manualService = manualFilters.querySelector('select[name="service_id"]');
     const manualDate = manualFilters.querySelector('input[name="date"]');
+    const manualSelection = manualBooking.querySelector('[data-manual-selection]');
+    const manualGuestHeading = manualBooking.querySelector('#manual-booking-guest');
+    const showManualSelection = input => {
+        const slot = input.closest('.slot');
+        const time = slot?.querySelector('strong')?.textContent?.trim();
+        const staff = slot?.querySelector('small')?.textContent?.trim();
+        if (manualSelection && time && staff) {
+            manualSelection.textContent = `Kiválasztva: ${manualDate.value} · ${time} · ${staff}`;
+            manualSelection.hidden = false;
+        }
+    };
+    const selectedManualSlot = manualBooking.querySelector('input[name="slot"]:checked');
+    if (selectedManualSlot) showManualSelection(selectedManualSlot);
+    let pointerSlotSelection = false;
+    manualBooking.addEventListener('pointerdown', event => {
+        pointerSlotSelection = Boolean(event.target.closest('.slot'));
+    });
+    manualBooking.addEventListener('change', event => {
+        if (!(event.target instanceof HTMLInputElement) || event.target.name !== 'slot') return;
+        showManualSelection(event.target);
+        if (pointerSlotSelection && manualGuestHeading && window.matchMedia('(max-width: 640px)').matches) {
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            manualGuestHeading.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+        }
+        pointerSlotSelection = false;
+    });
     const refreshSlots = async (nearest = false) => {
         const search = ++latestSearch;
         const status = manualFilters.querySelector('[data-nearest-status]');
         const params = new URLSearchParams(new FormData(manualFilters));
         if (nearest) params.set('nearest', '1');
         status.textContent = 'Szabad időpontok keresése…';
+        if (manualSelection) manualSelection.hidden = true;
         manualBooking.querySelector('.slots-field').replaceChildren();
         manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
         try {
@@ -152,6 +179,15 @@ if (manualFilters && manualBooking) {
         if (event.submitter?.name === 'nearest') { event.preventDefault(); refreshSlots(true); }
     });
 }
+
+document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
+    sheet.addEventListener('toggle', () => {
+        if (sheet.open && window.matchMedia('(max-width: 640px)').matches) {
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            sheet.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+        }
+    });
+});
 
 const guestSearch = document.querySelector('[data-live-guests]');
 const guestList = document.querySelector('[data-guest-list]');

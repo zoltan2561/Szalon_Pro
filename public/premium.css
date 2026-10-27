@@ -317,3 +317,22 @@
 @media(max-width:640px) { .booking-mobile-actions { display:grid; position:fixed; z-index:29; left:0; right:0; bottom:calc(68px + env(safe-area-inset-bottom)); grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:8px; background:#fff; box-shadow:0 -3px 15px #0002; } .booking-mobile-actions .button { min-width:0; min-height:44px; padding:8px 4px; font-size:12px; justify-content:center; } .admin-content:has(.booking-mobile-actions) { padding-bottom:95px; } .calendar-period-nav a,.calendar-view-switch a,.mobile-logout button,.page-heading a.eyebrow { min-height:44px; min-width:44px; display:inline-flex; align-items:center; justify-content:center; } .calendar-page-heading .muted { display:none; } }
 @media(max-width:640px) { .premium .booking-finalize-group { position:sticky; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:4; background:var(--paper); box-shadow:0 0 0 8px var(--paper),0 5px 20px #0002; } .premium .booking-finalize-group .booking-finalize { position:static; box-shadow:none; } .premium .booking-finalize-group .selected-slot-note { margin:0; padding:8px 12px; } }
 @media(max-width:640px) { html:has(.booking-wrap) { scroll-snap-type:y proximity; } #booking-service, #booking-slots, #booking-guest { scroll-snap-align:start; scroll-margin-top:16px; } .steps a { display:inline-flex; min-height:44px; flex-direction:column; justify-content:center; } }
+
+/* Daily work: compact actions and a clear selected appointment. */
+.admin .next-guest { border:1px solid #cbd9c8; box-shadow:0 12px 28px #233d2d0b; }
+.admin .next-guest-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; }
+.admin .next-guest-actions a { display:inline-flex; align-items:center; min-height:44px; font-weight:600; }
+.admin .quick-contact { margin:4px 0 12px; }
+.admin .quick-contact > summary { color:#315443; min-height:44px; display:flex; align-items:center; font-size:14px; font-weight:600; }
+.admin .quick-contact[open] > summary { margin-bottom:10px; padding-bottom:8px; }
+.admin .manual-selection { border-left:3px solid #315443; border-radius:6px; background:#edf4ea; color:#233d2d; padding:12px 14px; font-size:14px; font-weight:600; }
+.admin #manual-booking-guest { scroll-margin-top:16px; }
+@media(max-width:640px) {
+ .admin .quick-sheet { scroll-margin-top:12px; }
+ .admin .quick-sheet[open] { padding:16px; box-shadow:0 12px 28px #233d2d12; }
+ .admin .quick-sheet[open] > summary { width:100%; justify-content:center; }
+ .admin .quick-sheet form > .button { width:100%; justify-content:center; }
+ .admin .next-guest { padding:20px 18px; }
+ .admin .next-guest h2 { overflow-wrap:anywhere; }
+ .admin .next-time { flex-shrink:0; }
+}

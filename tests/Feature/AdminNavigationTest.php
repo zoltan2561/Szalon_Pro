@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Booking;
+use App\Models\Guest;
 use App\Models\Salon;
 use App\Models\Staff;
 use App\Models\User;
@@ -28,5 +30,15 @@ class AdminNavigationTest extends TestCase
         Salon::factory()->create();
         $this->actingAs(User::factory()->create(['role' => 'owner']))->get(route('admin.today'))->assertOk()
             ->assertSee('aria-current="page"', false)->assertSee('aria-label="Új foglalás"', false)->assertSee('További lehetőségek');
+    }
+
+    public function test_tomorrows_next_guest_is_clearly_labeled_and_has_a_call_link_when_a_phone_is_available(): void
+    {
+        Salon::factory()->create();
+        $guest = Guest::factory()->create(['phone' => '+36 30 555 0001']);
+        Booking::factory()->create(['guest_id' => $guest->id]);
+
+        $this->actingAs(User::factory()->create(['role' => 'owner']))->get(route('admin.today'))
+            ->assertOk()->assertSee('KÖVETKEZŐ VENDÉG · Holnap')->assertSee('tel:+36305550001', false);
     }
 }

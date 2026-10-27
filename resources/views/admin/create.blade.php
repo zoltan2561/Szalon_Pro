@@ -16,7 +16,8 @@
         <input type="hidden" name="service_id" value="{{ $service?->id }}"><input type="hidden" name="request_key" value="{{ $requestKey }}">
         @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
         <h2>Válassz időpontot</h2>@include('components.slots')<hr>
-        <h2>Ki érkezik?</h2>
+        <h2 id="manual-booking-guest">Ki érkezik?</h2>
+        <p class="manual-selection" data-manual-selection aria-live="polite" hidden></p>
         <label>Vendég keresése név, e-mail vagy telefonszám alapján<input type="search" data-guest-search autocomplete="off" aria-controls="manual-guest"></label>
         <label>Meglévő vendég<select id="manual-guest" name="guest_id"><option value="">Új vendég adatait adom meg</option>@foreach($guests as $guest)<option value="{{ $guest->id }}" @selected(old('guest_id', request('guest_id')) == $guest->id)>{{ $guest->name }} · {{ $guest->email ?: 'nincs e-mail' }}{{ $guest->phone ? ' · '.$guest->phone : '' }}</option>@endforeach</select></label>
         <p class="muted">Meglévő vendég választásakor az alábbi újvendég-mezőket hagyd üresen.</p>
