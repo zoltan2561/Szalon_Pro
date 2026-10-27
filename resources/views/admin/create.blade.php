@@ -3,21 +3,22 @@
 @section('content')
 <div class="page-heading"><div><p class="eyebrow">TELEFONON, SZEMÉLYESEN, ÜZENETBEN</p><h1>Új foglalás</h1><p class="muted">A kézi foglalás is ugyanabba a közös naptárba kerül.</p></div></div>
 <div class="booking-grid"><div>
-    <form method="get" class="panel"><div class="form-grid">
+    <form method="get" class="panel" data-manual-filters><div class="form-grid">
         <label>Szolgáltatás<select name="service_id">@foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach</select></label>
         <label>Nap<input type="date" name="date" value="{{ $date }}" required></label>
     </div>
     @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
     @if(request()->filled('guest_id'))<input type="hidden" name="guest_id" value="{{ request('guest_id') }}">@endif
     @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
-    <button class="button secondary">Szabad időpontok mutatása</button></form>
+    <div class="actions"><button class="button secondary">Szabad időpontok mutatása</button><button class="button secondary" name="nearest" value="1">Legközelebbi szabad időpont</button></div><p class="muted" data-nearest-status aria-live="polite"></p></form>
 
     <form class="panel booking-submit" method="post" action="{{ route('admin.store') }}">@csrf
         <input type="hidden" name="service_id" value="{{ $service?->id }}"><input type="hidden" name="request_key" value="{{ $requestKey }}">
         @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
         <h2>Válassz időpontot</h2>@include('components.slots')<hr>
         <h2>Ki érkezik?</h2>
-        <label>Meglévő vendég<select name="guest_id"><option value="">Új vendég adatait adom meg</option>@foreach($guests as $guest)<option value="{{ $guest->id }}" @selected(old('guest_id', request('guest_id')) == $guest->id)>{{ $guest->name }} · {{ $guest->email ?: 'nincs e-mail' }}{{ $guest->phone ? ' · '.$guest->phone : '' }}</option>@endforeach</select></label>
+        <label>Vendég keresése név, e-mail vagy telefonszám alapján<input type="search" data-guest-search autocomplete="off" aria-controls="manual-guest"></label>
+        <label>Meglévő vendég<select id="manual-guest" name="guest_id"><option value="">Új vendég adatait adom meg</option>@foreach($guests as $guest)<option value="{{ $guest->id }}" @selected(old('guest_id', request('guest_id')) == $guest->id)>{{ $guest->name }} · {{ $guest->email ?: 'nincs e-mail' }}{{ $guest->phone ? ' · '.$guest->phone : '' }}</option>@endforeach</select></label>
         <p class="muted">Meglévő vendég választásakor az alábbi újvendég-mezőket hagyd üresen.</p>
         <label>Új vendég neve<input name="name" value="{{ old('name') }}" maxlength="120"></label>
         <div class="form-grid"><label>E-mail-cím <span class="muted">(opcionális)</span><input name="email" type="email" value="{{ old('email') }}" maxlength="200"></label><label>Telefonszám <span class="muted">(opcionális)</span><input name="phone" type="tel" value="{{ old('phone') }}" maxlength="40"></label></div>

@@ -67,6 +67,7 @@ class AdminController extends Controller
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View
     {
+        $request->validate(['date' => 'nullable|date_format:Y-m-d']);
         $services = Service::where('active', true)->when($request->user()->role !== 'owner', fn ($q) => $q->whereHas('staff', fn ($q) => $q->where('staff.id', $request->user()->staff_id)))->with('staff')->get();
         $service = $services->firstWhere('id', $request->integer('service_id')) ?? $services->first();
         $date = $request->query('date', now(Salon::current()->timezone)->addDay()->toDateString());
@@ -82,7 +83,25 @@ class AdminController extends Controller
             }
         }
 
-        return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests') + ['slots' => $service ? $availability->slots($service, $date, $staffId) : [], 'requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
+        $slots = $service ? $availability->slots($service, $date, $staffId) : [];
+        if (($request->boolean('nearest') || ! $request->filled('date')) && $service && $staffId) {
+            $salon = Salon::current();
+            $today = CarbonImmutable::now($salon->timezone)->startOfDay();
+            $slots = [];
+            for ($daysAhead = 0; $daysAhead <= $salon->horizon_days; $daysAhead++) {
+                $candidate = $today->addDays($daysAhead);
+                if (! ($salon->opening_hours[$candidate->isoWeekday()] ?? [])) {
+                    continue;
+                }
+                $date = $candidate->toDateString();
+                $slots = $availability->slots($service, $date, $staffId);
+                if ($slots) {
+                    break;
+                }
+            }
+        }
+
+        return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
     public function store(Request $request, PublicController $public, BookingService $bookings): RedirectResponse
