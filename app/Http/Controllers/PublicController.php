@@ -12,6 +12,7 @@ use App\Services\BookingLinks;
 use App\Services\BookingService;
 use App\Services\Branding;
 use App\Services\SmsGateway;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,17 +50,11 @@ class PublicController extends Controller
         $date = $request->filled('date') ? $request->query('date') : now($salon->timezone)->toDateString();
         $slots = $service ? $availability->slots($service, $date, $staffId) : [];
         if (! $request->filled('date') && $service && ! $slots) {
-            $today = now($salon->timezone)->startOfDay();
-            for ($daysAhead = 1; $daysAhead <= min($salon->horizon_days, 7); $daysAhead++) {
-                $candidate = $today->copy()->addDays($daysAhead);
-                if (! ($salon->opening_hours[$candidate->isoWeekday()] ?? [])) {
-                    continue;
-                }
-                $date = $candidate->toDateString();
-                $slots = $availability->slots($service, $date, $staffId);
-                if ($slots) {
-                    break;
-                }
+            $today = CarbonImmutable::now($salon->timezone)->startOfDay();
+            $next = $availability->firstAvailableDay($service, $today->addDay(), $today->addDays($salon->horizon_days), $staffId);
+            if ($next) {
+                $date = $next['date'];
+                $slots = $next['slots'];
             }
         }
 

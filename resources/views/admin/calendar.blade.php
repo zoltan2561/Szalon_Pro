@@ -24,13 +24,19 @@
             $localStart = $item->starts_at->setTimezone($salon->timezone);
             $localEnd = $item->ends_at->setTimezone($salon->timezone);
             $timelineStartHour = min($timelineStartHour, $localStart->isBefore($day) ? 0 : $localStart->hour);
-            $timelineEndHour = max($timelineEndHour, $localEnd->isAfter($day->addDay()) ? 24 : (int) ceil($localEnd->hour + $localEnd->minute / 60));
+            $timelineEndHour = max($timelineEndHour, $localEnd->greaterThanOrEqualTo($day->addDay()) ? 24 : (int) ceil($localEnd->hour + $localEnd->minute / 60));
         }
     }
     $timelineStartHour = max(0, $timelineStartHour);
     $timelineEndHour = min(24, max($timelineStartHour + 1, $timelineEndHour));
-    $timelineHeight = ($timelineEndHour - $timelineStartHour) * 90;
     $timelineStart = $day->setTime($timelineStartHour, 0);
+    $timelineEnd = $timelineEndHour === 24 ? $day->addDay() : $day->setTime($timelineEndHour, 0);
+    $timelineHeight = $timelineStart->diffInMinutes($timelineEnd) * 1.5;
+    $timelineTicks = collect();
+    for ($tick = $timelineStart->utc(); $tick->isBefore($timelineEnd); $tick = $tick->addHour()) {
+        $timelineTicks->push($tick->setTimezone($salon->timezone));
+    }
+    $repeatedTickLabels = $timelineTicks->map(fn ($tick) => $tick->format('H:i'))->countBy();
     $nowPosition = $isActualToday ? $timelineStart->diffInMinutes(now($salon->timezone), false) * 1.5 : null;
 @endphp
 
@@ -85,7 +91,7 @@
 @endif
 
 <div class="calendar-overview"><section class="calendar-summary" aria-label="Időpontok összesítése">
-    <article><span>{{ $week ? 'Heti foglalások' : 'Napi foglalások' }}</span><strong>{{ $bookings->whereIn('status', ['confirmed', 'completed', 'no_show'])->count() }}</strong><small>{{ $bookings->where('status', 'cancelled')->count() }} lemondás</small></article>
+    <article><span>{{ $week ? 'Heti foglalások' : 'Napi foglalások' }}</span><strong>{{ $bookings->whereIn('status', ['confirmed', 'completed', 'no_show'])->count() }}</strong><small>Lemondások nélkül · {{ $bookings->where('status', 'cancelled')->count() }} lemondás</small></article>
     <article><span>Visszaigazolt</span><strong>{{ $confirmedBookings->count() }}</strong><small>{{ $isActualToday && ! $week ? $confirmedBookings->filter(fn ($booking) => $booking->starts_at->isAfter(now()))->count().' még hátravan' : 'tervezett időpont' }}</small></article>
     <article><span>Elvégezve</span><strong>{{ $completedBookings->count() }}</strong><small>{{ $bookings->where('status', 'no_show')->count() }} meg nem jelenés</small></article>
     @if($salon->featureEnabled('financials'))<article><span>Elvégzett szolgáltatások összege</span><strong>{{ number_format($completedBookings->sum('actual_amount'), 0, ',', ' ') }} <small>Ft</small></strong><small>Rögzített összeg, nem pénzforgalmi adat</small></article>@endif
@@ -119,8 +125,8 @@
                         @foreach($dayBookings as $booking)
                             <a class="calendar-week-booking {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-week-booking-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}</span><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }}</span><small>{{ $booking->staff->name }} · {{ $booking->label() }}</small></a>
                         @endforeach
-                        @foreach($dayBlocks as $block)<div class="calendar-week-unavailable"><strong>{{ $block->starts_at->setTimezone($salon->timezone)->format('H:i') }} · {{ $block->reason }}</strong><small>{{ $block->staff->name }}</small></div>@endforeach
-                        @foreach($dayBusy as $busy)<div class="calendar-week-unavailable google"><strong>{{ $busy->starts_at->setTimezone($salon->timezone)->format('H:i') }} · Google-foglaltság</strong><small>{{ $busy->connection->staff->name }}</small></div>@endforeach
+                        @foreach($dayBlocks as $block)<div class="calendar-week-unavailable"><strong>{{ $block->starts_at->isBefore($weekDayStart) ? '00:00' : $block->starts_at->setTimezone($salon->timezone)->format('H:i') }} · {{ $block->reason }}</strong><small>{{ $block->staff->name }}</small></div>@endforeach
+                        @foreach($dayBusy as $busy)<div class="calendar-week-unavailable google"><strong>{{ $busy->starts_at->isBefore($weekDayStart) ? '00:00' : $busy->starts_at->setTimezone($salon->timezone)->format('H:i') }} · Google-foglaltság</strong><small>{{ $busy->connection->staff->name }}</small></div>@endforeach
                         @foreach($dayExceptions as $exception)<div class="calendar-week-unavailable closed"><strong>{{ empty($exception->hours) ? 'Zárva' : 'Eltérő munkarend' }}</strong><small>{{ $exception->staff->name }}</small></div>@endforeach
                         @if($dayBookings->isEmpty() && $dayBlocks->isEmpty() && $dayBusy->isEmpty() && $dayExceptions->isEmpty())<p class="calendar-week-empty">Nincs bejegyzés</p>@endif
                     </div>
@@ -143,8 +149,8 @@
                         </div>
                         <div class="calendar-timeline-body" style="grid-template-columns: 64px repeat({{ $calendarStaff->count() }}, minmax(0, 1fr)); height: {{ $timelineHeight }}px">
                             <div class="calendar-time-rail">
-                                @foreach(range($timelineStartHour, $timelineEndHour - 1) as $hour)
-                                    <span style="top: {{ ($hour - $timelineStartHour) * 90 }}px">{{ sprintf('%02d:00', $hour) }}</span>
+                                @foreach($timelineTicks as $tick)
+                                    <span style="top: {{ $timelineStart->diffInMinutes($tick) * 1.5 }}px">{{ $tick->format('H:i') }}@if($repeatedTickLabels[$tick->format('H:i')] > 1)<small style="display: block; font-size: 9px">UTC{{ $tick->format('P') }}</small>@endif</span>
                                 @endforeach
                             </div>
                             @foreach($calendarStaff as $person)
@@ -163,15 +169,19 @@
                                     @endforeach
                                     @foreach($blocks->where('staff_id', $person->id) as $block)
                                         @php
-                                            $eventTop = max(0, $timelineStart->diffInMinutes($block->starts_at->setTimezone($salon->timezone), false) * 1.5);
-                                            $eventHeight = max(22, min($timelineHeight - $eventTop, $block->starts_at->diffInMinutes($block->ends_at) * 1.5));
+                                            $eventStart = $block->starts_at->setTimezone($salon->timezone)->max($day);
+                                            $eventEnd = $block->ends_at->setTimezone($salon->timezone)->min($day->addDay());
+                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
+                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * 1.5));
                                         @endphp
                                         <div class="calendar-timeline-unavailable" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" title="{{ $block->reason }}"><span>{{ $block->reason }}</span></div>
                                     @endforeach
                                     @foreach($googleBusy->filter(fn ($busy) => $busy->connection->staff_id === $person->id) as $busy)
                                         @php
-                                            $eventTop = max(0, $timelineStart->diffInMinutes($busy->starts_at->setTimezone($salon->timezone), false) * 1.5);
-                                            $eventHeight = max(22, min($timelineHeight - $eventTop, $busy->starts_at->diffInMinutes($busy->ends_at) * 1.5));
+                                            $eventStart = $busy->starts_at->setTimezone($salon->timezone)->max($day);
+                                            $eventEnd = $busy->ends_at->setTimezone($salon->timezone)->min($day->addDay());
+                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
+                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * 1.5));
                                         @endphp
                                         <div class="calendar-timeline-unavailable google" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" title="Google Naptár foglaltság"><span>Google-foglaltság</span></div>
                                     @endforeach
@@ -185,7 +195,7 @@
                 @endif
             </div>
             <section class="calendar-agenda" aria-labelledby="agenda-heading">
-                <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA</p><h3 id="agenda-heading">Időpontok</h3></div><span>{{ $bookings->count() }}</span></div>
+                <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA · MINDEN ÁLLAPOT</p><h3 id="agenda-heading">Időpontok</h3></div><span>{{ $bookings->count() }}</span></div>
                 <ol class="calendar-agenda-list">
                     @forelse($bookings as $booking)
                         <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }} · {{ $booking->label() }}</small></span></a></li>

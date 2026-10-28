@@ -108,6 +108,42 @@ class SalonWorkflowTest extends TestCase
         $this->get(route('booking.success'))->assertOk()->assertSee('Várunk szeretettel!');
     }
 
+    public function test_public_booking_finds_first_available_day_beyond_a_week_within_the_horizon(): void
+    {
+        Salon::current()->update(['horizon_days' => 12]);
+        TimeBlock::factory()->create([
+            'staff_id' => $this->staff->id,
+            'starts_at' => '2026-10-15 22:00:00',
+            'ends_at' => '2026-10-25 23:00:00',
+        ]);
+
+        $this->get(route('booking.form', ['service_id' => $this->service->id, 'staff_id' => $this->staff->id]))
+            ->assertOk()
+            ->assertViewHas('date', '2026-10-26')
+            ->assertViewHas('slots', fn ($slots) => count($slots) > 0 && $slots[0]['staff_id'] === $this->staff->id);
+
+        $this->get(route('booking.form', ['service_id' => $this->service->id, 'staff_id' => $this->staff->id, 'date' => '2026-10-20']))
+            ->assertOk()->assertViewHas('date', '2026-10-20')->assertViewHas('slots', []);
+
+        Salon::current()->update(['horizon_days' => 7]);
+        $this->get(route('booking.form', ['service_id' => $this->service->id, 'staff_id' => $this->staff->id]))
+            ->assertOk()->assertViewHas('date', '2026-10-16')->assertViewHas('slots', []);
+
+        Salon::current()->update(['horizon_days' => 365]);
+        TimeBlock::factory()->create([
+            'staff_id' => $this->staff->id,
+            'starts_at' => '2026-10-25 23:00:00',
+            'ends_at' => '2027-10-18 23:00:00',
+        ]);
+        $queries = 0;
+        DB::listen(function () use (&$queries): void {
+            $queries++;
+        });
+        $this->get(route('booking.form', ['service_id' => $this->service->id, 'staff_id' => $this->staff->id]))
+            ->assertOk()->assertViewHas('date', '2026-10-16')->assertViewHas('slots', []);
+        $this->assertLessThanOrEqual(120, $queries);
+    }
+
     public function test_quick_booking_uses_the_previewed_slot_and_repeated_submission_is_idempotent(): void
     {
         $data = ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'name' => 'Walk-in', 'request_key' => Str::uuid()->toString()];
