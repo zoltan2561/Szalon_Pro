@@ -1,7 +1,7 @@
 @php($appearance = old('appearance', $brand))
 <section class="panel" id="arculat"><p class="eyebrow">02 · ARCULAT</p><h2>A te stílusod.</h2>
     <input type="hidden" name="theme" value="{{ $salon->theme }}">
-    <p class="settings-note">Jelenlegi kiindulópont: <strong>{{ $brand['label'] }}</strong>. Az alábbi beállításokat a lap alján lévő mentés rögzíti.</p>
+    <p class="settings-note">Jelenlegi kiindulópont: <strong>{{ $brand['label'] }}</strong>. A mentés az összes beállítást együtt rögzíti.</p>
     <div class="form-grid three">
         <label>Főoldali elrendezés<select name="appearance[layout]"><option value="split" @selected(($appearance['layout'] ?? 'split') === 'split')>Atelier · ívelt képes elrendezés</option><option value="immersive" @selected(($appearance['layout'] ?? '') === 'immersive')>Nagy képes nyitóoldal</option></select></label>
         <label>Betűkészlet<select name="font"><option value="serif" @selected(old('font',$salon->font)==='serif')>Playfair Display · elegáns</option><option value="sans" @selected(old('font',$salon->font)==='sans')>DM Sans · letisztult</option></select></label>

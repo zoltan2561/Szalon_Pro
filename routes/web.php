@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BenefitsController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BookingListController;
 use App\Http\Controllers\BookingPolicyController;
+use App\Http\Controllers\CatalogManagementController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\GoogleCalendarRelayController;
 use App\Http\Controllers\ModuleSettingsController;
@@ -28,13 +31,13 @@ Route::get('/adatkezeles', function () {
 
     return view('public.privacy');
 })->name('privacy');
-Route::get('/foglalas', [PublicController::class, 'book'])->name('booking.form');
-Route::post('/foglalas', [PublicController::class, 'store'])->middleware('throttle:booking')->name('booking.store');
+Route::get('/foglalas', [PublicController::class, 'book'])->middleware('throttle:booking-form')->name('booking.form');
+Route::post('/foglalas', [PublicController::class, 'store'])->middleware('throttle:booking-submission')->name('booking.store');
 Route::get('/foglalas/kesz', [PublicController::class, 'success'])->name('booking.success');
 Route::get('/kezeles/{token}', [PublicController::class, 'manage'])->middleware('throttle:booking')->name('booking.manage');
 Route::post('/kezeles/{token}', [PublicController::class, 'update'])->middleware('throttle:booking')->name('booking.update');
 Route::get('/kezeles/{token}/ujra', [PublicController::class, 'rebook'])->middleware('throttle:booking')->name('booking.rebook.form');
-Route::post('/kezeles/{token}/ujra', [PublicController::class, 'storeRebooking'])->middleware('throttle:booking')->name('booking.rebook.store');
+Route::post('/kezeles/{token}/ujra', [PublicController::class, 'storeRebooking'])->middleware('throttle:booking-submission')->name('booking.rebook.store');
 Route::get('/belepes', fn () => view('auth.login'))->name('login');
 Route::post('/belepes', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::get('/elfelejtett-jelszo', [PasswordResetController::class, 'request'])->name('password.request');
@@ -46,6 +49,7 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::get('/', [AdminController::class, 'today'])->name('today');
     Route::get('/naptar', [AdminController::class, 'today'])->name('calendar');
     Route::get('/uj-foglalas', [AdminController::class, 'create'])->name('create');
+    Route::get('/foglalasok', BookingListController::class)->name('bookings.index');
     Route::post('/foglalas', [AdminController::class, 'store'])->name('store');
     Route::get('/foglalas/{booking}', [AdminController::class, 'booking'])->name('booking');
     Route::post('/foglalas/{booking}', [AdminController::class, 'updateBooking'])->name('booking.update');
@@ -91,13 +95,21 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
         Route::post('/vendegek/{guest}/torles', [AdminController::class, 'anonymize'])->name('anonymize');
         Route::get('/szolgaltatasok', [AdminController::class, 'services'])->name('services');
         Route::post('/szolgaltatasok/{service?}', [AdminController::class, 'saveService'])->name('services.save');
+        Route::post('/szolgaltatasok/{service}/sorrend', [CatalogManagementController::class, 'moveService'])->name('services.move');
+        Route::post('/szolgaltatasok/{service}/allapot', [CatalogManagementController::class, 'archiveService'])->name('services.archive');
+        Route::delete('/szolgaltatasok/{service}', [CatalogManagementController::class, 'deleteService'])->name('services.delete');
         Route::get('/munkatarsak', [AdminController::class, 'staff'])->name('staff');
         Route::post('/munkatarsak/{staff?}', [AdminController::class, 'saveStaff'])->name('staff.save');
+        Route::post('/munkatarsak/{staff}/sorrend', [CatalogManagementController::class, 'moveStaff'])->name('staff.move');
+        Route::post('/munkatarsak/{staff}/allapot', [CatalogManagementController::class, 'archiveStaff'])->name('staff.archive');
+        Route::delete('/munkatarsak/{staff}', [CatalogManagementController::class, 'deleteStaff'])->name('staff.delete');
         Route::post('/blokkolas', [AdminController::class, 'block'])->name('block');
         Route::delete('/blokkolas/{block}', [AdminController::class, 'removeBlock'])->name('block.delete');
         Route::post('/napi-munkarend', [AdminController::class, 'exception'])->name('exception');
         Route::delete('/napi-munkarend/{exception}', [AdminController::class, 'removeException'])->name('exception.delete');
         Route::get('/beallitasok', [AdminController::class, 'settings'])->name('settings');
+        Route::get('/fiok', [AccountController::class, 'index'])->name('account');
+        Route::post('/fiok/jelszo', [AccountController::class, 'updatePassword'])->name('account.password');
         Route::post('/beallitasok', [AdminController::class, 'saveSettings'])->name('settings.save');
         Route::post('/beallitasok/arculat', [AdminController::class, 'applyPreset'])->name('branding.preset');
         Route::get('/ertesitesek', [AdminController::class, 'notifications'])->name('notifications');

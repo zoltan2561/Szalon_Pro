@@ -5,10 +5,12 @@
     <title>@yield('title', $salon->name) · {{ $salon->name }}</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/branding/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('industry.css').'?v='.substr(hash_file('sha256', public_path('industry.css')), 0, 12) }}">
+    <link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}">
 </head>
-<body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }}"
+<body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }} {{ request()->routeIs('login') ? 'login-page' : '' }}"
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['surface'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
+@unless(request()->routeIs('login'))
 @if($salon->demo && count($demoUrls) === 3)
 <div class="demo-strip"><div class="wrap demo-strip-inner">
     <span class="demo-strip-label"><span class="demo-strip-desktop">SzalonPRO · három külön szakági bemutató</span><span class="demo-strip-mobile">3 külön demó · saját adatokkal</span></span>
@@ -34,13 +36,17 @@
         </details>
     </div>
 </header>
+@endunless
 <main id="main">@include('components.flash')@yield('content')</main>
+@unless(request()->routeIs('login'))
 <footer class="public-footer wrap">
     <div><a class="brand footer-brand" href="{{ route('home') }}"><img class="brand-logo {{ $brand['custom_logo'] ? 'custom-logo' : 'default-logo' }}" src="{{ $brand['logo'] }}" alt="" width="40" height="40"><span>{{ $salon->name }}</span></a><p>{{ $salon->tagline }}</p></div>
     <div><a href="{{ route('privacy') }}">Adatkezelés</a><a href="{{ route('login') }}">Munkatársi belépés</a><span class="muted">SzalonPRO</span></div>
 </footer>
+@endunless
 @unless(request()->routeIs('booking.*', 'vouchers.*', 'login', 'privacy', 'password.*'))
 <div class="mobile-booking-bar"><span>{{ $salon->demo ? $brand['demo_copy']['mobile_cta'] : 'Egy kis idő magadra.' }}</span><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div>
 @endunless
+<script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 </body></html>

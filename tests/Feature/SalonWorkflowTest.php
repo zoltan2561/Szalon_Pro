@@ -83,6 +83,28 @@ class SalonWorkflowTest extends TestCase
         return array_merge(['service_id' => $this->service->id, 'staff_id' => $this->staff->id, 'starts_at' => '2026-10-19T10:00:00+02:00', 'name' => 'Teszt Vendég', 'email' => 'guest@example.test', 'phone' => '+36305550001', 'request_key' => Str::uuid()->toString()], $overrides);
     }
 
+    public function test_any_staff_shows_each_start_time_once_and_selected_staff_remains_bookable(): void
+    {
+        $other = Staff::factory()->create();
+        $this->service->staff()->attach($other);
+        $response = $this->get(route('booking.form', ['service_id' => $this->service->id, 'date' => '2026-10-19']))->assertOk();
+        $html = $response->getContent();
+        $this->assertSame(1, preg_match_all('/name="slot" value="[0-9]+\|2026-10-19T10:00:00\+02:00"/', $html));
+        $response->assertSee('Elérhető szakember');
+        $this->post(route('booking.store'), ['service_id' => $this->service->id, 'slot' => $this->staff->id.'|2026-10-19T10:00:00+02:00', 'name' => 'Teszt Vendég', 'email' => 'guest@example.test', 'terms' => 1, 'request_key' => Str::uuid()->toString()])->assertRedirect(route('booking.success'));
+        $this->assertDatabaseHas('bookings', ['staff_id' => $this->staff->id]);
+    }
+
+    public function test_work_exception_requires_hours_only_when_the_day_is_not_closed(): void
+    {
+        $this->actingAs($this->owner)->post(route('admin.exception'), ['staff_id' => $this->staff->id, 'date' => '2026-10-19'])
+            ->assertSessionHasErrors(['start', 'end']);
+        $this->assertDatabaseCount('work_exceptions', 0);
+        $this->post(route('admin.exception'), ['staff_id' => $this->staff->id, 'date' => '2026-10-19', 'closed' => 1])
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('work_exceptions', 1);
+    }
+
     private function create(array $overrides = []): Booking
     {
         return app(BookingService::class)->create($this->data($overrides));

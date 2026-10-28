@@ -1,0 +1,7 @@
+.localized-field{display:flex;position:relative;align-items:center;gap:4px;min-width:0;width:100%}
+.localized-field .localized-field-text{min-width:0;flex:1;width:100%}
+.localized-field .localized-field-native{position:absolute;width:1px;height:1px;min-height:0;padding:0;margin:0;opacity:0;pointer-events:none}
+.localized-field-picker{flex:none;margin-top:7px;border:1px solid #dce1da;border-radius:6px;background:#fff;color:inherit;padding:8px;font-size:11px;min-height:46px}
+.calendar-date-form .localized-field{width:200px}.calendar-date-form .localized-field-text,.calendar-date-form .localized-field-picker{margin-top:0;min-height:40px}
+.hours-row .localized-field-text{margin-top:0}
+@media(max-width:560px){.calendar-date-form .localized-field{flex:1;width:auto}.hours-row > .localized-field:nth-of-type(3){grid-column:2;grid-row:2}.hours-row > .localized-field:nth-of-type(4){grid-column:3;grid-row:2}}

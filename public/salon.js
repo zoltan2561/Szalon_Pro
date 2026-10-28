@@ -19,6 +19,20 @@ if (moreButton && moreSheet instanceof HTMLDialogElement) {
     });
 }
 
+document.querySelectorAll('[data-calendar-create]').forEach(track => {
+    track.addEventListener('click', event => {
+        if (event.target !== track || event.button !== 0) return;
+        const start = Date.parse(track.dataset.calendarStart);
+        if (!Number.isFinite(start)) return;
+        const minutes = Math.floor((event.clientY - track.getBoundingClientRect().top) / 1.5 / 15) * 15;
+        if (minutes < 0) return;
+        const selected = new Date(start + minutes * 60000).toISOString().replace('.000Z', '+00:00');
+        const target = new URL(track.dataset.calendarCreate);
+        target.searchParams.set('calendar_start', selected);
+        window.location.assign(target.toString());
+    });
+});
+
 const publicBookingFilters = document.querySelector('.public #booking-service');
 if (publicBookingFilters) {
     publicBookingFilters.addEventListener('submit', () => {
@@ -166,6 +180,7 @@ const manualBooking = document.querySelector('.admin .booking-submit');
 if (manualFilters && manualBooking) {
     let latestSearch = 0;
     const manualService = manualFilters.querySelector('select[name="service_id"]');
+    const manualServiceLabel = manualFilters.querySelector('[data-manual-service-label]');
     const manualDate = manualFilters.querySelector('input[name="date"]');
     const manualSelection = manualBooking.querySelector('[data-manual-selection]');
     const manualGuestHeading = manualBooking.querySelector('#manual-booking-guest');
@@ -199,6 +214,7 @@ if (manualFilters && manualBooking) {
         const params = new URLSearchParams(new FormData(manualFilters));
         if (nearest) params.set('nearest', '1');
         status.textContent = 'Szabad időpontok keresése…';
+        manualBooking.querySelector('[data-calendar-slot-unavailable]')?.remove();
         if (manualSelection) manualSelection.hidden = true;
         manualBooking.querySelector('.slots-field').replaceChildren();
         manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
@@ -216,16 +232,20 @@ if (manualFilters && manualBooking) {
             if (!newSlots || !newDate || !newService || !newSummary || !currentSlots) throw new Error('Availability response incomplete');
             currentSlots.replaceWith(newSlots);
             manualDate.value = newDate.value;
+            manualDate.dispatchEvent(new Event('localized:sync'));
             if (manualStaff && newStaff) { manualStaff.innerHTML = newStaff.innerHTML; manualStaff.value = newStaff.value; }
             manualBooking.querySelector('input[name="service_id"]').value = newService.value;
             document.querySelector('.booking-grid > aside').replaceWith(newSummary);
             manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = !newSlots.querySelector('input[name="slot"]');
-            status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value}.` : 'Erre a napra nincs szabad időpont.';
+            status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value.replaceAll('-', '. ')}.` : 'Erre a napra nincs szabad időpont.';
         } catch (error) {
             if (search === latestSearch) status.textContent = 'Nem sikerült betölteni az időpontokat. Használd a Szabad időpontok mutatása gombot.';
         }
     };
-    manualService.addEventListener('change', () => refreshSlots());
+    manualService.addEventListener('change', () => {
+        if (manualServiceLabel) manualServiceLabel.textContent = manualService.selectedOptions[0]?.textContent || '';
+        refreshSlots();
+    });
     manualDate.addEventListener('change', () => refreshSlots());
     manualStaff?.addEventListener('change', () => refreshSlots(true));
     manualFilters.addEventListener('submit', event => {
@@ -296,10 +316,44 @@ document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
 
 const guestSearch = document.querySelector('[data-live-guests]');
 const guestList = document.querySelector('[data-guest-list]');
-if (guestSearch && guestList) {
-    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('hu').trim();
-    guestSearch.addEventListener('input', () => {
-        const query = normalize(guestSearch.value);
-        guestList.querySelectorAll('.guest-card').forEach(card => { card.hidden = !normalize(card.textContent).includes(query); });
-    });
+const guestSearchForm = document.querySelector('[data-live-guests-form]');
+if (guestSearch && guestList && guestSearchForm) {
+    const status = guestSearchForm.querySelector('[data-guest-list-status]');
+    const sort = guestSearchForm.querySelector('[data-guest-sort]');
+    let sequence = 0;
+    let timer;
+    const refreshGuests = async current => {
+        const target = new URL(guestSearchForm.action);
+        target.search = new URLSearchParams(new FormData(guestSearchForm)).toString();
+        status.textContent = 'Keresés…';
+        try {
+            const response = await fetch(target, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            if (!response.ok) throw new Error('Guest search failed');
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+            const results = page.querySelector('[data-guest-list]');
+            if (!results) throw new Error('Guest search response incomplete');
+            if (current !== sequence) return;
+            guestList.innerHTML = results.innerHTML;
+            history.replaceState(null, '', target);
+            status.textContent = 'A vendéglista frissült.';
+        } catch (error) {
+            if (current === sequence) status.textContent = 'Nem sikerült frissíteni a listát. Nyomd meg a Keresés gombot.';
+        }
+    };
+    const queueGuestSearch = delay => {
+        const current = ++sequence;
+        clearTimeout(timer);
+        timer = setTimeout(() => refreshGuests(current), delay);
+    };
+    guestSearch.addEventListener('input', () => queueGuestSearch(300));
+    sort?.addEventListener('change', () => queueGuestSearch(0));
 }
+
+document.querySelectorAll('form[data-work-exception]').forEach(form => {
+    const closed = form.querySelector('input[name="closed"]');
+    const timeFields = form.querySelectorAll('input[name="start"], input[name="end"]');
+    if (!closed) return;
+    const update = () => { timeFields.forEach(input => { input.disabled = closed.checked; }); };
+    closed.addEventListener('change', update);
+    update();
+});

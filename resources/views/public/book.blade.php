@@ -53,13 +53,14 @@
             </aside>
             <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit">
                 @csrf
+                <div hidden aria-hidden="true"><label for="booking-website">Weboldal</label><input id="booking-website" type="text" name="website" tabindex="-1" autocomplete="off"></div>
                 <input type="hidden" name="service_id" value="{{ $service?->id }}">
                 <input type="hidden" name="request_key" value="{{ $requestKey }}">
                 @if($referralSource)<input type="hidden" name="referral_source" value="{{ $referralSource }}">@endif
                 <p class="eyebrow">02 · IDŐPONT</p>
                 <h2 id="booking-slots">Mikor érkezel?</h2>
                 <p class="booking-date-label">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>
-                @include('components.slots')
+                @include('components.slots', ['groupAnyStaff' => ! $staffId])
                 <hr>
                 <p class="eyebrow">03 · ADATAID</p>
                 <h2 id="booking-guest">Hogyan érhetünk el?</h2>
@@ -77,7 +78,7 @@
                 @if($smsReady && (!$rebookingGuest || $rebookingGuest->phone))<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>SMS-emlékeztetőt kérek a megadott telefonszámra.</span></label>@endif
                 @if($salon->featureEnabled('reviews'))<label class="check"><input type="checkbox" name="review_opt_in" value="1" @checked(old('review_opt_in'))><span>Kérek a látogatás után egy semleges értékeléskérő e-mailt vagy SMS-t a szalontól, legfeljebb 90 naponta. Bármikor leiratkozhatok; a foglalásom ettől független.</span></label>@endif
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
-                <p class="muted">A választott időpont mellett láthatod a szakember nevét. A foglalás a véglegesítéskor válik érvényessé.</p>
+                <p class="muted">{{ $staffId ? 'A választott időpont mellett láthatod a szakember nevét.' : 'A szabad szakembert automatikusan választjuk ki.' }} A foglalás a véglegesítéskor válik érvényessé.</p>
                 @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif
                 <div class="booking-finalize-group"><p class="selected-slot-note" aria-live="polite" hidden></p><button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button></div>
             </form>

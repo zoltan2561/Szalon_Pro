@@ -80,6 +80,11 @@
 .calendar-time-rail span:first-child{transform:translateY(4px)}
 .calendar-timeline-track{position:relative;overflow:hidden;border-right:1px solid #e4ebe2;background-image:linear-gradient(to bottom,transparent calc(100% - 1px),#e3eae1 calc(100% - 1px));background-size:100% 90px}
 .calendar-timeline-track.is-closed{background-color:#f4f1ef}
+.calendar-timeline-track[data-calendar-create]{cursor:pointer}
+.premium .booking-submit .slots,.admin .booking-submit .slots{max-height:none;overflow:visible}
+.admin .manual-service-label{display:block;overflow-wrap:anywhere;margin-top:6px;font-size:13px;color:#52634f}
+.guest-table-wrap{overflow-x:auto}.guest-table{width:100%;border-collapse:collapse;text-align:left}.guest-table th,.guest-table td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top}.guest-table th{font-size:12px}.guest-table td{font-size:14px}.guest-table td small{display:block;overflow-wrap:anywhere}.guest-table td a{font-weight:600}
+@media(max-width:640px){.guest-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}.guest-table,.guest-table tbody,.guest-table tr,.guest-table td{display:block}.guest-table tr{padding:12px 0;border-bottom:1px solid var(--line)}.guest-table td{display:flex;justify-content:space-between;gap:16px;padding:5px 0;border:0;text-align:right}.guest-table td::before{content:attr(data-label);font-weight:600;text-align:left}.guest-table td:first-child{display:block;text-align:left}.guest-table td:first-child::before{display:none}}
 .calendar-timeline-event,.calendar-timeline-unavailable{position:absolute;left:5px;right:5px;border-radius:5px;padding:5px 7px;overflow:hidden;line-height:1.2;overflow-wrap:anywhere}
 .calendar-timeline-event{z-index:2;background:#dcece2;border-left:3px solid #4d8963;color:#204b35;display:block}
 .calendar-timeline-event:hover{background:#cce4d4;text-decoration:none}

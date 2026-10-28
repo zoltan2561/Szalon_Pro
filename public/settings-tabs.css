@@ -1,0 +1,6 @@
+.settings-tablist{display:flex;flex-wrap:wrap;gap:8px}
+.settings-tablist a[role=tab]{display:inline-block;padding:9px 12px;border:1px solid #b8c9b7;border-radius:7px;color:#294b36;text-decoration:none}
+.settings-tablist a[role=tab][aria-selected=true]{background:#314f42;border-color:#314f42;color:#fff}
+.settings-tablist a[role=tab]:focus-visible{outline:3px solid #a88346;outline-offset:2px}
+.admin-settings [role=tabpanel][hidden],.admin-settings [data-settings-validation][hidden]{display:none}
+.settings-save{margin:16px 0 24px}

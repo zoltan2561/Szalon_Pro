@@ -32,8 +32,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -55,15 +57,17 @@ class AdminController extends Controller
             $day = $day->startOfWeek(CarbonImmutable::MONDAY);
         }
         $end = $week ? $day->addDays(7) : $day->addDay();
-        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff'])->where('starts_at', '>=', $day->utc())->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
+        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff'])
+            ->when($week, fn ($query) => $query->where('ends_at', '>', $day->utc()), fn ($query) => $query->where('starts_at', '>=', $day->utc()))
+            ->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
         $next = Booking::visibleTo($request->user())->with('guest', 'staff')->where('status', 'confirmed')->where('starts_at', '>=', now())->orderBy('starts_at')->first();
         $visibleStaffIds = $request->user()->role === 'owner' ? Staff::pluck('id')->all() : [$request->user()->staff_id];
-        $calendarStaff = Staff::whereIn('id', $visibleStaffIds)->orderBy('name')->get();
+        $calendarStaff = Staff::whereIn('id', $visibleStaffIds)->orderBy('sort_order')->orderBy('id')->get();
         $blocks = TimeBlock::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
         $exceptions = WorkException::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('date', '>=', $day->toDateString())->where('date', '<', $end->toDateString())->orderBy('date')->get();
         $googleBusy = GoogleCalendarBusy::with('connection.staff')->whereHas('connection', fn ($query) => $query->whereIn('staff_id', $visibleStaffIds))->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
 
-        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['quickServices' => Service::where('active', true)->when($request->user()->role !== 'owner', fn ($query) => $query->whereHas('staff', fn ($query) => $query->where('staff.id', $request->user()->staff_id)))->get(), 'requestKey' => old('request_key', Str::uuid()->toString()), 'failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
+        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['quickServices' => Service::where('active', true)->when($request->user()->role !== 'owner', fn ($query) => $query->whereHas('staff', fn ($query) => $query->where('staff.id', $request->user()->staff_id)))->orderBy('sort_order')->orderBy('id')->get(), 'requestKey' => old('request_key', Str::uuid()->toString()), 'failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View|JsonResponse
@@ -72,8 +76,21 @@ class AdminController extends Controller
             return $this->quickPreview($request, $availability);
         }
         $request->validate(['date' => 'nullable|date_format:Y-m-d']);
-        $services = Service::where('active', true)->when($request->user()->role !== 'owner', fn ($q) => $q->whereHas('staff', fn ($q) => $q->where('staff.id', $request->user()->staff_id)))->with('staff')->get();
-        $service = $services->firstWhere('id', $request->integer('service_id')) ?? $services->first();
+        $services = Service::where('active', true)->when($request->user()->role !== 'owner', fn ($q) => $q->whereHas('staff', fn ($q) => $q->where('staff.id', $request->user()->staff_id)))->with('staff')->orderBy('sort_order')->orderBy('id')->get();
+        $calendarStart = null;
+        $calendarStaffId = null;
+        if ($request->filled('calendar_start')) {
+            abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
+            $request->validate(['calendar_start' => 'required|string', 'date' => 'required|date_format:Y-m-d', 'staff_id' => 'required|integer']);
+            $calendarStaffId = $request->integer('staff_id');
+            abort_unless($request->user()->role === 'owner' || $calendarStaffId === (int) $request->user()->staff_id, 403);
+            abort_unless(Staff::whereKey($calendarStaffId)->where('active', true)->exists(), 404);
+            $calendarStart = $availability->parse($request->query('calendar_start'));
+            abort_unless($calendarStart->setTimezone(Salon::current()->timezone)->toDateString() === $request->query('date'), 422);
+        }
+        $preferredStaffId = $calendarStaffId ?? ($request->user()->role === 'owner' ? $request->integer('staff_id') : $request->user()->staff_id);
+        $service = $services->firstWhere('id', $request->integer('service_id'))
+            ?? ($preferredStaffId ? $services->first(fn ($item) => $item->staff->contains($preferredStaffId)) : $services->first());
         $date = $request->query('date', now(Salon::current()->timezone)->addDay()->toDateString());
         $staffId = $request->user()->role === 'owner' ? ($request->integer('staff_id') ?: null) : $request->user()->staff_id;
         if ($staffId && ! $service?->staff->contains($staffId)) {
@@ -105,7 +122,17 @@ class AdminController extends Controller
             }
         }
 
-        return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
+        $selectedSlot = null;
+        if ($calendarStart && $staffId === $calendarStaffId) {
+            foreach ($slots as $slot) {
+                if ($slot['staff_id'] === $calendarStaffId && CarbonImmutable::parse($slot['starts_at'])->equalTo($calendarStart)) {
+                    $selectedSlot = $slot['staff_id'].'|'.$slot['starts_at'];
+                    break;
+                }
+            }
+        }
+
+        return view('admin.create', compact('services', 'service', 'date', 'staffId', 'guests', 'slots', 'selectedSlot', 'calendarStart') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'smsReady' => Salon::current()->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
     public function quickPreview(Request $request, Availability $availability): JsonResponse
@@ -202,10 +229,28 @@ class AdminController extends Controller
 
     public function guests(Request $request): View
     {
-        $search = mb_substr($request->query('q', ''), 0, 120);
-        $guests = $this->guestQuery($request)->when($search, fn ($q) => $q->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$search}%")))->orderBy('name')->paginate(30);
+        $filters = $request->validate(['q' => 'nullable|string|max:120', 'sort' => ['nullable', Rule::in(['name', 'last_visit'])]]);
+        $search = trim($filters['q'] ?? '');
+        $sort = $filters['sort'] ?? 'name';
+        $digits = preg_replace('/\D+/', '', $search);
+        $visibleVisits = fn (Builder $query) => $query->visibleTo($request->user())->where('status', 'completed');
+        $guests = $this->guestQuery($request)
+            ->withCount(['bookings as visit_count' => $visibleVisits])
+            ->withMax(['bookings as last_visit_at' => $visibleVisits], 'starts_at')
+            ->when($search !== '', function ($query) use ($search, $digits): void {
+                $query->where(function ($guest) use ($search, $digits): void {
+                    $guest->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%')->orWhere('phone', 'like', '%'.$search.'%');
+                    if ($digits !== '') {
+                        $guest->orWhere('phone_normalized', 'like', '%'.$digits.'%');
+                    }
+                });
+            });
+        if ($sort === 'last_visit') {
+            $guests->orderByRaw('CASE WHEN last_visit_at IS NULL THEN 1 ELSE 0 END')->orderByDesc('last_visit_at');
+        }
+        $guests = $guests->orderBy('name')->orderBy('id')->paginate(30)->withQueryString();
 
-        return view('admin.guests', compact('guests', 'search'));
+        return view('admin.guests', compact('guests', 'search', 'sort'));
     }
 
     public function guest(Guest $guest, Request $request): View
@@ -291,7 +336,7 @@ class AdminController extends Controller
 
     public function services(): View
     {
-        return view('admin.services', ['services' => Service::with('staff')->get(), 'staff' => Staff::where('active', true)->get()]);
+        return view('admin.services', ['services' => Service::with('staff')->orderBy('sort_order')->orderBy('id')->get(), 'staff' => Staff::where('active', true)->orderBy('sort_order')->orderBy('id')->get()]);
     }
 
     public function saveService(Request $request, ?Service $service = null): RedirectResponse
@@ -302,6 +347,9 @@ class AdminController extends Controller
             unset($data['staff']);
             $data['active'] = $request->boolean('active');
             $item = $service ?? new Service;
+            if (! $item->exists) {
+                $item->sort_order = (int) Service::max('sort_order') + 1;
+            }
             $item->fill($data)->save();
             $item->staff()->sync($ids);
         });
@@ -311,7 +359,7 @@ class AdminController extends Controller
 
     public function staff(): View
     {
-        return view('admin.staff', ['staff' => Staff::all(), 'blocks' => TimeBlock::orderByDesc('starts_at')->limit(40)->get(), 'exceptions' => WorkException::orderByDesc('date')->limit(40)->get(), 'users' => User::where('role', 'staff')->get()->keyBy('staff_id')]);
+        return view('admin.staff', ['staff' => Staff::orderBy('sort_order')->orderBy('id')->get(), 'blocks' => TimeBlock::orderByDesc('starts_at')->limit(40)->get(), 'exceptions' => WorkException::orderByDesc('date')->limit(40)->get(), 'users' => User::where('role', 'staff')->get()->keyBy('staff_id')]);
     }
 
     public function saveStaff(Request $request, ?Staff $staff = null): RedirectResponse
@@ -321,6 +369,9 @@ class AdminController extends Controller
         $hours = $this->hours($data['hours']);
         $this->mutate(function () use ($staff, $data, $hours, $request): void {
             $item = $staff ?? new Staff;
+            if (! $item->exists) {
+                $item->sort_order = (int) Staff::max('sort_order') + 1;
+            }
             $item->fill(['name' => $data['name'], 'title' => $data['title'], 'bio' => $data['bio'], 'active' => $request->boolean('active'), 'weekly_hours' => $hours])->save();
             if (! empty($data['email'])) {
                 $user = User::firstOrNew(['staff_id' => $item->id, 'role' => 'staff']);
@@ -356,7 +407,7 @@ class AdminController extends Controller
 
     public function exception(Request $request): RedirectResponse
     {
-        $data = $request->validate(['staff_id' => 'required|exists:staff,id', 'date' => 'required|date_format:Y-m-d', 'start' => 'nullable|date_format:H:i', 'end' => 'nullable|date_format:H:i|after:start']);
+        $data = $request->validate(['staff_id' => 'required|exists:staff,id', 'date' => 'required|date_format:Y-m-d', 'start' => 'required_unless:closed,1|nullable|date_format:H:i', 'end' => 'required_unless:closed,1|nullable|date_format:H:i|after:start']);
         $this->mutate(fn () => WorkException::updateOrCreate(['staff_id' => $data['staff_id'], 'date' => $data['date']], ['hours' => $request->boolean('closed') ? [] : $this->hours([1 => ['start' => $data['start'], 'end' => $data['end']]])[1]]));
 
         return back()->with('success', 'Az adott napi munkarendet elmentettük.');
@@ -452,9 +503,24 @@ class AdminController extends Controller
                 $salon->update(['published' => true]);
             }
             if ($request->filled('new_password')) {
-                $request->user()->update(['password' => $request->input('new_password')]);
+                $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+                if (! Hash::check((string) $request->input('current_password'), $user->password)) {
+                    throw ValidationException::withMessages(['current_password' => 'A jelenlegi jelszó időközben megváltozott.']);
+                }
+                $user->forceFill(['password' => $request->input('new_password'), 'remember_token' => Str::random(60)])->save();
+                if (config('session.driver') === 'database') {
+                    DB::connection(config('session.connection'))->table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+                }
             }
         });
+
+        if ($request->filled('new_password')) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('success', 'A beállításokat és a jelszavadat elmentettük. Jelentkezz be újra.');
+        }
 
         return back()->with('success', 'A beállításokat elmentettük.');
     }

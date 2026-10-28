@@ -57,7 +57,7 @@ class CalendarWorkspaceTest extends TestCase
             ->assertOk()
             ->assertSee('calendar-week-grid', false)
             ->assertSee('calendar-week-booking confirmed', false)
-            ->assertSee('okt. 19. – okt. 25.')
+            ->assertSee('2026. 10. 19. – 2026. 10. 25.')
             ->assertSee('Nagy Eszter')
             ->assertSee('Kiss Anna');
 

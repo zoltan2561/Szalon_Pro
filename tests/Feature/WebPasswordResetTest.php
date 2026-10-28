@@ -33,6 +33,24 @@ class WebPasswordResetTest extends TestCase
         config(['mail.default' => 'array']);
     }
 
+    public function test_login_page_hides_public_navigation_and_demo_switch(): void
+    {
+        Salon::current()->update(['demo' => true]);
+        config()->set('salon.demo_urls', ['salon' => 'https://demo.test/hair', 'barber' => 'https://demo.test/barber', 'nails' => 'https://demo.test/nails']);
+
+        $this->get(route('login'))->assertOk()
+            ->assertSee('Munkatársi belépés')
+            ->assertSee('Elfelejtetted a jelszavad?')
+            ->assertSee('action="'.route('login.submit').'"', false)
+            ->assertDontSee('class="demo-style-nav"', false)
+            ->assertDontSee('class="public-header"', false)
+            ->assertDontSee('class="public-footer wrap"', false);
+
+        $this->get(route('home'))->assertOk()
+            ->assertSee('class="demo-style-nav"', false)
+            ->assertSee('class="public-header"', false);
+    }
+
     public function test_existing_and_unknown_addresses_receive_the_same_response(): void
     {
         Notification::fake();

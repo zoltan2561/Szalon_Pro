@@ -5,6 +5,7 @@
 
 @unless($configured)<div class="notice error">A Google-kapcsolat még nincs beállítva. Kérd az üzemeltetőtől a bekapcsolását.</div>@endunless
 <div class="notice">A naptár ötpercenként frissül. Hibás vagy 15 percnél régebbi kapcsolatnál az érintett szakemberhez új időpont nem foglalható.</div>
+<section class="panel"><h2>Kapcsolódás három lépésben</h2><ol class="setup-list"><li>Válaszd ki alább a munkatársat, és kattints a kapcsolásra.</li><li>A Google oldalán jelentkezz be, és engedélyezd a naptár használatát.</li><li>Visszatérés után ellenőrizd, hogy a kapcsolat és az első beolvasás sikeres-e.</li></ol><p class="muted">A Google-jelszavadat csak a Google bejelentkezési oldalán add meg.</p></section>
 
 @forelse($staff as $person)
 @php($connection=$connections->get($person->id))

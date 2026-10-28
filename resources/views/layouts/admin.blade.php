@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('upload-controls.css').'?v='.substr(hash_file('sha256', public_path('upload-controls.css')), 0, 12) }}">@if(request()->routeIs('admin.settings'))<link rel="stylesheet" href="{{ asset('settings-tabs.css').'?v='.substr(hash_file('sha256', public_path('settings-tabs.css')), 0, 12) }}">@endif</head>
 <body class="admin premium-admin">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 <aside class="sidebar">
@@ -14,7 +14,8 @@
 </nav>
 <div class="sidebar-bottom">
 <a href="{{ route('home') }}" target="_blank" rel="noopener">Weboldal előnézete ↗</a>
-<p>{{ auth()->user()->name }}<small>{{ auth()->user()->role==='owner' ? 'Tulajdonos':'Munkatárs' }}</small></p>
+@php($roleLabel = auth()->user()->role === 'owner' ? 'Tulajdonos' : 'Munkatárs')
+<p>{{ auth()->user()->name }}@if(mb_strtolower(trim(auth()->user()->name)) !== mb_strtolower($roleLabel))<small>{{ $roleLabel }}</small>@endif</p>
 <form method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kijelentkezés</button></form>
 </div>
 </aside>
@@ -33,10 +34,13 @@
 @foreach(['today'=>['clock','Ma'],'calendar'=>['calendar-blank','Naptár']] as $key=>$item)
 <a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" /><span>{{ $item[1] }}</span></a>
 @endforeach
-@if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="mobile-new-booking" href="{{ route('admin.create') }}" aria-label="Új foglalás" @if(request()->routeIs('admin.create','admin.booking*')) aria-current="page" @endif><x-icon name="calendar-blank" /><span>+ Új</span></a>@else<span class="mobile-tab-disabled" aria-label="Új foglaláshoz nincs jogosultság">Új foglalás</span>@endif
+@if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="mobile-new-booking" href="{{ route('admin.create') }}" aria-label="Új foglalás" @if(request()->routeIs('admin.create','admin.booking','admin.booking.*')) aria-current="page" @endif><x-icon name="calendar-blank" /><span>+ Új</span></a>@else<span class="mobile-tab-disabled" aria-label="Új foglaláshoz nincs jogosultság">Új foglalás</span>@endif
 <a href="{{ route('admin.guests') }}" @if(request()->routeIs('admin.guests','admin.guest')) aria-current="page" @endif><x-icon name="users" /><span>Vendégeim</span></a>
-<button type="button" data-open-more aria-controls="admin-more-menu" aria-expanded="false" @if(!request()->routeIs('admin.today','admin.calendar','admin.guests','admin.guest','admin.create','admin.booking*')) aria-current="page" @endif><x-icon name="list" /><span>Több</span></button>
+<button type="button" data-open-more aria-controls="admin-more-menu" aria-expanded="false" @if(!request()->routeIs('admin.today','admin.calendar','admin.guests','admin.guest','admin.create','admin.booking','admin.booking.*')) aria-current="page" @endif><x-icon name="list" /><span>Több</span></button>
 </nav>
 <dialog id="admin-more-menu" class="admin-more-sheet" aria-labelledby="admin-more-title"><div class="section-heading"><h2 id="admin-more-title">További lehetőségek</h2><form method="dialog"><button class="button secondary" aria-label="Menü bezárása">Bezárás</button></form></div><nav aria-label="További menüpontok">@include('components.admin-links')<a href="{{ route('home') }}">Weboldal előnézete ↗</a></nav><form method="post" action="{{ route('logout') }}">@csrf<button class="button secondary full">Kijelentkezés</button></form></dialog>
+<script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
+<script src="{{ asset('upload-controls.js').'?v='.substr(hash_file('sha256', public_path('upload-controls.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
+@if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif
 </body></html>

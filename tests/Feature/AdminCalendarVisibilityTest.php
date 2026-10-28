@@ -18,6 +18,51 @@ class AdminCalendarVisibilityTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_weekly_hour_grid_retains_overlapping_bookings_and_clips_overnight_blocks(): void
+    {
+        Salon::factory()->create(['timezone' => 'Europe/Budapest']);
+        $owner = User::factory()->create(['role' => 'owner']);
+        $firstStaff = Staff::factory()->create(['name' => 'Első szakember']);
+        $secondStaff = Staff::factory()->create(['name' => 'Második szakember']);
+        $start = CarbonImmutable::parse('2026-10-23 10:00', 'Europe/Budapest')->utc();
+        $first = Booking::factory()->create(['staff_id' => $firstStaff->id, 'starts_at' => $start, 'ends_at' => $start->addMinutes(90)]);
+        $second = Booking::factory()->create(['staff_id' => $secondStaff->id, 'starts_at' => $start, 'ends_at' => $start->addMinutes(90)]);
+        $previousWeekStart = CarbonImmutable::parse('2026-10-18 23:30', 'Europe/Budapest')->utc();
+        $overnight = Booking::factory()->create(['staff_id' => $firstStaff->id, 'starts_at' => $previousWeekStart, 'ends_at' => $previousWeekStart->addHour()]);
+        TimeBlock::factory()->create(['staff_id' => $firstStaff->id, 'starts_at' => CarbonImmutable::parse('2026-10-22 23:30', 'Europe/Budapest')->utc(), 'ends_at' => CarbonImmutable::parse('2026-10-23 00:30', 'Europe/Budapest')->utc(), 'reason' => 'Éjszakai szünet']);
+
+        $response = $this->actingAs($owner)->get(route('admin.calendar', ['date' => '2026-10-23', 'view' => 'week']))
+            ->assertOk()->assertSee('Heti időrács')->assertSee('Hétfő')->assertSee('Csütörtök')->assertSee('Péntek')
+            ->assertSee('<span>Heti foglalások</span><strong>2</strong>', false)
+            ->assertSee('23:30 · Éjszakai szünet')->assertSee('00:00 · Éjszakai szünet')->assertSee('Vége: 24:00')->assertSee('Vége: 00:30')->assertSee('00:00–00:30')
+            ->assertSee('Az üres mező önmagában nem jelent foglalható időpontot.');
+        $this->assertSame(2, substr_count($response->getContent(), 'href="'.route('admin.booking', $first).'"'));
+        $this->assertSame(2, substr_count($response->getContent(), 'href="'.route('admin.booking', $second).'"'));
+        $this->assertSame(1, substr_count($response->getContent(), 'href="'.route('admin.booking', $overnight).'"'));
+        $staffUser = User::factory()->create(['role' => 'staff', 'staff_id' => $secondStaff->id]);
+        $this->actingAs($staffUser)->get(route('admin.calendar', ['date' => '2026-10-23', 'view' => 'week']))
+            ->assertOk()->assertDontSee('href="'.route('admin.booking', $overnight).'"', false);
+    }
+
+    public function test_weekly_hour_grid_distinguishes_both_repeated_hours_and_skips_missing_hour(): void
+    {
+        Salon::factory()->create(['timezone' => 'Europe/Budapest']);
+        $owner = User::factory()->create(['role' => 'owner']);
+        $staff = Staff::factory()->create();
+        $firstStart = CarbonImmutable::parse('2026-10-25T00:15:00Z');
+        $secondStart = CarbonImmutable::parse('2026-10-25T01:15:00Z');
+        $first = Booking::factory()->create(['staff_id' => $staff->id, 'starts_at' => $firstStart, 'ends_at' => $firstStart->addMinutes(30)]);
+        $second = Booking::factory()->create(['staff_id' => $staff->id, 'starts_at' => $secondStart, 'ends_at' => $secondStart->addMinutes(30)]);
+        $response = $this->actingAs($owner)->get(route('admin.calendar', ['date' => '2026-10-25', 'view' => 'week']))
+            ->assertOk()->assertSee('Óraátállítás napja')->assertSee('02:15 UTC+02:00')->assertSee('02:15 UTC+01:00');
+        $this->assertStringContainsString('href="'.route('admin.booking', $first).'"', $response->getContent());
+        $this->assertStringContainsString('href="'.route('admin.booking', $second).'"', $response->getContent());
+
+        TimeBlock::factory()->create(['staff_id' => $staff->id, 'starts_at' => '2026-03-28 23:00:00', 'ends_at' => '2026-03-29 22:00:00', 'reason' => 'Egész nap']);
+        $this->get(route('admin.calendar', ['date' => '2026-03-29', 'view' => 'week']))
+            ->assertOk()->assertSee('Óraátállítás napja')->assertSee('Óraátállítás miatt nincs ilyen óra.');
+    }
+
     public function test_calendar_marks_both_repeated_hours_and_positions_events_by_elapsed_time(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-25T01:30:00Z'));

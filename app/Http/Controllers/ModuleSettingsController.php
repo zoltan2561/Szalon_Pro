@@ -13,23 +13,30 @@ class ModuleSettingsController extends Controller
 {
     /** @var array<string, array{title: string, description: string}> */
     public const Modules = [
-        'billing' => ['title' => 'Számlázz.hu bizonylatok', 'description' => 'Tulajdonosi nyugta- és számlakiállítás; külön szolgáltatói és könyvelői beállítást igényel.'],
-        'statistics' => ['title' => 'Statisztika', 'description' => 'Heti és havi foglalási arányok, források, szolgáltatások és munkatársi kihasználtság.'],
-        'vouchers' => ['title' => 'Ajándékutalványok', 'description' => 'Kiadás, részbeváltható egyenleg, nyomtatható kártya és naplózott sztornó; online fizetés nélkül.'],
-        'reviews' => ['title' => 'Értékelés kérése', 'description' => 'Semleges Google-értékeléskérés, külön hozzájárulással, leiratkozással és 90 napos gyakoriságkorláttal.'],
-        'phone_booking' => ['title' => 'Telefonközpontú foglalás', 'description' => 'Kiválasztható kötelező elérhetőség; e-mail nélkül SMS-ben is küldhető a kezelési link.'],
-        'no_show_protection' => ['title' => 'Meg nem jelenés elleni védelem', 'description' => 'Beállítható korlátozás egyező elérhetőséghez tartozó korábbi meg nem jelenések után.'],
-        'sharing' => ['title' => 'Megosztás és QR', 'description' => 'Foglalási linkek és letölthető QR-kódok, forrás szerinti összesítéssel.'],
-        'waitlist' => ['title' => 'Várólista', 'description' => 'A felszabaduló időpontokra váró vendégek kezelése a munkafelületen.'],
-        'sms' => ['title' => 'SMS-emlékeztetők', 'description' => 'Telefonos emlékeztetők a megadott számmal rendelkező vendégeknek. A tényleges küldéshez SMS-szolgáltató kapcsolata kell.'],
-        'passes' => ['title' => 'Bérletek', 'description' => 'Szolgáltatáshoz kötött alkalmak és felhasználásuk kezelése.'],
-        'loyalty' => ['title' => 'Hűségpontok', 'description' => 'Teljesített látogatások után pontgyűjtés és szabályozható beváltás.'],
-        'financials' => ['title' => 'Pénzügyi összesítés', 'description' => 'A rögzített szolgáltatási összegek megjelenítése. Nem fizetés vagy könyvelés.'],
+        'billing' => ['title' => 'Számlázz.hu bizonylatok', 'description' => 'Nyugta és számla. Szolgáltatói és könyvelői beállítást igényel.'],
+        'statistics' => ['title' => 'Statisztika', 'description' => 'Foglalások és kihasználtság áttekintése.'],
+        'vouchers' => ['title' => 'Ajándékutalványok', 'description' => 'Utalványok kiadása és beváltása, online fizetés nélkül.'],
+        'reviews' => ['title' => 'Értékelés kérése', 'description' => 'Google-értékelés kérése a vendég hozzájárulásával.'],
+        'phone_booking' => ['title' => 'Telefonközpontú foglalás', 'description' => 'A kötelező vendégelérhetőség kiválasztása.'],
+        'no_show_protection' => ['title' => 'Meg nem jelenés elleni védelem', 'description' => 'Korlátozás ismételt meg nem jelenés után.'],
+        'sharing' => ['title' => 'Megosztás és QR', 'description' => 'Megosztható foglalási linkek és QR-kódok.'],
+        'waitlist' => ['title' => 'Várólista', 'description' => 'Vendégek kezelése felszabaduló időpontokhoz.'],
+        'sms' => ['title' => 'SMS-emlékeztetők', 'description' => 'Emlékeztetők küldése SMS-szolgáltatón keresztül.'],
+        'passes' => ['title' => 'Bérletek', 'description' => 'Bérletalkalmak kiadása és felhasználása.'],
+        'loyalty' => ['title' => 'Hűségpontok', 'description' => 'Pontgyűjtés és beváltás látogatások után.'],
+        'financials' => ['title' => 'Pénzügyi összesítés', 'description' => 'Rögzített összegek áttekintése; nem könyvelés.'],
+    ];
+
+    /** @var array<string, list<string>> */
+    public const ModuleGroups = [
+        'Foglalás és vendégek' => ['phone_booking', 'no_show_protection', 'waitlist', 'sms'],
+        'Pénzügy és kedvezmények' => ['billing', 'financials', 'vouchers', 'passes', 'loyalty'],
+        'Marketing és elemzés' => ['reviews', 'sharing', 'statistics'],
     ];
 
     public function index(SmsGateway $smsGateway): View
     {
-        return view('admin.modules', ['modules' => self::Modules, 'smsConfigured' => $smsGateway->configured()]);
+        return view('admin.modules', ['modules' => self::Modules, 'moduleGroups' => self::ModuleGroups, 'smsConfigured' => $smsGateway->configured()]);
     }
 
     public function update(Request $request): RedirectResponse

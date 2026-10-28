@@ -5,10 +5,14 @@
 
 <form method="post" action="{{ route('admin.modules.update') }}">
 @csrf
-@foreach($modules as $key => $module)
-<section class="panel">
+@foreach($moduleGroups as $group => $keys)
+<section class="panel" aria-labelledby="module-group-{{ $loop->index }}">
+<h2 id="module-group-{{ $loop->index }}">{{ $group }}</h2>
+@foreach($keys as $key)
+@php($module = $modules[$key])
 <label class="check"><input type="checkbox" name="features[{{ $key }}]" value="1" @checked($salon->featureEnabled($key))><span><strong>{{ $module['title'] }}</strong><br>{{ $module['description'] }}</span></label>
 @if($key === 'sms' && !$smsConfigured)<p class="notice">Az SMS-küldés még nincs szolgáltatóhoz kapcsolva; a kapcsoló önmagában nem indít küldést.</p>@endif
+@endforeach
 </section>
 @endforeach
 <button class="button">Modulok mentése</button>

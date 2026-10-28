@@ -7,8 +7,9 @@
     $calendarStaff = $calendarStaff ?? collect();
     $previousDate = $day->subDays($week ? 7 : 1)->toDateString();
     $followingDate = $day->addDays($week ? 7 : 1)->toDateString();
-    $confirmedBookings = $bookings->where('status', 'confirmed');
-    $completedBookings = $bookings->where('status', 'completed');
+    $summaryBookings = $week ? $bookings->filter(fn ($booking) => $booking->starts_at->gte($day->utc())) : $bookings;
+    $confirmedBookings = $summaryBookings->where('status', 'confirmed');
+    $completedBookings = $summaryBookings->where('status', 'completed');
     $timelineStartHour = 8;
     $timelineEndHour = 20;
 
@@ -42,12 +43,11 @@
 
 <div class="page-heading calendar-page-heading">
     <div>
-        <p class="eyebrow">{{ $day->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>
+        <p class="eyebrow">{{ $day->format('Y. m. d.') }} · {{ $day->locale('hu')->isoFormat('dddd') }}</p>
         <h1>{{ $isTodayPage && $isActualToday ? 'A mai nap menete' : ($week ? 'Heti naptár' : 'Napi naptár') }}</h1>
         <p class="muted">Foglalások, szünetek és eltérő munkaidő egy helyen.</p>
     </div>
     <div class="calendar-heading-actions">
-        @if(auth()->user()->role === 'owner')<a class="calendar-connect-link" href="{{ route('admin.google.index') }}">Google Naptár kapcsolatok →</a>@endif
         @if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="button" href="{{ route('admin.create', ['date' => $date]) }}">+ Új foglalás</a>@endif
     </div>
 </div>
@@ -66,17 +66,17 @@
     @php
         $nextLocal = $next->starts_at->setTimezone($salon->timezone);
         $todayLocal = now($salon->timezone)->toDateString();
-        $nextDayLabel = $nextLocal->toDateString() === $todayLocal ? 'Ma' : ($nextLocal->toDateString() === now($salon->timezone)->addDay()->toDateString() ? 'Holnap' : $nextLocal->locale('hu')->isoFormat('MMMM D., dddd'));
+        $nextDayLabel = $nextLocal->toDateString() === $todayLocal ? 'Ma' : ($nextLocal->toDateString() === now($salon->timezone)->addDay()->toDateString() ? 'Holnap' : $nextLocal->format('Y. m. d.'));
         $nextPhone = preg_replace('/[^+0-9]/', '', (string) $next->guest->phone);
     @endphp
-    <section class="next-guest" aria-labelledby="next-guest-heading"><div><p class="eyebrow">KÖVETKEZŐ VENDÉG · {{ $nextDayLabel }}</p><h2 id="next-guest-heading">{{ $next->guest->name }}</h2><p>{{ $next->service_name }} · {{ $next->staff->name }}</p><div class="next-guest-actions"><a href="{{ route('admin.booking', $next) }}">Foglalás megnyitása ↗</a>@if($nextPhone)<a href="tel:{{ $nextPhone }}" aria-label="{{ $next->guest->name }} hívása">Vendég hívása</a>@endif</div></div><div class="next-time">{{ $nextLocal->format('H:i') }}<small>{{ $nextLocal->format('m. d.') }} · {{ $next->duration_minutes }} perc</small></div></section>
+    <section class="next-guest" aria-labelledby="next-guest-heading"><div><p class="eyebrow">KÖVETKEZŐ VENDÉG · {{ $nextDayLabel }}</p><h2 id="next-guest-heading">{{ $next->guest->name }}</h2><p>{{ $next->service_name }} · {{ $next->staff->name }}</p><div class="next-guest-actions"><a href="{{ route('admin.booking', $next) }}">Foglalás megnyitása ↗</a>@if($nextPhone)<a href="tel:{{ $nextPhone }}" aria-label="{{ $next->guest->name }} hívása">Vendég hívása</a>@endif</div></div><div class="next-time">{{ $nextLocal->format('H:i') }}<small>{{ $nextLocal->format('Y. m. d.') }} · {{ $next->duration_minutes }} perc</small></div></section>
 @elseif($isTodayPage)
     <section class="next-guest" aria-labelledby="next-guest-heading"><div><p class="eyebrow">A KÖVETKEZŐ VENDÉG</p><h2 id="next-guest-heading">Nincs következő foglalás</h2><p>Az új időpontok itt jelennek meg.</p></div></section>
 @endif
 
 @if($isTodayPage && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))
 <div class="quick-actions">
-<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors rögzítés</summary><form method="post" action="{{ route('admin.store') }}" data-quick-preview-url="{{ route('admin.create') }}">@csrf
+<details class="quick-sheet" data-quick-sheet @if(old('quick_time')) open @endif><summary class="button">Gyors foglalás</summary><form method="post" action="{{ route('admin.store') }}" data-quick-preview-url="{{ route('admin.create') }}">@csrf
 <input type="hidden" name="request_key" value="{{ $requestKey }}">
 <input type="hidden" name="preview_token" value="">
 <label>Szolgáltatás<select name="service_id" required>@foreach($quickServices as $service)<option value="{{ $service->id }}" @selected(old('service_id') == $service->id)>{{ $service->name }} · {{ $service->duration_minutes }} perc</option>@endforeach</select></label>
@@ -86,22 +86,22 @@
 <label>Vendég neve<input name="name" value="{{ old('name') }}" autocomplete="name" required maxlength="120"></label>
 <details class="quick-contact" @if(old('phone')) open @endif><summary>Telefonszám megadása (opcionális)</summary><label>Telefonszám<input name="phone" type="tel" inputmode="tel" autocomplete="tel" value="{{ old('phone') }}" maxlength="40"></label></details>
 <p id="quick-preview-status" class="quick-preview" data-quick-preview aria-live="polite">A választott szabad időpontot itt mutatjuk meg.</p><button class="button" type="submit" disabled>Foglalás mentése</button><noscript><p>Az előnézethez JavaScript szükséges. <a href="{{ route('admin.create') }}">Foglalás az időpontlistából</a></p></noscript></form></details>
-@if(auth()->user()->role === 'owner')<details class="quick-sheet"><summary class="button secondary">Blokk vagy szabadság</summary>
+@if(auth()->user()->role === 'owner')<details class="quick-sheet"><summary class="button secondary">Idő blokkolása vagy szabadság</summary>
 <form method="post" action="{{ route('admin.block') }}">@csrf<h2>Idősáv blokkolása</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Ettől<input type="datetime-local" name="starts_at" required></label><label>Eddig<input type="datetime-local" name="ends_at" required></label><label>Megnevezés<input name="reason" value="Szünet" required maxlength="120"></label><button class="button">Blokkolás mentése</button></form>
 <form method="post" action="{{ route('admin.exception') }}">@csrf<h2>Szabadság</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Nap<input type="date" name="date" value="{{ $date }}" required></label><input type="hidden" name="closed" value="1"><button class="button secondary">Szabadság mentése</button></form></details>@endif
 </div>
 @endif
 
 <div class="calendar-overview"><section class="calendar-summary" aria-label="Időpontok összesítése">
-    <article><span>{{ $week ? 'Heti foglalások' : 'Napi foglalások' }}</span><strong>{{ $bookings->whereIn('status', ['confirmed', 'completed', 'no_show'])->count() }}</strong><small>Lemondások nélkül · {{ $bookings->where('status', 'cancelled')->count() }} lemondás</small></article>
+    <article><span>{{ $week ? 'Heti foglalások' : 'Napi foglalások' }}</span><strong>{{ $summaryBookings->whereIn('status', ['confirmed', 'completed', 'no_show'])->count() }}</strong><small>Lemondások nélkül · {{ $summaryBookings->where('status', 'cancelled')->count() }} lemondás</small></article>
     <article><span>Visszaigazolt</span><strong>{{ $confirmedBookings->count() }}</strong><small>{{ $isActualToday && ! $week ? $confirmedBookings->filter(fn ($booking) => $booking->starts_at->isAfter(now()))->count().' még hátravan' : 'tervezett időpont' }}</small></article>
-    <article><span>Elvégezve</span><strong>{{ $completedBookings->count() }}</strong><small>{{ $bookings->where('status', 'no_show')->count() }} meg nem jelenés</small></article>
+    <article><span>Elvégezve</span><strong>{{ $completedBookings->count() }}</strong><small>{{ $summaryBookings->where('status', 'no_show')->count() }} meg nem jelenés</small></article>
     @if($salon->featureEnabled('financials'))<article><span>Elvégzett szolgáltatások összege</span><strong>{{ number_format($completedBookings->sum('actual_amount'), 0, ',', ' ') }} <small>Ft</small></strong><small>Rögzített összeg, nem pénzforgalmi adat</small></article>@endif
 </section>
 
 <section class="panel calendar-workspace" aria-labelledby="calendar-heading">
     <div class="calendar-toolbar">
-        <div><p class="eyebrow">{{ $week ? 'HÉT ÁTTEKINTÉSE' : 'A NAP MENETE' }}</p><h2 id="calendar-heading">{{ $week ? $day->locale('hu')->isoFormat('MMM D.').' – '.$day->addDays(6)->locale('hu')->isoFormat('MMM D.') : $day->locale('hu')->isoFormat('MMMM D., dddd') }}</h2></div>
+        <div><p class="eyebrow">{{ $week ? 'HÉT ÁTTEKINTÉSE' : 'A NAP MENETE' }}</p><h2 id="calendar-heading">{{ $week ? $day->format('Y. m. d.').' – '.$day->addDays(6)->format('Y. m. d.') : $day->format('Y. m. d.').' · '.$day->locale('hu')->isoFormat('dddd') }}</h2></div>
         <div class="calendar-controls">
             <nav class="calendar-period-nav" aria-label="Időszak léptetése"><a href="{{ route('admin.calendar', ['date' => $previousDate, 'view' => $week ? 'week' : 'day']) }}" aria-label="Előző {{ $week ? 'hét' : 'nap' }}">←</a><a class="calendar-period-today" href="{{ route('admin.today') }}">Ma</a><a href="{{ route('admin.calendar', ['date' => $followingDate, 'view' => $week ? 'week' : 'day']) }}" aria-label="Következő {{ $week ? 'hét' : 'nap' }}">→</a></nav>
             <nav class="calendar-view-switch" aria-label="Naptárnézet"><a class="{{ $week ? '' : 'active' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'day']) }}" @if(! $week) aria-current="page" @endif>Napi</a><a class="{{ $week ? 'active' : '' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'week']) }}" @if($week) aria-current="page" @endif>Heti</a></nav>
@@ -110,31 +110,7 @@
     </div>
 
     @if($week)
-        <div class="calendar-week-grid">
-            @foreach(range(0, 6) as $offset)
-                @php
-                    $weekDay = $day->addDays($offset);
-                    $weekDayStart = $weekDay->utc();
-                    $weekDayEnd = $weekDay->addDay()->utc();
-                    $dayBookings = $bookings->filter(fn ($booking) => $booking->starts_at->setTimezone($salon->timezone)->toDateString() === $weekDay->toDateString());
-                    $dayBlocks = $blocks->filter(fn ($block) => $block->starts_at->isBefore($weekDayEnd) && $block->ends_at->isAfter($weekDayStart));
-                    $dayBusy = $googleBusy->filter(fn ($busy) => $busy->starts_at->isBefore($weekDayEnd) && $busy->ends_at->isAfter($weekDayStart));
-                    $dayExceptions = $exceptions->where('date', $weekDay->toDateString());
-                @endphp
-                <section class="calendar-week-day {{ $weekDay->toDateString() === now($salon->timezone)->toDateString() ? 'is-today' : '' }}" aria-labelledby="week-day-{{ $offset }}">
-                    <div class="calendar-week-day-heading"><a id="week-day-{{ $offset }}" href="{{ route('admin.calendar', ['date' => $weekDay->toDateString()]) }}"><span>{{ $weekDay->locale('hu')->isoFormat('ddd') }}</span><strong>{{ $weekDay->format('d') }}</strong></a><small>{{ $dayBookings->where('status', '!=', 'cancelled')->count() }} időpont</small></div>
-                    <div class="calendar-week-entries">
-                        @foreach($dayBookings as $booking)
-                            <a class="calendar-week-booking {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-week-booking-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}</span><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }}</span><small>{{ $booking->staff->name }} · {{ $booking->label() }}</small></a>
-                        @endforeach
-                        @foreach($dayBlocks as $block)<div class="calendar-week-unavailable"><strong>{{ $block->starts_at->isBefore($weekDayStart) ? '00:00' : $block->starts_at->setTimezone($salon->timezone)->format('H:i') }} · {{ $block->reason }}</strong><small>{{ $block->staff->name }}</small></div>@endforeach
-                        @foreach($dayBusy as $busy)<div class="calendar-week-unavailable google"><strong>{{ $busy->starts_at->isBefore($weekDayStart) ? '00:00' : $busy->starts_at->setTimezone($salon->timezone)->format('H:i') }} · Google-foglaltság</strong><small>{{ $busy->connection->staff->name }}</small></div>@endforeach
-                        @foreach($dayExceptions as $exception)<div class="calendar-week-unavailable closed"><strong>{{ empty($exception->hours) ? 'Zárva' : 'Eltérő munkarend' }}</strong><small>{{ $exception->staff->name }}</small></div>@endforeach
-                        @if($dayBookings->isEmpty() && $dayBlocks->isEmpty() && $dayBusy->isEmpty() && $dayExceptions->isEmpty())<p class="calendar-week-empty">Nincs bejegyzés</p>@endif
-                    </div>
-                </section>
-            @endforeach
-        </div>
+        @include('admin.calendar-week')
     @else
         <div class="calendar-day-layout">
             <div class="calendar-timeline" aria-label="Szakemberek napi idősávjai">
@@ -146,7 +122,7 @@
                                 @php
                                     $personException = $exceptions->firstWhere('staff_id', $person->id);
                                 @endphp
-                                <div><strong>{{ $person->name }}</strong>@if($personException)<small>{{ empty($personException->hours) ? 'Zárva' : 'Eltérő munkarend' }}</small>@endif</div>
+                                <div><strong>{{ $person->name }}</strong>@if($personException)<small>{{ empty($personException->hours) ? 'Zárva' : 'Eltérő munkarend' }}</small>@endif @if($person->active && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))<small><a href="{{ route('admin.create', ['date' => $date, 'staff_id' => $person->id]) }}">Új foglalás</a></small>@endif</div>
                             @endforeach
                         </div>
                         <div class="calendar-timeline-body" style="grid-template-columns: 64px repeat({{ $calendarStaff->count() }}, minmax(0, 1fr)); height: {{ $timelineHeight }}px">
@@ -159,7 +135,7 @@
                                 @php
                                     $personException = $exceptions->firstWhere('staff_id', $person->id);
                                 @endphp
-                                <div class="calendar-timeline-track {{ $personException && empty($personException->hours) ? 'is-closed' : '' }}">
+                                <div class="calendar-timeline-track {{ $personException && empty($personException->hours) ? 'is-closed' : '' }}" @if($person->active && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)) data-calendar-create="{{ route('admin.create', ['date' => $date, 'staff_id' => $person->id]) }}" data-calendar-start="{{ $timelineStart->utc()->format('Y-m-d\TH:i:sP') }}" title="Üres idősávra kattintva új foglalás indítható" @endif>
                                     @foreach($bookings->where('staff_id', $person->id)->where('status', '!=', 'cancelled') as $booking)
                                         @php
                                             $eventStart = $booking->starts_at->setTimezone($salon->timezone);
@@ -216,7 +192,7 @@
             </div>
         </section>
     @endif
-    <div class="calendar-foot"><span>{{ $salon->timezone }} · Online és kézi foglalások</span><a href="{{ route('admin.create', ['date' => $date]) }}">Szabad időpontok keresése ↗</a></div>
+    <div class="calendar-foot"><span>{{ $salon->timezone === 'Europe/Budapest' ? 'Magyar idő' : $salon->timezone }} · Online, telefonos és személyes foglalások</span><a href="{{ route('admin.create', ['date' => $date]) }}">Szabad időpontok keresése ↗</a></div>
 </section>
 </div>
 @endsection

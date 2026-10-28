@@ -35,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('login', fn (Request $r) => [Limit::perMinute(5)->by($r->ip()), Limit::perMinute(5)->by(strtolower($r->input('email', '')).'|'.$r->ip())]);
         RateLimiter::for('booking', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
+        RateLimiter::for('booking-form', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('booking-submission', fn (Request $request) => [
+            Limit::perMinute(8)->by('minute:'.$request->ip()),
+            Limit::perHour(30)->by('hour:'.$request->ip()),
+        ]);
         RateLimiter::for('password-reset-link', function (Request $request): array {
             $email = $request->input('email');
             $email = is_string($email) ? mb_strtolower(trim($email)) : '';

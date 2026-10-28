@@ -10,6 +10,7 @@ use App\Services\Branding;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -223,6 +224,19 @@ class BrandingTest extends TestCase
         $data = array_replace($this->settingsData($salon, config('branding.presets.salon.appearance')), ['new_password' => 'new-demo-test-password']);
         $this->actingAs($owner)->post(route('admin.settings.save'), $data)->assertSessionHasErrors('current_password');
         $this->assertSame($originalHash, $owner->fresh()->password);
+    }
+
+    public function test_legacy_settings_password_change_revokes_remember_token_and_logs_out(): void
+    {
+        $salon = Salon::factory()->create();
+        $owner = User::factory()->create(['role' => 'owner', 'password' => 'previous-password-1']);
+        $owner->forceFill(['remember_token' => 'old-token'])->save();
+        $data = array_replace($this->settingsData($salon, config('branding.presets.salon.appearance')), ['current_password' => 'previous-password-1', 'new_password' => 'replacement-password-2']);
+
+        $this->actingAs($owner)->post(route('admin.settings.save'), $data)->assertRedirect(route('login'))->assertSessionHasNoErrors();
+        $this->assertTrue(Hash::check('replacement-password-2', $owner->fresh()->password));
+        $this->assertNotSame('old-token', $owner->fresh()->remember_token);
+        $this->assertGuest();
     }
 
     public function test_preset_defaults_have_readable_text_and_automatic_button_contrast(): void

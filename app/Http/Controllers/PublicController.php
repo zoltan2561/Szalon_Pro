@@ -32,7 +32,7 @@ class PublicController extends Controller
             return redirect()->away($demoUrls[$requestedStyle]);
         }
 
-        return view('public.home', ['salon' => $salon, 'services' => Service::where('active', true)->with('staff')->get(), 'staff' => Staff::where('active', true)->get(), 'ready' => $availability->ready()]);
+        return view('public.home', ['salon' => $salon, 'services' => Service::where('active', true)->with('staff')->orderBy('sort_order')->orderBy('id')->get(), 'staff' => Staff::where('active', true)->orderBy('sort_order')->orderBy('id')->get(), 'ready' => $availability->ready()]);
     }
 
     public function book(Request $request, Availability $availability, SmsGateway $smsGateway): View
@@ -40,7 +40,7 @@ class PublicController extends Controller
         $salon = Salon::current();
         abort_unless($salon->published || $request->user()?->role === 'owner', 404);
         $request->validate(['date' => 'nullable|date_format:Y-m-d']);
-        $services = Service::where('active', true)->with('staff')->get();
+        $services = Service::where('active', true)->with('staff')->orderBy('sort_order')->orderBy('id')->get();
         $requestedStaff = $request->integer('staff_id');
         $service = $services->firstWhere('id', (int) $request->query('service_id')) ?? ($requestedStaff ? $services->first(fn ($s) => $s->staff->contains($requestedStaff)) : null) ?? $services->first();
         $staffId = $request->integer('staff_id') ?: null;
@@ -63,6 +63,7 @@ class PublicController extends Controller
 
     public function store(Request $request, BookingService $bookings): RedirectResponse
     {
+        $this->rejectAutomatedBooking($request);
         $data = $this->bookingData($request);
         $booking = $bookings->create($data);
         $request->session()->put('last_booking', $booking->id);
@@ -86,6 +87,7 @@ class PublicController extends Controller
 
     public function storeRebooking(string $token, Request $request, BookingService $bookings): RedirectResponse
     {
+        $this->rejectAutomatedBooking($request);
         $source = $this->rebookingSource($token);
         if (! $source) {
             return redirect()->route('booking.form')->with('error', 'Az újrafoglalási link lejárt. Kérj új időpontot, vagy keresd a szalont.');
@@ -150,6 +152,12 @@ class PublicController extends Controller
         [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
 
         return $data + ['review_opt_in' => Salon::current()->featureEnabled('reviews') && (bool) ($reviewConsent['review_opt_in'] ?? false)];
+    }
+
+    private function rejectAutomatedBooking(Request $request): void
+    {
+        $website = $request->input('website');
+        abort_unless($website === null || $website === '', 422);
     }
 
     private function splitSlot(string $slot): array
