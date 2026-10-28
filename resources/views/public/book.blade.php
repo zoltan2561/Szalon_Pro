@@ -17,7 +17,7 @@
             <div class="notice">Legfeljebb {{ $salon->horizon_days }} napra előre, {{ now($salon->timezone)->addDays($salon->horizon_days)->format('Y. m. d.') }} napjáig foglalhatsz. Válassz egy korábbi napot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId])) }}">Foglalható nap keresése</a></div>
         @endif
         <div class="booking-grid">
-            <form id="booking-service" method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
+            <form id="booking-service" data-availability-filter method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
                 <p class="eyebrow">01 · VÁLASSZ</p>
                 @if($referralSource)<input type="hidden" name="utm_source" value="{{ $referralSource }}">@endif
                 <h2>Mit választasz?</h2>
@@ -34,7 +34,7 @@
                     </label>
                     <label>Nap<input type="date" name="date" value="{{ $date }}" min="{{ now($salon->timezone)->toDateString() }}" max="{{ now($salon->timezone)->addDays($salon->horizon_days)->toDateString() }}" required></label>
                 </div>
-                <button class="button secondary">Szabad időpontok mutatása <x-icon name="arrow-right" /></button>
+                <p class="muted" data-availability-status role="status" hidden></p><button class="button secondary">Szabad időpontok mutatása <x-icon name="arrow-right" /></button>
             </form>
             <aside class="booking-summary panel" aria-label="Foglalási összesítő">
                 <span class="eyebrow">A FOGLALÁSOD</span>
@@ -51,7 +51,7 @@
                 @if($salon->featureEnabled('no_show_protection'))<p>Online módosítás és lemondás: legalább {{ $salon->cancel_notice_hours }} órával az időpont előtt. Egyeztetés: <a href="tel:{{ preg_replace('/[^+0-9]/', '', $salon->phone) }}">{{ $salon->phone }}</a>.</p>@endif
                 @unless($salon->demo)<p class="muted">A visszaigazolást és a kezelési linket e-mailben, e-mail nélkül beállított SMS-kapcsolat esetén SMS-ben küldjük. A visszaigazoló oldalon is megkapod a linket.</p>@endunless
             </aside>
-            <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit">
+            <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit" data-availability-submit>
                 @csrf
                 <div hidden aria-hidden="true"><label for="booking-website">Weboldal</label><input id="booking-website" type="text" name="website" tabindex="-1" autocomplete="off"></div>
                 <input type="hidden" name="service_id" value="{{ $service?->id }}">
@@ -78,7 +78,7 @@
                 @if($smsReady && (!$rebookingGuest || $rebookingGuest->phone))<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>SMS-emlékeztetőt kérek a megadott telefonszámra.</span></label>@endif
                 @if($salon->featureEnabled('reviews'))<label class="check"><input type="checkbox" name="review_opt_in" value="1" @checked(old('review_opt_in'))><span>Kérek a látogatás után egy semleges értékeléskérő e-mailt vagy SMS-t a szalontól, legfeljebb 90 naponta. Bármikor leiratkozhatok; a foglalásom ettől független.</span></label>@endif
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
-                <p class="muted">{{ $staffId ? 'A választott időpont mellett láthatod a szakember nevét.' : 'A szabad szakembert automatikusan választjuk ki.' }} A foglalás a véglegesítéskor válik érvényessé.</p>
+                <p class="muted" data-availability-explanation>{{ $staffId ? 'A választott időpont mellett láthatod a szakember nevét.' : 'A szabad szakembert automatikusan választjuk ki.' }} A foglalás a véglegesítéskor válik érvényessé.</p>
                 @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif
                 <div class="booking-finalize-group"><p class="selected-slot-note" aria-live="polite" hidden></p><button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button></div>
             </form>

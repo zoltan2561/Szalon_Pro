@@ -49,4 +49,5 @@
 @endunless
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
+@if(request()->routeIs('booking.form', 'booking.rebook.form', 'booking.manage'))<script src="{{ asset('public-booking-refresh.js').'?v='.substr(hash_file('sha256', public_path('public-booking-refresh.js')), 0, 12) }}" defer></script>@endif
 </body></html>

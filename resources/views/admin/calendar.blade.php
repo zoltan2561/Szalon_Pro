@@ -105,7 +105,7 @@
         <div class="calendar-controls">
             <nav class="calendar-period-nav" aria-label="Időszak léptetése"><a href="{{ route('admin.calendar', ['date' => $previousDate, 'view' => $week ? 'week' : 'day']) }}" aria-label="Előző {{ $week ? 'hét' : 'nap' }}">←</a><a class="calendar-period-today" href="{{ route('admin.today') }}">Ma</a><a href="{{ route('admin.calendar', ['date' => $followingDate, 'view' => $week ? 'week' : 'day']) }}" aria-label="Következő {{ $week ? 'hét' : 'nap' }}">→</a></nav>
             <nav class="calendar-view-switch" aria-label="Naptárnézet"><a class="{{ $week ? '' : 'active' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'day']) }}" @if(! $week) aria-current="page" @endif>Napi</a><a class="{{ $week ? 'active' : '' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'week']) }}" @if($week) aria-current="page" @endif>Heti</a></nav>
-            <form class="calendar-date-form" method="get" action="{{ route('admin.calendar') }}"><label class="sr-only" for="calendar-date">Ugrás egy napra</label><input id="calendar-date" type="date" name="date" value="{{ $date }}"><input type="hidden" name="view" value="{{ $week ? 'week' : 'day' }}"><button class="button secondary small">Ugrás</button></form>
+            <form class="calendar-date-form" data-auto-filter="calendar" method="get" action="{{ route('admin.calendar') }}"><label class="sr-only" for="calendar-date">Ugrás egy napra</label><input id="calendar-date" type="date" name="date" value="{{ $date }}"><input type="hidden" name="view" value="{{ $week ? 'week' : 'day' }}"><button class="button secondary small">Ugrás</button></form>
         </div>
     </div>
 

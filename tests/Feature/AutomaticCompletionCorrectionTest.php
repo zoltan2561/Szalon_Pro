@@ -40,6 +40,25 @@ class AutomaticCompletionCorrectionTest extends TestCase
         return $booking;
     }
 
+    public function test_rescheduling_pages_expose_the_new_date_and_revision_for_automatic_and_confirmed_bookings(): void
+    {
+        Salon::factory()->create();
+        $owner = User::factory()->create(['role' => 'owner']);
+        $automatic = $this->automaticBooking();
+        $confirmed = Booking::factory()->create()->fresh();
+        $date = now(Salon::current()->timezone)->addDay()->toDateString();
+
+        foreach ([$automatic, $confirmed] as $booking) {
+            $this->actingAs($owner)->get(route('admin.booking', ['booking' => $booking, 'date' => $date]))
+                ->assertOk()
+                ->assertViewHas('date', $date)
+                ->assertViewHas('slots', fn ($slots) => $slots !== [] && str_starts_with($slots[0]['starts_at'], $date))
+                ->assertSee('data-admin-reschedule', false)
+                ->assertSee('data-reschedule-filter', false)
+                ->assertSee('name="revision" value="'.$booking->revision.'"', false);
+        }
+    }
+
     public function test_automatic_completion_can_be_confirmed_once_with_actual_amount(): void
     {
         Salon::factory()->create(['features' => ['financials' => true, 'loyalty' => true]]);
