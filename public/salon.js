@@ -19,6 +19,15 @@ if (moreButton && moreSheet instanceof HTMLDialogElement) {
     });
 }
 
+const publicBookingFilters = document.querySelector('.public #booking-service');
+if (publicBookingFilters) {
+    publicBookingFilters.addEventListener('submit', () => {
+        const action = new URL(publicBookingFilters.action);
+        action.hash = window.matchMedia('(max-width: 640px)').matches ? 'booking-slots' : '';
+        publicBookingFilters.action = action.toString();
+    });
+}
+
 document.querySelectorAll('.booking-submit').forEach(form => {
     form.addEventListener('submit', () => {
         if (form.checkValidity()) {
@@ -228,21 +237,40 @@ document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
     const form = sheet.querySelector('form[data-quick-preview-url]');
     const service = form?.querySelector('select[name="service_id"]');
     const time = form?.querySelector('select[name="quick_time"]');
+    const date = form?.querySelector('input[name="quick_date"]');
+    const timeMode = form?.querySelector('[data-quick-time-mode]');
+    const slotsLabel = form?.querySelector('[data-quick-slots-label]');
+    const slots = form?.querySelector('[data-quick-slots]');
     const token = form?.querySelector('input[name="preview_token"]');
     const preview = form?.querySelector('[data-quick-preview]');
     const submit = form?.querySelector('button[type="submit"]');
     let latestPreview = 0;
     const refreshPreview = async () => {
-        if (!form || !service || !time || !token || !preview || !submit || !service.value) return;
+        if (!form || !service || !time || !date || !timeMode || !slotsLabel || !slots || !token || !preview || !submit) return;
         const sequence = ++latestPreview;
         token.value = '';
         submit.disabled = true;
+        timeMode.hidden = !!date.value;
+        slotsLabel.hidden = true;
+        slots.replaceChildren();
+        if (!service.value) { preview.textContent = 'Először válassz szolgáltatást.'; return; }
+        if (!date.checkValidity()) { preview.textContent = 'Válassz a megengedett időszakon belüli napot.'; return; }
         preview.textContent = 'Szabad időpont keresése…';
         try {
             const params = new URLSearchParams({quick_preview: '1', service_id: service.value, quick_time: time.value});
+            if (date.value) params.set('quick_date', date.value);
             const response = await fetch(`${form.dataset.quickPreviewUrl}?${params}`, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
             const result = await response.json();
             if (sequence !== latestPreview) return;
+            if (date.value && response.ok && Array.isArray(result.slots)) {
+                if (!result.slots.length) { preview.textContent = 'Erre a napra nincs szabad időpont. Válassz másik napot.'; return; }
+                result.slots.forEach(slot => slots.add(new Option(slot.label, slot.token)));
+                slotsLabel.hidden = false;
+                token.value = slots.value;
+                preview.textContent = `${result.slots.length} szabad időpont közül választhatsz.`;
+                submit.disabled = false;
+                return;
+            }
             if (!response.ok || !result.token || !result.label) throw new Error(result.message || 'Nem sikerült megkeresni az időpontot.');
             token.value = result.token;
             preview.textContent = `Foglalható: ${result.label}`;
@@ -253,6 +281,8 @@ document.querySelectorAll('[data-quick-sheet]').forEach(sheet => {
     };
     service?.addEventListener('change', refreshPreview);
     time?.addEventListener('change', refreshPreview);
+    date?.addEventListener('input', refreshPreview);
+    slots?.addEventListener('change', () => { token.value = slots.value; });
     form?.addEventListener('submit', () => { if (form.checkValidity()) submit.disabled = true; });
     sheet.addEventListener('toggle', () => {
         if (sheet.open) refreshPreview();

@@ -41,6 +41,17 @@ class Booking extends Model
         return $this->hasMany(BookingEvent::class);
     }
 
+    public function isAutomaticallyCompleted(): bool
+    {
+        if ($this->status !== 'completed') {
+            return false;
+        }
+
+        $event = $this->events()->latest('id')->first();
+
+        return $event?->action === 'complete' && ($event->getAttribute('changes')['automatic'] ?? false) === true;
+    }
+
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         if ($user->role !== 'owner') {

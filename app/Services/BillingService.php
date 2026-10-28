@@ -32,6 +32,9 @@ class BillingService
             if ($booking->status !== 'completed') {
                 $this->error('Csak elvégzett foglalásból állítható ki bizonylat.');
             }
+            if ($booking->isAutomaticallyCompleted()) {
+                $this->error('Bizonylat kiállítása előtt pontosítsd az automatikusan lezárt látogatást.');
+            }
             $document = FiscalDocument::where('booking_id', $booking->id)->lockForUpdate()->first();
             if ($document && $document->kind !== $data['kind']) {
                 $this->error('Ehhez a foglaláshoz már más típusú bizonylatkérés tartozik.');

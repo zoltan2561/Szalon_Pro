@@ -339,6 +339,7 @@
 
 /* Appointment review and daily work on small screens. */
 .admin .quick-preview { background:#edf4ea; border-left:3px solid #315443; border-radius:6px; color:#24412c; padding:12px 14px; font-weight:600; }
+.admin label[data-quick-time-mode][hidden], .admin label[data-quick-slots-label][hidden] { display:none; }
 .admin .manual-guest-results:not([hidden]) { display:grid; gap:6px; margin:-5px 0 12px; }
 .admin .manual-guest-result { display:block; width:100%; min-height:48px; padding:10px 12px; text-align:left; border:1px solid #c3d2c2; border-radius:8px; background:#f7faf6; color:#203b2b; font:inherit; cursor:pointer; overflow-wrap:anywhere; }
 .admin .manual-guest-result:hover,.admin .manual-guest-result:focus-visible { background:#e7f1e4; outline:2px solid #315443; outline-offset:1px; }

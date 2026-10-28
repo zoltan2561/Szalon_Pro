@@ -56,6 +56,9 @@ class VoucherService
             }
             $voucher = GiftVoucher::lockForUpdate()->findOrFail($voucher->id);
             $booking = Booking::findOrFail($booking->id);
+            if ($booking->isAutomaticallyCompleted()) {
+                $this->error('Utalvány beváltása előtt pontosítsd az automatikusan lezárt látogatást.');
+            }
             $used = VoucherRedemption::where('booking_id', $booking->id)->whereNull('reversed_at')->sum('amount');
             if ($booking->status !== 'completed' || $voucher->voided_at || $voucher->expires_at->lte(now()) || $amount < 1
                 || ($voucher->service_id && $voucher->service_id !== $booking->service_id)

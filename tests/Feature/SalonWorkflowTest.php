@@ -159,6 +159,37 @@ class SalonWorkflowTest extends TestCase
         $this->assertDatabaseCount('bookings', 1);
     }
 
+    public function test_quick_booking_can_select_a_slot_on_a_chosen_day(): void
+    {
+        $params = ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'now', 'quick_date' => '2026-10-19'];
+        $slots = $this->actingAs($this->owner)->getJson(route('admin.create', $params))->assertOk()->assertHeader('Cache-Control', 'no-store, private')->json('slots');
+        $this->assertGreaterThan(1, count($slots));
+        $chosen = json_decode(Crypt::decryptString($slots[1]['token']), true);
+        $this->assertSame('2026-10-19', $chosen['date']);
+        $this->assertStringContainsString('2026-10-19', $chosen['slot']);
+        $data = ['service_id' => $this->service->id, 'quick_time' => 'now', 'quick_date' => '2026-10-19', 'preview_token' => $slots[1]['token'], 'name' => 'Vendég', 'request_key' => Str::uuid()->toString()];
+        $this->post(route('admin.store'), $data)->assertSessionHasNoErrors();
+        $booking = Booking::sole();
+        $this->assertStringContainsString($booking->starts_at->setTimezone(Salon::current()->timezone)->format('H:i'), $slots[1]['label']);
+        $this->assertSame('2026-10-19', $booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString());
+    }
+
+    public function test_chosen_day_preview_cannot_be_used_for_a_different_day_or_occupied_slot(): void
+    {
+        $params = ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest', 'quick_date' => '2026-10-19'];
+        $slots = $this->actingAs($this->owner)->getJson(route('admin.create', $params))->assertOk()->json('slots');
+        $data = ['service_id' => $this->service->id, 'quick_time' => 'nearest', 'quick_date' => '2026-10-20', 'preview_token' => $slots[0]['token'], 'name' => 'Vendég', 'request_key' => Str::uuid()->toString()];
+        $this->post(route('admin.store'), $data)->assertSessionHasErrors('preview_token');
+        $this->post(route('admin.store'), array_merge($data, ['quick_date' => null]))->assertSessionHasErrors('preview_token');
+        $slot = json_decode(Crypt::decryptString($slots[0]['token']), true)['slot'];
+        $this->post(route('admin.store'), ['service_id' => $this->service->id, 'slot' => $slot, 'name' => 'Első', 'request_key' => Str::uuid()->toString()])->assertSessionHasNoErrors();
+        $this->from(route('admin.today'))->post(route('admin.store'), array_merge($data, ['quick_date' => '2026-10-19']))->assertSessionHasErrors('starts_at');
+        $this->assertDatabaseCount('bookings', 1);
+
+        $this->getJson(route('admin.create', array_merge($params, ['quick_date' => '2025-01-01'])))->assertOk()->assertExactJson(['slots' => []]);
+        $this->getJson(route('admin.create', array_merge($params, ['quick_date' => 'invalid'])))->assertUnprocessable()->assertJsonValidationErrors('quick_date');
+    }
+
     public function test_quick_booking_rejects_an_occupied_preview_without_silently_selecting_another_slot(): void
     {
         $preview = $this->actingAs($this->owner)->getJson(route('admin.create', ['quick_preview' => 1, 'service_id' => $this->service->id, 'quick_time' => 'nearest']))->assertOk()->json();

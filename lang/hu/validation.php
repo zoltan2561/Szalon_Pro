@@ -47,7 +47,7 @@ return [
         'reminder_hours' => 'emlékeztető ideje', 'cancel_notice_hours' => 'lemondási határidő', 'retention_days' => 'adatmegőrzési idő',
         'amount' => 'összeg', 'code' => 'utalványkód', 'buyer_name' => 'vevő neve', 'expires_at' => 'lejárati nap',
         'reason' => 'indoklás', 'confirm' => 'megerősítés', 'sms_opt_in' => 'SMS-hozzájárulás', 'review_opt_in' => 'értékeléskérési hozzájárulás',
-        'referral_source' => 'foglalási forrás', 'request_key' => 'kérésazonosító', 'quick_time' => 'gyorsfoglalás időpontja', 'preview_token' => 'időpont előnézete', 'waitlist_entry_id' => 'várólistás kérés',
+        'referral_source' => 'foglalási forrás', 'request_key' => 'kérésazonosító', 'quick_time' => 'gyorsfoglalás időpontja', 'quick_date' => 'gyorsfoglalás napja', 'preview_token' => 'időpont előnézete', 'waitlist_entry_id' => 'várólistás kérés',
         'action' => 'művelet', 'notes' => 'szakmai megjegyzés', 'note' => 'megjegyzés', 'preferred_date' => 'kívánt nap',
         'description' => 'leírás', 'title' => 'megnevezés', 'bio' => 'szakmai bemutatkozás', 'about' => 'bemutatkozás',
         'review_url' => 'értékelési link', 'review_delay_hours' => 'értékeléskérés késleltetése',

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\BookingEvent;
+use App\Models\FiscalDocument;
 use App\Models\Guest;
 use App\Models\OutboxMessage;
 use App\Models\Salon;
@@ -11,6 +12,7 @@ use App\Models\Service;
 use App\Models\SmsOutboxMessage;
 use App\Models\Staff;
 use App\Models\User;
+use App\Models\VoucherRedemption;
 use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -114,8 +116,12 @@ class BookingService
             if ($booking->revision !== (int) $data['revision']) {
                 $this->error('A foglalás időközben változott. Nyisd meg újra.');
             }
-            if ($booking->status !== 'confirmed') {
+            $automaticCorrection = $actor && in_array($data['action'], ['complete', 'no_show', 'cancel', 'move'], true) && $booking->isAutomaticallyCompleted();
+            if ($booking->status !== 'confirmed' && ! $automaticCorrection) {
                 $this->error('Ez a foglalás már lezárt.');
+            }
+            if ($automaticCorrection && (FiscalDocument::where('booking_id', $booking->id)->exists() || VoucherRedemption::where('booking_id', $booking->id)->whereNull('reversed_at')->exists())) {
+                $this->error('A látogatáshoz pénzügyi művelet tartozik. Előbb egyeztesd a bizonylatot vagy az utalványbeváltást.');
             }
             if (! $actor && CarbonImmutable::now()->gte($booking->starts_at->subHours(Salon::current()->cancel_notice_hours))) {
                 $this->error('Az online módosítási határidő lejárt. Kérjük, keresd a szalont.');
@@ -138,6 +144,9 @@ class BookingService
                 $booking->fill(['staff_id' => $staff->id, 'starts_at' => $start, 'ends_at' => $start->addMinutes($booking->duration_minutes),
                     'busy_from' => $start->subMinutes($booking->buffer_before), 'busy_until' => $start->addMinutes($booking->duration_minutes + $booking->buffer_after),
                     'token_expires_at' => $start->addDays(30)]);
+                if ($automaticCorrection) {
+                    $booking->status = 'confirmed';
+                }
             } else {
                 $status = ['cancel' => 'cancelled', 'complete' => 'completed', 'no_show' => 'no_show'][$data['action']] ?? null;
                 abort_unless($status && ($actor || $status === 'cancelled'), 403);
@@ -166,6 +175,28 @@ class BookingService
             }
 
             return $booking;
+        }, 5);
+    }
+
+    public function completeExpiredBooking(int $bookingId, CarbonImmutable $cutoff): bool
+    {
+        return DB::transaction(function () use ($bookingId, $cutoff): bool {
+            Salon::whereKey(1)->increment('lock_version');
+            $booking = Booking::whereKey($bookingId)->where('status', 'confirmed')->where('ends_at', '<=', $cutoff)->first();
+            if (! $booking) {
+                return false;
+            }
+
+            $before = $booking->only(['starts_at', 'ends_at', 'staff_id', 'status', 'actual_amount']);
+            $booking->status = 'completed';
+            $booking->actual_amount = null;
+            $booking->revision++;
+            $booking->save();
+            $this->event($booking, 'complete', ['before' => $before, 'after' => $booking->only(array_keys($before)), 'automatic' => true], null);
+            OutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
+            SmsOutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
+
+            return true;
         }, 5);
     }
 

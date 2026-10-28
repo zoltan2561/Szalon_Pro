@@ -111,7 +111,7 @@ class AdminController extends Controller
     public function quickPreview(Request $request, Availability $availability): JsonResponse
     {
         abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
-        $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id']);
+        $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'quick_date' => 'nullable|date_format:Y-m-d', 'service_id' => 'required|integer|exists:services,id']);
         $service = Service::findOrFail($quick['service_id']);
         $staffId = $request->user()->role === 'owner' ? null : $request->user()->staff_id;
         if ($request->user()->role !== 'owner') {
@@ -119,6 +119,20 @@ class AdminController extends Controller
         }
         $salon = Salon::current();
         $now = CarbonImmutable::now($salon->timezone);
+        if (! empty($quick['quick_date'])) {
+            $candidates = $availability->slots($service, $quick['quick_date'], $staffId);
+            $ambiguous = collect($candidates)->groupBy(fn (array $candidate): string => $candidate['staff_id'].'|'.$candidate['label'])->filter(fn ($group): bool => $group->count() > 1);
+            $slots = array_map(function (array $candidate) use ($request, $service, $quick, $salon, $ambiguous): array {
+                $slot = $candidate['staff_id'].'|'.$candidate['starts_at'];
+                $token = Crypt::encryptString(json_encode(['actor' => $request->user()->id, 'service' => $service->id, 'time' => $quick['quick_time'], 'date' => $quick['quick_date'], 'slot' => $slot], JSON_THROW_ON_ERROR));
+                $local = CarbonImmutable::parse($candidate['starts_at'])->setTimezone($salon->timezone);
+                $offset = $ambiguous->has($candidate['staff_id'].'|'.$candidate['label']) ? ' · UTC'.$candidate['offset'] : '';
+
+                return ['token' => $token, 'label' => $local->format('H:i').' · '.$candidate['staff_name'].$offset];
+            }, $candidates);
+
+            return response()->json(['slots' => $slots])->header('Cache-Control', 'no-store');
+        }
         $threshold = $quick['quick_time'] === 'plus15' ? $now->addMinutes(15) : $now;
         $lastDay = $quick['quick_time'] === 'nearest' ? $salon->horizon_days : 0;
         for ($day = 0; $day <= $lastDay; $day++) {
@@ -140,13 +154,13 @@ class AdminController extends Controller
     {
         if ($request->filled('quick_time')) {
             abort_unless($request->user()->role === 'owner' || $request->user()->can_manage_bookings, 403);
-            $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'service_id' => 'required|integer|exists:services,id', 'preview_token' => 'required|string']);
+            $quick = $request->validate(['quick_time' => ['required', Rule::in(['now', 'plus15', 'nearest'])], 'quick_date' => 'nullable|date_format:Y-m-d', 'service_id' => 'required|integer|exists:services,id', 'preview_token' => 'required|string']);
             try {
                 $preview = json_decode(Crypt::decryptString($quick['preview_token']), true, flags: JSON_THROW_ON_ERROR);
             } catch (\Throwable) {
                 throw ValidationException::withMessages(['preview_token' => 'Az előnézet lejárt vagy érvénytelen. Keresd meg újra az időpontot.']);
             }
-            if (! is_array($preview) || ($preview['actor'] ?? null) !== $request->user()->id || ($preview['service'] ?? null) !== (int) $quick['service_id'] || ($preview['time'] ?? null) !== $quick['quick_time'] || ! is_string($preview['slot'] ?? null)) {
+            if (! is_array($preview) || ($preview['actor'] ?? null) !== $request->user()->id || ($preview['service'] ?? null) !== (int) $quick['service_id'] || ($preview['time'] ?? null) !== $quick['quick_time'] || ($preview['date'] ?? null) !== ($quick['quick_date'] ?? null) || ! is_string($preview['slot'] ?? null)) {
                 throw ValidationException::withMessages(['preview_token' => 'Az előnézet megváltozott. Keresd meg újra az időpontot.']);
             }
             $request->merge(['slot' => $preview['slot']]);
