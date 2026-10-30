@@ -7,6 +7,8 @@ use App\Models\Salon;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Models\WaitlistEntry;
+use App\Models\WaitlistOffer;
+use App\Services\WaitlistOffers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +30,9 @@ class WaitlistController extends Controller
         $guests = Guest::whereNull('anonymized_at')->when($user->role !== 'owner', fn ($query) => $query->where(fn ($visible) => $visible->whereHas('bookings', fn ($bookings) => $bookings->visibleTo($user))->orWhereIn('id', WaitlistEntry::visibleTo($user)->select('guest_id'))))
             ->orderBy('name')->get();
 
-        return view('admin.waitlist', compact('entries', 'recent', 'services', 'staff', 'guests'));
+        $offers = WaitlistOffer::with('entry.guest', 'entry.service', 'staff')->whereIn('waitlist_entry_id', WaitlistEntry::visibleTo($user)->select('id'))->orderByDesc('id')->limit(20)->get();
+
+        return view('admin.waitlist', compact('entries', 'recent', 'services', 'staff', 'guests', 'offers') + ['automatic' => app(WaitlistOffers::class)->enabled()]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -44,7 +48,11 @@ class WaitlistController extends Controller
             'phone' => 'nullable|string|max:40',
             'service_id' => 'required|integer|exists:services,id',
             'staff_id' => 'nullable|integer|exists:staff,id',
-            'preferred_date' => 'nullable|date_format:Y-m-d',
+            'preferred_date' => 'nullable|required_with:preferred_until|date_format:Y-m-d',
+            'preferred_until' => 'nullable|date_format:Y-m-d|after_or_equal:preferred_date',
+            'time_from' => 'nullable|required_with:time_until|date_format:H:i',
+            'time_until' => 'nullable|required_with:time_from|date_format:H:i|after:time_from',
+            'notify_consent' => 'sometimes|boolean',
             'note' => 'nullable|string|max:255',
         ]);
         $service = Service::where('active', true)->findOrFail($data['service_id']);
@@ -67,10 +75,14 @@ class WaitlistController extends Controller
             if (! $guest->email && ! $guest->phone) {
                 throw ValidationException::withMessages(['guest_id' => 'Ehhez a vendéghez nincs elérhetőség. Egészítsd ki a vendégkartont.']);
             }
+            $token = bin2hex(random_bytes(32));
             WaitlistEntry::create([
                 'guest_id' => $guest->id, 'service_id' => $service->id, 'staff_id' => $staffId,
                 'preferred_date' => $data['preferred_date'] ?? null, 'note' => $data['note'] ?? null,
                 'status' => 'waiting', 'created_by_id' => $user->id,
+                'preferred_until' => $data['preferred_until'] ?? null, 'time_from' => $data['time_from'] ?? null, 'time_until' => $data['time_until'] ?? null,
+                'notification_consent_at' => ! empty($data['notify_consent']) ? now() : null,
+                'token_hash' => hash('sha256', $token), 'manage_token' => $token, 'token_expires_at' => now()->addDays(Salon::current()->horizon_days + 7),
             ]);
         }, 5);
 
@@ -87,9 +99,22 @@ class WaitlistController extends Controller
             $entry = WaitlistEntry::lockForUpdate()->findOrFail($entry->id);
             abort_unless($entry->status === 'waiting', 422);
             $entry->update(['status' => 'cancelled']);
+            WaitlistOffer::where('waitlist_entry_id', $entry->id)->whereIn('status', ['pending', 'retry', 'sent'])->update(['status' => 'obsolete']);
         }, 5);
 
         return back()->with('success', 'A várólistás kérést lezártuk.');
+    }
+
+    public function consent(WaitlistEntry $entry, Request $request): RedirectResponse
+    {
+        $this->ensureEnabled();
+        $user = $request->user();
+        abort_unless(($user->role === 'owner' || $user->can_manage_bookings) && WaitlistEntry::visibleTo($user)->whereKey($entry->id)->exists(), 403);
+        $request->validate(['notify_consent' => 'accepted']);
+        abort_unless($entry->status === 'waiting' && ! $entry->guest->anonymized_at, 422);
+        $entry->update(['notification_consent_at' => now()]);
+
+        return back()->with('success', 'Az értesítéskérést elmentettük. Automatikus ajánlatot csak bekapcsolt, beállított küldéssel adunk.');
     }
 
     private function ensureEnabled(): void

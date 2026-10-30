@@ -18,12 +18,16 @@ use App\Models\TimeBlock;
 use App\Models\User;
 use App\Models\VoucherRedemption;
 use App\Models\WaitlistEntry;
+use App\Models\WaitlistOffer;
 use App\Models\WorkException;
 use App\Services\Availability;
 use App\Services\BenefitsService;
+use App\Services\BookingSeries;
 use App\Services\BookingService;
+use App\Services\BookingWorkNotes;
 use App\Services\Branding;
 use App\Services\OperationsHealth;
+use App\Services\ServiceSelection;
 use App\Services\SmsGateway;
 use App\Services\SmsNotificationSender;
 use Carbon\CarbonImmutable;
@@ -57,7 +61,7 @@ class AdminController extends Controller
             $day = $day->startOfWeek(CarbonImmutable::MONDAY);
         }
         $end = $week ? $day->addDays(7) : $day->addDay();
-        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff'])
+        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff', 'events'])
             ->when($week, fn ($query) => $query->where('ends_at', '>', $day->utc()), fn ($query) => $query->where('starts_at', '>=', $day->utc()))
             ->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
         $next = Booking::visibleTo($request->user())->with('guest', 'staff')->where('status', 'confirmed')->where('starts_at', '>=', now())->orderBy('starts_at')->first();
@@ -66,8 +70,9 @@ class AdminController extends Controller
         $blocks = TimeBlock::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
         $exceptions = WorkException::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('date', '>=', $day->toDateString())->where('date', '<', $end->toDateString())->orderBy('date')->get();
         $googleBusy = GoogleCalendarBusy::with('connection.staff')->whereHas('connection', fn ($query) => $query->whereIn('staff_id', $visibleStaffIds))->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
+        $reviewBookings = $bookings->filter(fn (Booking $booking): bool => $booking->isAutomaticallyCompleted());
 
-        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
+        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff', 'reviewBookings') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View|JsonResponse
@@ -75,7 +80,7 @@ class AdminController extends Controller
         if ($request->boolean('quick_preview')) {
             return $this->quickPreview($request, $availability);
         }
-        $request->validate(['date' => 'nullable|date_format:Y-m-d']);
+        $request->validate(['date' => 'nullable|date_format:Y-m-d', 'extra_service_ids' => 'nullable|array|max:4', 'extra_service_ids.*' => 'integer|distinct|exists:services,id']);
         $services = Service::where('active', true)->when($request->user()->role !== 'owner', fn ($q) => $q->whereHas('staff', fn ($q) => $q->where('staff.id', $request->user()->staff_id)))->with('staff')->orderBy('sort_order')->orderBy('id')->get();
         $calendarStart = null;
         $calendarStaffId = null;
@@ -91,6 +96,9 @@ class AdminController extends Controller
         $preferredStaffId = $calendarStaffId ?? ($request->user()->role === 'owner' ? $request->integer('staff_id') : $request->user()->staff_id);
         $service = $services->firstWhere('id', $request->integer('service_id'))
             ?? ($preferredStaffId ? $services->first(fn ($item) => $item->staff->contains($preferredStaffId)) : $services->first());
+        if ($service) {
+            $service = app(ServiceSelection::class)->combine($service, $request->input('extra_service_ids', []));
+        }
         $date = $request->query('date', now(Salon::current()->timezone)->addDay()->toDateString());
         $staffId = $request->user()->role === 'owner' ? ($request->integer('staff_id') ?: null) : $request->user()->staff_id;
         if ($staffId && ! $service?->staff->contains($staffId)) {
@@ -201,19 +209,18 @@ class AdminController extends Controller
     {
         $this->authorizeBooking($booking, $request);
         $date = $request->query('date', $booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString());
-        $service = $booking->service;
-        $service->duration_minutes = $booking->duration_minutes;
-        $service->buffer_before = $booking->buffer_before;
-        $service->buffer_after = $booking->buffer_after;
+        $service = app(ServiceSelection::class)->forBooking($booking);
         $staffId = $request->user()->role === 'owner' ? null : $request->user()->staff_id;
 
-        return view('admin.booking', compact('booking', 'date') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
+        $seriesBookings = $booking->series_key ? Booking::visibleTo($request->user())->with('staff')->where('series_key', $booking->series_key)->where('guest_id', $booking->guest_id)->orderBy('starts_at')->get() : collect();
+
+        return view('admin.booking', compact('booking', 'date', 'seriesBookings') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
     }
 
     public function updateBooking(Booking $booking, Request $request, BookingService $bookings): RedirectResponse
     {
         $this->authorizeBooking($booking, $request, true);
-        $data = $request->validate(['action' => ['required', Rule::in(['move', 'cancel', 'complete', 'no_show'])], 'revision' => 'required|integer', 'slot' => 'required_if:action,move|string', 'actual_amount' => 'nullable|integer|min:0|max:10000000', 'guest_pass_id' => 'nullable|integer|exists:guest_passes,id']);
+        $data = $request->validate(['action' => ['required', Rule::in(['move', 'cancel', 'complete', 'no_show', 'arrive', 'start'])], 'revision' => 'required|integer', 'slot' => 'required_if:action,move|string', 'actual_amount' => 'nullable|integer|min:0|max:10000000', 'guest_pass_id' => 'nullable|integer|exists:guest_passes,id', 'repeat_scope' => ['nullable', Rule::in(['single', 'following'])]]);
         if (! Salon::current()->featureEnabled('financials')) {
             unset($data['actual_amount']);
         }
@@ -222,7 +229,11 @@ class AdminController extends Controller
             abort_unless(count($parts) === 2 && ctype_digit($parts[0]), 422);
             [$data['staff_id'],$data['starts_at']] = $parts;
         }
-        $bookings->change($booking, $data, $request->user());
+        if (($data['repeat_scope'] ?? 'single') === 'following') {
+            app(BookingSeries::class)->changeFollowing($booking, $data, $request->user());
+        } else {
+            $bookings->change($booking, $data, $request->user());
+        }
 
         return back()->with('success', 'A foglalást frissítettük.');
     }
@@ -306,7 +317,7 @@ class AdminController extends Controller
             $passIds = GuestPass::where('guest_id', $guest->id)->select('id');
             echo json_encode([
                 'guest' => $guest->makeVisible('notes')->toArray(),
-                'visits' => $guest->bookings()->get()->toArray(),
+                'visits' => $guest->bookings()->get()->each->makeVisible(['work_notes', 'work_photos'])->toArray(),
                 'waitlist' => WaitlistEntry::where('guest_id', $guest->id)->get()->toArray(),
                 'passes' => GuestPass::where('guest_id', $guest->id)->get()->toArray(),
                 'pass_uses' => PassUse::whereIn('guest_pass_id', $passIds)->get()->toArray(),
@@ -326,6 +337,7 @@ class AdminController extends Controller
             if ($guest->bookings()->where('status', 'confirmed')->where('starts_at', '>', now())->exists()) {
                 throw ValidationException::withMessages(['confirm' => 'Előbb rendezd a vendég jövőbeli foglalásait.']);
             }
+            app(BookingWorkNotes::class)->eraseForGuest($guest);
             $guest->update(['name' => 'Törölt vendég #'.$guest->id, 'email' => 'deleted-'.$guest->id.'@example.invalid', 'phone' => null, 'notes' => null, 'anonymized_at' => now()]);
             $guest->bookings()->update(['token_expires_at' => now(), 'manage_token' => Crypt::encryptString(bin2hex(random_bytes(32)))]);
             $guest->update(['review_opt_in_at' => null, 'review_opt_out_at' => now()]);
@@ -333,6 +345,8 @@ class AdminController extends Controller
             SmsOutboxMessage::whereIn('booking_id', $guest->bookings()->select('id'))->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             WaitlistEntry::where('guest_id', $guest->id)->where('status', 'waiting')->update(['status' => 'cancelled']);
             WaitlistEntry::where('guest_id', $guest->id)->update(['note' => null]);
+            WaitlistEntry::where('guest_id', $guest->id)->update(['token_expires_at' => now(), 'manage_token' => null, 'notification_consent_at' => null]);
+            WaitlistOffer::whereIn('waitlist_entry_id', WaitlistEntry::where('guest_id', $guest->id)->select('id'))->whereIn('status', ['pending', 'retry', 'sent', 'sending', 'uncertain'])->update(['status' => 'obsolete', 'expires_at' => now()]);
         });
 
         return back()->with('success', 'A személyes adatokat töröltük; a látogatási összesítés megmaradt.');
@@ -412,7 +426,7 @@ class AdminController extends Controller
     public function exception(Request $request): RedirectResponse
     {
         $data = $request->validate(['staff_id' => 'required|exists:staff,id', 'date' => 'required|date_format:Y-m-d', 'start' => 'required_unless:closed,1|nullable|date_format:H:i', 'end' => 'required_unless:closed,1|nullable|date_format:H:i|after:start']);
-        $this->mutate(fn () => WorkException::updateOrCreate(['staff_id' => $data['staff_id'], 'date' => $data['date']], ['hours' => $request->boolean('closed') ? [] : $this->hours([1 => ['start' => $data['start'], 'end' => $data['end']]])[1]]));
+        $this->mutate(fn () => WorkException::updateOrCreate(['staff_id' => $data['staff_id'], 'date' => $data['date']], ['leave_request_id' => null, 'hours' => $request->boolean('closed') ? [] : $this->hours([1 => ['start' => $data['start'], 'end' => $data['end']]])[1]]));
 
         return back()->with('success', 'Az adott napi munkarendet elmentettük.');
     }

@@ -5,6 +5,7 @@
 <div class="booking-grid"><div>
     <form method="get" class="panel" data-manual-filters>
         <label>Szolgáltatás<select name="service_id" aria-describedby="manual-service-label">@foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach</select><span id="manual-service-label" class="manual-service-label" data-manual-service-label>{{ $service ? $service->name.' · '.$service->duration_minutes.' perc' : 'Nincs választható szolgáltatás' }}</span></label>
+    @include('components.service-extras')
     <div class="form-grid">
     @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
         <label>Nap<input type="date" name="date" value="{{ $date }}" required></label>
@@ -15,6 +16,7 @@
 
     <form class="panel booking-submit" method="post" action="{{ route('admin.store') }}">@csrf
         <input type="hidden" name="service_id" value="{{ $service?->id }}"><input type="hidden" name="request_key" value="{{ $requestKey }}">
+        @if($service)@include('components.selected-service-inputs')@endif
         @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
         <h2 id="manual-booking-guest">Ki érkezik?</h2>
         <p class="manual-selection" data-manual-selection aria-live="polite" hidden></p>
@@ -27,9 +29,9 @@
         <p class="muted">Telefonos vagy betérő vendéghez elég a név.</p></div>
         @if($smsReady)<label class="check"><input type="checkbox" name="sms_opt_in" value="1" @checked(old('sms_opt_in'))><span>A vendég SMS-emlékeztetőt kér a megadott telefonszámra.</span></label>@endif
         <hr><h2>Válassz időpontot</h2>@if($calendarStart && ! $selectedSlot)<p class="notice" data-calendar-slot-unavailable>A naptárban kiválasztott időpont ehhez a szolgáltatáshoz már nem foglalható. Válassz egy másik szabad időpontot.</p>@endif @include('components.slots', ['groupAnyStaff' => ! $staffId, 'selectedSlot' => $selectedSlot])
-        <div data-manual-finalize>@include('components.booking-review')
+        <div data-manual-finalize>@include('components.repeat-booking')@include('components.booking-review')
         <p class="muted">A mentéssel visszaigazoljuk az időpontot. Ha megadtál elérhetőséget, az értesítés állapotát az Értesítések oldalon követheted.</p>
-        <button class="button full" @disabled(!$slots)>Foglalás mentése</button></div>
+        <button class="button full" @disabled(!$slots)><span data-booking-save-label>Foglalás mentése</span></button></div>
     </form>
 </div><aside class="panel manual-service-summary"><p class="eyebrow">KIVÁLASZTOTT SZOLGÁLTATÁS</p><h2>{{ $service?->name ?? 'Először vegyél fel szolgáltatást' }}</h2><div class="summary-price">{{ number_format($service?->price ?? 0, 0, ',', ' ') }} Ft{{ $service?->price_kind === 'from' ? '-tól' : '' }}</div><p>{{ $service?->duration_minutes }} perc{{ $service?->price_kind === 'indicative' ? ' · tájékoztató ár' : '' }}</p><p class="muted">Az előkészületet, az utómunkát, a munkarendet és a blokkolásokat automatikusan figyelembe vesszük.</p><p class="muted">Új időpontnál az aktuális árlista érvényes; a korábbi látogatások adatai megmaradnak.</p></aside></div>
 @endsection

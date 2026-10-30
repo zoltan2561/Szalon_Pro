@@ -22,6 +22,8 @@
     </div>
     <p>A saját foglalásodat ezen a bizalmas linken kezelheted. Őrizd meg, és ne oszd meg másokkal.</p>
     <p><a class="button secondary" href="{{ route('booking.manage', $booking->manage_token) }}">Foglalásom kezelése</a></p>
+    @include('components.calendar-actions', ['calendarUrl' => route('booking.calendar', $booking->manage_token)])
+    @include('components.series-summary')
     <a class="button" href="{{ route('home') }}">Vissza a szalon oldalára</a>
 </section>
 @endsection

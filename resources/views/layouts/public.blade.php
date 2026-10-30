@@ -44,11 +44,12 @@
     <div><a href="{{ route('privacy') }}">Adatkezelés</a><a href="{{ route('login') }}">Munkatársi belépés</a><span class="muted">SzalonPRO</span></div>
 </footer>
 @endunless
-@unless(request()->routeIs('booking.*', 'vouchers.*', 'login', 'privacy', 'password.*'))
+@unless(request()->routeIs('booking.*', 'waitlist.*', 'vouchers.*', 'login', 'privacy', 'password.*'))
 <div class="mobile-booking-bar"><span>{{ $salon->demo ? $brand['demo_copy']['mobile_cta'] : 'Egy kis idő magadra.' }}</span><a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div>
 @endunless
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('booking.form', 'booking.rebook.form', 'booking.manage'))<script src="{{ asset('public-booking-refresh.js').'?v='.substr(hash_file('sha256', public_path('public-booking-refresh.js')), 0, 12) }}" defer></script>@endif
 <script src="{{ asset('booking-experience.js').'?v='.substr(hash_file('sha256', public_path('booking-experience.js')), 0, 12) }}" defer></script>
+<script src="{{ asset('booking-series.js').'?v='.substr(hash_file('sha256', public_path('booking-series.js')), 0, 12) }}" defer></script>
 </body></html>

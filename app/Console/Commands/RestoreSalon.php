@@ -29,22 +29,52 @@ class RestoreSalon extends Command
             $tables = match ($snapshot['format'] ?? null) {
                 1 => BackupSalon::LEGACY_TABLES,
                 2 => BackupSalon::V2_TABLES,
-                3 => BackupSalon::TABLES,
+                3 => BackupSalon::V3_TABLES,
+                4 => BackupSalon::TABLES,
                 default => null,
             };
             if ($tables === null || ! isset($snapshot['tables']) || array_keys($snapshot['tables']) !== $tables) {
                 throw new \RuntimeException('format');
+            }
+            if (($snapshot['format'] ?? null) === 4) {
+                $referenced = [];
+                foreach ($snapshot['tables']['bookings'] as $booking) {
+                    foreach (json_decode($booking['work_photos'] ?? '[]', true, flags: JSON_THROW_ON_ERROR) ?? [] as $path) {
+                        if (! preg_match('#^visit-photos/'.$booking['id'].'/[A-Za-z0-9]+\.(jpg|jpeg|png|webp)$#', $path) || ! array_key_exists($path, $snapshot['private_media'] ?? [])) {
+                            throw new \RuntimeException('private media reference');
+                        }
+                        $referenced[] = $path;
+                    }
+                }
+                $referenced = array_values(array_unique($referenced));
+                $provided = array_keys($snapshot['private_media'] ?? []);
+                sort($referenced);
+                sort($provided);
+                if ($referenced !== $provided) {
+                    throw new \RuntimeException('unreferenced private media');
+                }
             }
             foreach ($snapshot['media'] ?? [] as $path => $contents) {
                 if (! preg_match('#^(branding|gallery)/[A-Za-z0-9]+\.(jpg|jpeg|png|webp)$#', $path) || Storage::disk('public')->exists($path) || base64_decode($contents, true) === false) {
                     throw new \RuntimeException('media');
                 }
             }
+            foreach ($snapshot['private_media'] ?? [] as $path => $contents) {
+                if (! preg_match('#^visit-photos/[0-9]+/[A-Za-z0-9]+\.(jpg|jpeg|png|webp)$#', $path) || Storage::disk('local')->exists($path) || base64_decode($contents, true) === false) {
+                    throw new \RuntimeException('private media');
+                }
+            }
             foreach ($snapshot['media'] ?? [] as $path => $contents) {
                 if (! Storage::disk('public')->put($path, base64_decode($contents, true))) {
                     throw new \RuntimeException('media write');
                 }
-                $created[] = $path;
+                $created[] = ['disk' => 'public', 'path' => $path];
+            }
+            foreach ($snapshot['private_media'] ?? [] as $path => $contents) {
+                if (! Storage::disk('local')->put($path, base64_decode($contents, true))) {
+                    throw new \RuntimeException('private media write');
+                }
+                $created[] = ['disk' => 'local', 'path' => $path];
             }
             DB::transaction(function () use ($snapshot, $tables): void {
                 foreach ($tables as $table) {
@@ -55,7 +85,7 @@ class RestoreSalon extends Command
             });
         } catch (\Throwable) {
             foreach ($created as $file) {
-                Storage::disk('public')->delete($file);
+                Storage::disk($file['disk'])->delete($file['path']);
             } $this->error('A visszaállítás sikertelen. Ellenőrizd a fájlt, az APP_KEY-t és a séma verzióját.');
 
             return self::FAILURE;

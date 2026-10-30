@@ -35,6 +35,7 @@
         @if($salon->featureEnabled('waitlist') && !$salon->demo && $salon->phone)
             <a href="tel:{{ preg_replace('/[^+0-9]/', '', $salon->phone) }}">Várólistát kérek a szalontól</a>
         @endif
+        @if($salon->featureEnabled('waitlist') && !request()->is('admin/*'))<a class="button secondary" href="{{ route('waitlist.join', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId ?? null, 'date' => $date ?? null])) }}">Szóljatok, ha lesz szabad hely</a>@endif
         </div>
     @endforelse
 </div></fieldset>

@@ -19,7 +19,7 @@ class SecurityHeaders
         if ($request->routeIs('booking.form')) {
             $response->headers->set('Cache-Control', 'no-store, private');
         }
-        if ($request->is('admin*', 'kezeles*', 'foglalas/kesz', 'belepes', 'ajandek*', 'ertekeles/lemondas*')) {
+        if ($request->is('admin*', 'kezeles*', 'foglalas/kesz', 'belepes', 'ajandek*', 'ertekeles/lemondas*', 'varolista*', 'szabad-idopont*')) {
             $response->headers->set('Cache-Control', 'no-store, private');
             $response->headers->set('X-Robots-Tag', 'noindex');
         }

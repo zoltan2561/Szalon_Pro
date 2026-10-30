@@ -1,4 +1,5 @@
 <a href="{{ route('admin.bookings.index') }}" @if(request()->routeIs('admin.bookings.*')) aria-current="page" @endif><x-icon name="list" />Foglalások</a>
+<a href="{{ route('admin.leave.index') }}" @if(request()->routeIs('admin.leave.*')) aria-current="page" @endif><x-icon name="calendar-blank" />Szabadnapok</a>
 @if($salon->featureEnabled('waitlist'))
 <a href="{{ route('admin.waitlist.index') }}" @if(request()->routeIs('admin.waitlist.*')) aria-current="page" @endif><x-icon name="list" />Várólista</a>
 @endif

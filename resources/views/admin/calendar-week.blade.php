@@ -98,7 +98,7 @@
                                     }
                                 @endphp
                                 @if($entry['type'] === 'booking')
-                                    <a class="calendar-week-booking {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><span class="calendar-week-booking-time">{{ $startText }}–{{ $endText }}</span><strong>{{ $item->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $item->guest->no_show_count)<small>Nem jelent meg: {{ $item->guest->no_show_count }}</small>@endif<span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->label() }}</small></a>
+                                    <a class="calendar-week-booking {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><span class="calendar-week-booking-time">{{ $startText }}–{{ $endText }}</span><strong>{{ $item->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $item->guest->no_show_count)<small>Nem jelent meg: {{ $item->guest->no_show_count }}</small>@endif<span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->visitLabel() }}</small></a>
                                 @else
                                     <div class="calendar-week-unavailable {{ $entry['type'] === 'google' ? 'google' : '' }}"><strong>{{ $startText }} · {{ $entry['type'] === 'google' ? 'Google-foglaltság' : $item->reason }}</strong><small>Vége: {{ $endText }} · {{ $entry['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
                                 @endif

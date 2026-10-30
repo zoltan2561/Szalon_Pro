@@ -111,7 +111,7 @@ class Availability
 
     private function loadSlotData(Service $service, CarbonImmutable $start, CarbonImmutable $end, ?int $staffId = null, ?Booking $ignore = null): array
     {
-        $staff = $service->staff()->where('active', true)->when($staffId, fn ($q) => $q->where('staff.id', $staffId))->with('googleCalendarConnection')->get();
+        $staff = $service->staff()->where('active', true)->when($service->relationLoaded('selectedServices'), fn ($query) => $query->whereIn('staff.id', $service->staff->modelKeys()))->when($staffId, fn ($q) => $q->where('staff.id', $staffId))->with('googleCalendarConnection')->get();
         $staffIds = $staff->modelKeys();
         $exceptions = WorkException::whereIn('staff_id', $staffIds)->where('date', '>=', $start->toDateString())->where('date', '<', $end->toDateString())->get()->groupBy('date');
         $blocks = TimeBlock::whereIn('staff_id', $staffIds)->where('starts_at', '<', $end->utc())->where('ends_at', '>', $start->utc())->get();
@@ -192,12 +192,12 @@ class Availability
         return true;
     }
 
-    public function canBook(Service $service, Staff $staff, CarbonImmutable $start, ?Booking $ignore = null): bool
+    public function canBook(Service $service, Staff $staff, CarbonImmutable $start, ?Booking $ignore = null, array $ignoreBookingIds = []): bool
     {
         $start = $start->utc();
         $salon = Salon::query()->findOrFail(1);
         $local = $start->setTimezone($salon->timezone);
-        if (! $service->active || ! $staff->active || ! $service->staff()->whereKey($staff->id)->exists()
+        if (! $service->active || ! $staff->active || ! $service->staff()->whereKey($staff->id)->exists() || ! app(ServiceSelection::class)->eligible($service, $staff)
             || $start->lt(CarbonImmutable::now()->addMinutes($salon->min_notice_minutes))
             || $local->toDateString() > CarbonImmutable::now($salon->timezone)->addDays($salon->horizon_days)->toDateString()
             || $local->minute % 15 !== 0 || $local->second !== 0) {
@@ -228,6 +228,7 @@ class Availability
 
         return ! Booking::where('staff_id', $staff->id)->whereIn('status', ['confirmed', 'completed', 'no_show'])
             ->when($ignore, fn ($q) => $q->where('id', '!=', $ignore->id))
+            ->when($ignoreBookingIds !== [], fn ($query) => $query->whereNotIn('id', $ignoreBookingIds))
             ->where('busy_from', '<', $until)->where('busy_until', '>', $from)->exists();
     }
 

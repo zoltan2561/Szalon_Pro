@@ -17,6 +17,7 @@ document.querySelectorAll('[data-admin-reschedule]').forEach(section => {
         clearSlots('Válassz érvényes napot a szabad időpontokhoz.');
     });
     const refresh = async () => {
+        const origin = document.activeElement;
         const search = ++latestSearch;
         if (!date.value || !date.checkValidity()) {
             clearSlots('Válassz érvényes napot a szabad időpontokhoz.');
@@ -43,6 +44,7 @@ document.querySelectorAll('[data-admin-reschedule]').forEach(section => {
             const hasSlots = Boolean(newSlots.querySelector('input[name="slot"]'));
             submit.disabled = !hasSlots;
             status.textContent = hasSlots ? 'A szabad időpontok frissültek.' : 'Erre a napra nincs szabad időpont.';
+            postForm.dispatchEvent(new CustomEvent('booking:updated', {detail:{step:'date',origin}}));
         } catch (error) {
             if (search === latestSearch) status.textContent = 'Nem sikerült frissíteni az időpontokat. Próbáld újra a Szabad időpontok gombbal.';
         }

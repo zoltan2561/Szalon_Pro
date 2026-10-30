@@ -41,7 +41,7 @@
     ];
 @endphp
 @if($displayWarnings->isNotEmpty())<details class="notice compact-warning operation-status" aria-label="Működési figyelmeztetések"><summary>{{ $displayWarnings->count() }} működési teendő</summary><ul>@foreach($displayWarnings as $key => $warning)<li>{{ $warningLabels[$key] ?? $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Állapot és teendők megnyitása →</a></details>@endif
-@yield('content')</main>
+@yield('content')@yield('day-review')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>
 <nav class="mobile-admin-tabs" aria-label="Mobil munkafelület">
@@ -57,6 +57,7 @@
 <script src="{{ asset('upload-controls.js').'?v='.substr(hash_file('sha256', public_path('upload-controls.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('booking-experience.js').'?v='.substr(hash_file('sha256', public_path('booking-experience.js')), 0, 12) }}" defer></script>
+<script src="{{ asset('booking-series.js').'?v='.substr(hash_file('sha256', public_path('booking-series.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('admin-live-filters.js').'?v='.substr(hash_file('sha256', public_path('admin-live-filters.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('admin.booking'))<script src="{{ asset('admin-appointment-refresh.js').'?v='.substr(hash_file('sha256', public_path('admin-appointment-refresh.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif

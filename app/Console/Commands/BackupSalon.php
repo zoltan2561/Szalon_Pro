@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Booking;
 use App\Models\Salon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
@@ -20,7 +21,9 @@ class BackupSalon extends Command
         'guest_passes', 'pass_uses', 'loyalty_entries',
     ];
 
-    public const TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
+    public const V3_TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
+
+    public const TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'leave_requests', 'work_exceptions', 'outbox_messages', 'booking_events', 'google_calendar_connections', 'google_calendar_events', 'google_calendar_busies', 'sms_outbox_messages', 'waitlist_entries', 'waitlist_offers', 'benefit_settings', 'pass_plans', 'guest_passes', 'pass_uses', 'loyalty_entries', 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
 
     protected $signature = 'salon:backup {--path= : Titkosított mentés célfájlja}';
 
@@ -49,7 +52,17 @@ class BackupSalon extends Command
                 $media[$file] = base64_encode(Storage::disk('public')->get($file));
             }
 
-            return ['format' => 3, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media];
+            $privateMedia = [];
+            foreach (Booking::whereNotNull('work_photos')->get() as $booking) {
+                foreach ($booking->work_photos ?? [] as $file) {
+                    if (! preg_match('#^visit-photos/'.$booking->id.'/[A-Za-z0-9]+\.(jpg|jpeg|png|webp)$#', $file) || ! Storage::disk('local')->exists($file)) {
+                        throw new \RuntimeException('Invalid private media path');
+                    }
+                    $privateMedia[$file] = base64_encode(Storage::disk('local')->get($file));
+                }
+            }
+
+            return ['format' => 4, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media, 'private_media' => $privateMedia];
         }, 5);
         File::ensureDirectoryExists(dirname($path));
         if (file_put_contents($path, Crypt::encryptString(json_encode($snapshot, JSON_THROW_ON_ERROR)), LOCK_EX) === false) {

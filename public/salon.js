@@ -89,7 +89,7 @@ document.querySelectorAll('[data-print]').forEach(button => button.addEventListe
 
 document.querySelectorAll('[data-confirm-cancel]').forEach(button => {
     button.addEventListener('click', event => {
-        if (!window.confirm('Biztosan lemondod ezt a foglalást?')) event.preventDefault();
+        if (!window.confirm(button.dataset.confirmMessage || 'Biztosan lemondod ezt a foglalást?')) event.preventDefault();
     });
 });
 
@@ -219,6 +219,7 @@ if (manualFilters && manualBooking) {
             const newService = page.querySelector('.admin .booking-submit input[name="service_id"]');
             const newSummary = page.querySelector('.booking-grid > aside');
             const newReview = page.querySelector('[data-booking-review]');
+            const freshServices = page.querySelector('[data-selected-service-inputs]');
             const currentSlots = manualBooking.querySelector('.slots-field');
             if (!newSlots || !newDate || !newService || !newSummary || !newReview || !currentSlots) throw new Error('Availability response incomplete');
             currentSlots.replaceWith(newSlots);
@@ -226,6 +227,10 @@ if (manualFilters && manualBooking) {
             manualDate.dispatchEvent(new Event('localized:sync'));
             if (manualStaff && newStaff) { manualStaff.innerHTML = newStaff.innerHTML; manualStaff.value = newStaff.value; }
             manualBooking.querySelector('input[name="service_id"]').value = newService.value;
+            if (freshServices) manualBooking.querySelector('[data-selected-service-inputs]')?.replaceWith(freshServices);
+            const extras = manualFilters.querySelector('[data-service-extras]');
+            const freshExtras = page.querySelector('[data-service-extras]');
+            if (extras && freshExtras) { freshExtras.open = extras.open; extras.replaceWith(freshExtras); }
             document.querySelector('.booking-grid > aside').replaceWith(newSummary);
             Object.assign(manualBooking.querySelector('[data-booking-review]').dataset, newReview.dataset);
             const freshLabel = page.querySelector('[data-manual-service-label]');
@@ -247,6 +252,9 @@ if (manualFilters && manualBooking) {
     });
     manualDate.addEventListener('change', () => refreshSlots(false, 'date'));
     manualStaff?.addEventListener('change', () => refreshSlots(false, 'staff_id'));
+    manualFilters.addEventListener('change', event => {
+        if (event.target.name === 'extra_service_ids[]') refreshSlots();
+    });
     manualFilters.addEventListener('submit', event => {
         event.preventDefault();
         refreshSlots(event.submitter?.name === 'nearest', 'date');

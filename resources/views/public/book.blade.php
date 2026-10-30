@@ -18,6 +18,7 @@
         @endif
         <div class="booking-grid">
             <form id="booking-service" data-availability-filter method="get" action="{{ $rebookToken ? route('booking.rebook.form', $rebookToken) : route('booking.form') }}" class="panel filter-form">
+                <input type="hidden" name="custom_services" value="1">
                 <p class="eyebrow">01 · VÁLASSZ</p>
                 @if($referralSource)<input type="hidden" name="utm_source" value="{{ $referralSource }}">@endif
                 <h2>Mit választasz?</h2>
@@ -26,6 +27,7 @@
                         @foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach
                     </select>
                 </label>
+                @include('components.service-extras')
                 <div class="form-grid">
                     <label>Szakember
                         <select name="staff_id"><option value="">Mindegy, kihez</option>
@@ -55,6 +57,7 @@
                 @csrf
                 <div hidden aria-hidden="true"><label for="booking-website">Weboldal</label><input id="booking-website" type="text" name="website" tabindex="-1" autocomplete="off"></div>
                 <input type="hidden" name="service_id" value="{{ $service?->id }}">
+                @if($service)@include('components.selected-service-inputs')@endif
                 <input type="hidden" name="request_key" value="{{ $requestKey }}">
                 @if($referralSource)<input type="hidden" name="referral_source" value="{{ $referralSource }}">@endif
                 <p class="eyebrow">02 · IDŐPONT</p>
@@ -80,8 +83,9 @@
                 <label class="check"><input type="checkbox" name="terms" value="1" required @checked(old('terms'))><span>Megismertem a <a href="#booking-terms">foglalási feltételeket</a> és az <a href="{{ route('privacy') }}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>.</span></label>
                 <p class="muted" data-availability-explanation>A választott időpont mellett láthatod a szakember nevét. A foglalás a véglegesítéskor válik érvényessé.</p>
                 @if($contactMode === 'phone' && $smsReady)<p class="muted">Ha e-mailt nem adsz meg, a foglalásról és módosításáról SMS-t küldünk a megadott számra. Az emlékeztetőt külön kérheted.</p>@endif
+                @include('components.repeat-booking')
                 @include('components.booking-review')
-                <div class="booking-finalize-group"><p class="selected-slot-note" aria-live="polite" hidden></p><button class="button full booking-finalize" @disabled(!$slots)>Foglalás véglegesítése <x-icon name="arrow-right" /></button></div>
+                <div class="booking-finalize-group"><p class="selected-slot-note" aria-live="polite" hidden></p><button class="button full booking-finalize" @disabled(!$slots)><span data-booking-save-label>Foglalás véglegesítése</span> <x-icon name="arrow-right" /></button></div>
                 </div>
             </form>
         </div>

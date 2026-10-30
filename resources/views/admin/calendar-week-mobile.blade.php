@@ -22,7 +22,7 @@
                     $timeRange = $localStart->format($transition ? 'H:i P' : 'H:i').'–'.$localEnd->format($transition ? 'H:i P' : 'H:i');
                 @endphp
                 @if($event['type'] === 'booking')
-                    <a class="calendar-week-entry {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><strong>{{ $timeRange }} · {{ $item->guest->name }}</strong><span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->label() }}</small></a>
+                    <a class="calendar-week-entry {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><strong>{{ $timeRange }} · {{ $item->guest->name }}</strong><span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->visitLabel() }}</small></a>
                 @else
                     <div class="calendar-week-entry"><strong>{{ $timeRange }} · {{ $event['type'] === 'google' ? 'Google Naptár foglaltság' : $item->reason }}</strong><small>{{ $event['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
                 @endif

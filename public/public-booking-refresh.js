@@ -74,6 +74,11 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                     staff.replaceChildren(...Array.from(freshStaff.children));
                     staff.value = selectedStaff;
                     booking.querySelector('input[name="service_id"]').value = freshService.value;
+                    const freshServices = freshBooking.querySelector('[data-selected-service-inputs]');
+                    if (freshServices) booking.querySelector('[data-selected-service-inputs]')?.replaceWith(freshServices);
+                    const extras = filter.querySelector('[data-service-extras]');
+                    const freshExtras = freshFilter.querySelector('[data-service-extras]');
+                    if (extras && freshExtras) { freshExtras.open = extras.open; extras.replaceWith(freshExtras); }
                     currentSummary.replaceChildren(...Array.from(freshSummary.childNodes));
                     currentDate.textContent = freshDate.textContent;
                     const review = booking.querySelector('[data-booking-review]');
@@ -113,6 +118,9 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
     date.addEventListener('change', schedule);
     service?.addEventListener('change', schedule);
     staff?.addEventListener('change', schedule);
+    filter.addEventListener('change', event => {
+        if (event.target.name === 'extra_service_ids[]') schedule(event);
+    });
     booking.addEventListener('click', event => {
         const nextDay = event.target.closest('[data-next-available]');
         if (!nextDay) return;

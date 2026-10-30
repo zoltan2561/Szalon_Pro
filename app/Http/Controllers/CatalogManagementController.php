@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Salon;
 use App\Models\Service;
 use App\Models\Staff;
@@ -45,7 +46,7 @@ class CatalogManagementController extends Controller
     {
         $request->validate(['confirm' => 'accepted']);
 
-        return $this->delete($staff, ['bookings', 'service_staff', 'users', 'time_blocks', 'work_exceptions', 'google_calendar_connections', 'waitlist_entries']);
+        return $this->delete($staff, ['bookings', 'service_staff', 'users', 'time_blocks', 'work_exceptions', 'google_calendar_connections', 'waitlist_entries', 'leave_requests', 'waitlist_offers']);
     }
 
     private function move(Request $request, Model $item): RedirectResponse
@@ -89,6 +90,13 @@ class CatalogManagementController extends Controller
         DB::transaction(function () use ($item, $tables): void {
             Salon::whereKey(1)->increment('lock_version');
             $column = $item instanceof Staff ? 'staff_id' : 'service_id';
+            if ($item instanceof Service) {
+                foreach (Booking::whereNotNull('service_items')->select('service_items')->cursor() as $booking) {
+                    if (in_array($item->id, array_column($booking->service_items ?? [], 'id'), true)) {
+                        throw ValidationException::withMessages(['catalog' => 'A szolgáltatás korábbi kombinált foglalásban szerepel. Archiváld, hogy az előzmény megmaradjon.']);
+                    }
+                }
+            }
             foreach ($tables as $table) {
                 if (DB::table($table)->where($column, $item->getKey())->exists()) {
                     throw ValidationException::withMessages(['catalog' => 'A törlés nem lehetséges, mert kapcsolódó adat van. Archiváld, hogy az előzmények megmaradjanak.']);

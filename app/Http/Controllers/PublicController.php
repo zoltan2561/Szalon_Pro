@@ -9,8 +9,10 @@ use App\Models\SmsOutboxMessage;
 use App\Models\Staff;
 use App\Services\Availability;
 use App\Services\BookingLinks;
+use App\Services\BookingSeries;
 use App\Services\BookingService;
 use App\Services\Branding;
+use App\Services\ServiceSelection;
 use App\Services\SmsGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
@@ -39,10 +41,13 @@ class PublicController extends Controller
     {
         $salon = Salon::current();
         abort_unless($salon->published || $request->user()?->role === 'owner', 404);
-        $request->validate(['date' => 'nullable|date_format:Y-m-d']);
+        $request->validate(['date' => 'nullable|date_format:Y-m-d', 'extra_service_ids' => 'nullable|array|max:4', 'extra_service_ids.*' => 'integer|distinct|exists:services,id']);
         $services = Service::where('active', true)->with('staff')->orderBy('sort_order')->orderBy('id')->get();
         $requestedStaff = $request->integer('staff_id');
         $service = $services->firstWhere('id', (int) $request->query('service_id')) ?? ($requestedStaff ? $services->first(fn ($s) => $s->staff->contains($requestedStaff)) : null) ?? $services->first();
+        if ($service) {
+            $service = app(ServiceSelection::class)->combine($service, $request->input('extra_service_ids', []));
+        }
         $staffId = $request->integer('staff_id') ?: null;
         if ($staffId && ! $service?->staff->contains($staffId)) {
             $staffId = null;
@@ -68,7 +73,7 @@ class PublicController extends Controller
                 $nextAvailable = $availability->firstAvailableDay($service, $searchStart, $searchEnd, $staffId);
             }
             if ($nextAvailable) {
-                $parameters = ['service_id' => $service->id, 'staff_id' => $staffId, 'date' => $nextAvailable['date']];
+                $parameters = ['service_id' => $service->id, 'staff_id' => $staffId, 'date' => $nextAvailable['date'], 'extra_service_ids' => $request->input('extra_service_ids', []), 'custom_services' => 1];
                 if ($salon->featureEnabled('sharing') && in_array($request->query('utm_source'), BookingLinks::Sources, true)) {
                     $parameters['utm_source'] = $request->query('utm_source');
                 }
@@ -100,6 +105,9 @@ class PublicController extends Controller
         }
         $request->query->set('service_id', $request->query('service_id', $booking->service_id));
         $request->query->set('staff_id', $request->query('staff_id', $booking->staff_id));
+        if (! $request->boolean('custom_services') && ! $request->has('extra_service_ids')) {
+            $request->query->set('extra_service_ids', $booking->rebookingParameters()['extra_service_ids']);
+        }
         $request->attributes->set('rebookToken', $token);
         $request->attributes->set('rebookingGuest', $booking->guest);
 
@@ -128,30 +136,34 @@ class PublicController extends Controller
     {
         $booking = Booking::with('guest', 'staff')->findOrFail($request->session()->get('last_booking'));
         $confirmationChannel = $booking->guest->email ? 'email' : (SmsOutboxMessage::where('booking_id', $booking->id)->where('kind', 'confirmation')->exists() ? 'sms' : null);
+        $seriesBookings = $booking->series_key ? Booking::with('staff')->where('series_key', $booking->series_key)->where('guest_id', $booking->guest_id)->orderBy('starts_at')->get() : collect();
 
-        return view('public.success', compact('booking', 'confirmationChannel'));
+        return view('public.success', compact('booking', 'confirmationChannel', 'seriesBookings'));
     }
 
     public function manage(string $token, Request $request, Availability $availability): View
     {
         $booking = $this->byToken($token);
         $date = $request->query('date', $booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString());
-        $service = $booking->service;
-        $service->duration_minutes = $booking->duration_minutes;
-        $service->buffer_before = $booking->buffer_before;
-        $service->buffer_after = $booking->buffer_after;
+        $service = app(ServiceSelection::class)->forBooking($booking);
 
-        return view('public.manage', compact('booking', 'token', 'date') + ['slots' => $availability->slots($service, $date, null, $booking)]);
+        $seriesBookings = $booking->series_key ? Booking::with('staff')->where('series_key', $booking->series_key)->where('guest_id', $booking->guest_id)->orderBy('starts_at')->get() : collect();
+
+        return view('public.manage', compact('booking', 'token', 'date', 'seriesBookings') + ['slots' => $availability->slots($service, $date, null, $booking)]);
     }
 
     public function update(string $token, Request $request, BookingService $bookings): RedirectResponse
     {
         $booking = $this->byToken($token);
-        $data = $request->validate(['action' => ['required', Rule::in(['move', 'cancel'])], 'revision' => 'required|integer', 'slot' => 'required_if:action,move|string']);
+        $data = $request->validate(['action' => ['required', Rule::in(['move', 'cancel'])], 'revision' => 'required|integer', 'slot' => 'required_if:action,move|string', 'repeat_scope' => ['nullable', Rule::in(['single', 'following'])]]);
         if ($data['action'] === 'move') {
             [$data['staff_id'],$data['starts_at']] = $this->splitSlot($data['slot']);
         }
-        $bookings->change($booking, $data);
+        if (($data['repeat_scope'] ?? 'single') === 'following') {
+            app(BookingSeries::class)->changeFollowing($booking, $data);
+        } else {
+            $bookings->change($booking, $data);
+        }
 
         return back()->with('success', $data['action'] === 'cancel' ? 'A foglalásodat lemondtad. Várunk egy másik időpontban!' : 'A foglalásodat áthelyeztük. Az új időpontot alább találod.');
     }
@@ -163,6 +175,8 @@ class PublicController extends Controller
         $emailRequired = ! $manual && in_array($mode, ['email', 'both'], true);
         $phoneRequired = ! $manual && in_array($mode, ['phone', 'both'], true);
         $data = $request->validate(['service_id' => 'required|integer|exists:services,id', 'slot' => 'required|string', 'name' => ($manual && $request->filled('guest_id') ? 'nullable' : 'required').'|string|max:120',
+            'repeat_count' => 'nullable|integer|between:1,6', 'repeat_weeks' => ['required_if:repeat_count,2,3,4,5,6', 'nullable', Rule::in([1, 2, 3, 4, 6, 8])],
+            'extra_service_ids' => 'nullable|array|max:4', 'extra_service_ids.*' => 'integer|distinct|exists:services,id',
             'email' => ($emailRequired ? 'required' : 'nullable').'|email:rfc|max:200', 'phone' => ($phoneRequired ? 'required' : 'nullable').'|string|max:40', 'request_key' => 'required|uuid',
             'guest_id' => $manual ? 'nullable|integer|exists:guests,id' : 'prohibited', 'waitlist_entry_id' => $manual ? 'nullable|integer|exists:waitlist_entries,id' : 'prohibited', 'sms_opt_in' => 'sometimes|boolean', 'terms' => $manual ? 'nullable' : 'accepted']);
         if (($phoneRequired || filled($data['phone'] ?? null)) && ! app(SmsGateway::class)->normalizeNumber($data['phone'] ?? null)) {

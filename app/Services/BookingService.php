@@ -24,12 +24,22 @@ class BookingService
 
     public function create(array $data, ?User $actor = null, ?Guest $rebookingGuest = null): Booking
     {
+        if ((int) ($data['repeat_count'] ?? 1) > 1 && empty($data['_series_occurrence'])) {
+            return app(BookingSeries::class)->create($data, $actor, $rebookingGuest);
+        }
+
         return DB::transaction(function () use ($data, $actor, $rebookingGuest): Booking {
             Salon::whereKey(1)->increment('lock_version');
             $fingerprint = hash('sha256', json_encode([$data['service_id'], $data['staff_id'], $data['starts_at'], $data['guest_id'] ?? $rebookingGuest?->id, $data['waitlist_entry_id'] ?? null, $data['name'] ?? null, $data['email'] ?? null, $data['phone'] ?? null, (bool) ($data['sms_opt_in'] ?? false), $actor?->id]));
             $key = ($actor ? 'admin:'.$actor->id.':' : 'public:').$data['request_key'];
             if (! empty($data['referral_source'])) {
                 $fingerprint = hash('sha256', $fingerprint.':'.$data['referral_source']);
+            }
+            if (! empty($data['extra_service_ids'])) {
+                $fingerprint = hash('sha256', $fingerprint.':services:'.json_encode(array_map('intval', $data['extra_service_ids'])));
+            }
+            if ((int) ($data['repeat_count'] ?? 1) > 1) {
+                $fingerprint = hash('sha256', $fingerprint.':repeat:'.(int) $data['repeat_count'].':'.(int) $data['repeat_weeks']);
             }
             if (! empty($data['review_opt_in'])) {
                 $fingerprint = hash('sha256', $fingerprint.':review-consent');
@@ -52,7 +62,7 @@ class BookingService
                 abort_unless($actor->can_manage_bookings && (int) $actor->staff_id === (int) $data['staff_id'], 403);
             }
             abort_if($actor && $rebookingGuest, 403);
-            $service = Service::findOrFail($data['service_id']);
+            $service = app(ServiceSelection::class)->combine(Service::findOrFail($data['service_id']), $data['extra_service_ids'] ?? []);
             $staff = Staff::findOrFail($data['staff_id']);
             $waitlistEntry = null;
             if (! empty($data['waitlist_entry_id'])) {
@@ -90,6 +100,7 @@ class BookingService
                 'referral_source' => $salon->featureEnabled('sharing') && in_array($data['referral_source'] ?? null, BookingLinks::Sources, true) ? $data['referral_source'] : null,
                 'service_id' => $service->id, 'staff_id' => $staff->id, 'guest_id' => $guest->id, 'status' => 'confirmed', 'revision' => 1,
                 'service_name' => $service->name, 'duration_minutes' => $service->duration_minutes, 'price' => $service->price, 'price_kind' => $service->price_kind,
+                'service_items' => app(ServiceSelection::class)->items($service),
                 'buffer_before' => $service->buffer_before, 'buffer_after' => $service->buffer_after,
                 'starts_at' => $start, 'ends_at' => $start->addMinutes($service->duration_minutes),
                 'busy_from' => $start->subMinutes($service->buffer_before), 'busy_until' => $start->addMinutes($service->duration_minutes + $service->buffer_after),
@@ -105,9 +116,9 @@ class BookingService
         }, 5);
     }
 
-    public function change(Booking $booking, array $data, ?User $actor = null): Booking
+    public function change(Booking $booking, array $data, ?User $actor = null, array $ignoreBookingIds = []): Booking
     {
-        return DB::transaction(function () use ($booking, $data, $actor): Booking {
+        return DB::transaction(function () use ($booking, $data, $actor, $ignoreBookingIds): Booking {
             Salon::whereKey(1)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             if ($actor) {
@@ -115,6 +126,27 @@ class BookingService
             }
             if ($booking->revision !== (int) $data['revision']) {
                 $this->error('A foglalás időközben változott. Nyisd meg újra.');
+            }
+            if (in_array($data['action'], ['arrive', 'start'], true)) {
+                abort_unless($actor && $booking->status === 'confirmed', 403);
+                if ($booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString() !== now(Salon::current()->timezone)->toDateString()) {
+                    $this->error('Az érkezést és a munkakezdést a látogatás napján jelölheted.');
+                }
+                if (($data['action'] === 'arrive' && $booking->arrived_at) || ($data['action'] === 'start' && $booking->started_at)) {
+                    return $booking;
+                }
+                $oldRevision = $booking->revision;
+                $booking->arrived_at ??= now();
+                if ($data['action'] === 'start') {
+                    $booking->started_at = now();
+                }
+                $booking->revision++;
+                $booking->save();
+                OutboxMessage::where('booking_id', $booking->id)->where('revision', $oldRevision)->whereIn('status', ['pending', 'retry'])->update(['revision' => $booking->revision]);
+                SmsOutboxMessage::where('booking_id', $booking->id)->where('revision', $oldRevision)->whereIn('status', ['pending', 'retry'])->update(['revision' => $booking->revision]);
+                $this->event($booking, $data['action'], [], $actor);
+
+                return $booking;
             }
             $automaticCorrection = $actor && in_array($data['action'], ['complete', 'no_show', 'cancel', 'move'], true) && $booking->isAutomaticallyCompleted();
             if ($booking->status !== 'confirmed' && ! $automaticCorrection) {
@@ -128,20 +160,17 @@ class BookingService
             }
             $before = $booking->only(['starts_at', 'ends_at', 'staff_id', 'status', 'actual_amount']);
             if ($data['action'] === 'move') {
-                $service = $booking->service->replicate();
-                $service->id = $booking->service_id;
-                $service->duration_minutes = $booking->duration_minutes;
-                $service->buffer_before = $booking->buffer_before;
-                $service->buffer_after = $booking->buffer_after;
+                $service = app(ServiceSelection::class)->forBooking($booking);
                 $start = $this->availability->parse($data['starts_at']);
                 $staff = Staff::findOrFail($data['staff_id']);
                 if ($actor && $actor->role !== 'owner') {
                     abort_unless($actor->staff_id === $staff->id, 403);
                 }
-                if (! $this->availability->canBook($service, $staff, $start, $booking)) {
+                if (! $this->availability->canBook($service, $staff, $start, $booking, $ignoreBookingIds)) {
                     $this->error('Az új időpont nem szabad. Az eredeti foglalás érvényben maradt.');
                 }
                 $booking->fill(['staff_id' => $staff->id, 'starts_at' => $start, 'ends_at' => $start->addMinutes($booking->duration_minutes),
+                    'arrived_at' => null, 'started_at' => null,
                     'busy_from' => $start->subMinutes($booking->buffer_before), 'busy_until' => $start->addMinutes($booking->duration_minutes + $booking->buffer_after),
                     'token_expires_at' => $start->addDays(30)]);
                 if ($automaticCorrection) {

@@ -3,6 +3,8 @@
 return [
     'accepted' => 'A(z) :attribute elfogadása szükséges.',
     'boolean' => 'A(z) :attribute értéke igen vagy nem lehet.',
+    'distinct' => 'A(z) :attribute csak egyszer választható ki.',
+    'between' => ['numeric' => 'A(z) :attribute értéke :min és :max között lehet.', 'string' => 'A(z) :attribute hossza :min és :max karakter között lehet.', 'file' => 'A(z) :attribute mérete :min és :max kB között lehet.', 'array' => 'A(z) :attribute :min és :max közötti elemet tartalmazhat.'],
     'required_without' => 'A(z) :attribute megadása szükséges, ha a(z) :values nincs megadva.',
     'url' => 'A(z) :attribute érvényes webcím legyen.',
     'confirmed' => 'A(z) :attribute megerősítése nem egyezik.',
@@ -33,6 +35,11 @@ return [
     'min' => ['numeric' => 'A(z) :attribute minimuma :min.', 'string' => 'A(z) :attribute legalább :min karakter legyen.', 'file' => 'A(z) :attribute legalább :min kB legyen.', 'array' => 'Legalább :min elem szükséges.'],
     'max' => ['numeric' => 'A(z) :attribute maximuma :max.', 'string' => 'A(z) :attribute legfeljebb :max karakter legyen.', 'file' => 'A(z) :attribute legfeljebb :max kB lehet.', 'array' => 'Legfeljebb :max elem adható meg.'],
     'attributes' => [
+        'extra_service_ids' => 'további szolgáltatások', 'extra_service_ids.*' => 'további szolgáltatás',
+        'repeat_count' => 'alkalmak száma', 'repeat_weeks' => 'ismétlés gyakorisága', 'repeat_scope' => 'módosított alkalmak',
+        'notes_revision' => 'munkalap változata', 'work_notes' => 'munkalap', 'work_notes.*' => 'szakmai feljegyzés', 'photos' => 'referenciafotók', 'photos.*' => 'referenciafotó', 'remove_photos' => 'törlendő fotók', 'remove_photos.*' => 'törlendő fotó',
+        'starts_on' => 'első szabadnap', 'ends_on' => 'utolsó szabadnap', 'review_note' => 'tulajdonosi válasz',
+        'preferred_until' => 'utolsó megfelelő nap', 'time_from' => 'legkorábbi kezdés', 'time_until' => 'legkésőbbi befejezés', 'notify_consent' => 'értesítéskérés', 'features.waitlist_auto' => 'automatikus szabadhely-ajánlat', 'offer' => 'szabadhely-ajánlat',
         'name' => 'név', 'email' => 'e-mail-cím', 'phone' => 'telefonszám',
         'password' => 'jelszó', 'password_confirmation' => 'jelszó megerősítése', 'token' => 'visszaállító hivatkozás', 'new_password' => 'új jelszó', 'current_password' => 'jelenlegi jelszó',
         'terms' => 'foglalási feltételek', 'privacy' => 'adatkezelési tájékoztató',

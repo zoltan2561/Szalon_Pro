@@ -13,7 +13,7 @@
 </form></section>
 <section class="panel" data-auto-filter-results><h2>Találatok · {{ $bookings->total() }}</h2>
     @forelse($bookings as $booking)
-        <div class="history-row"><div><strong><a href="{{ route('admin.booking', $booking) }}">{{ $booking->guest->name }}</a></strong><p>{{ $booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $booking->service_name }} · {{ $booking->staff->name }}</p><p>{{ $booking->guest->phone ?: 'Nincs telefonszám' }} · {{ $booking->label() }}</p></div><a href="{{ route('admin.booking', $booking) }}">Foglalás megnyitása ↗</a></div>
+        <div class="history-row"><div><strong><a href="{{ route('admin.booking', $booking) }}">{{ $booking->guest->name }}</a></strong><p>{{ $booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $booking->service_name }} · {{ $booking->staff->name }}</p><p>{{ $booking->guest->phone ?: 'Nincs telefonszám' }} · {{ $booking->visitLabel() }}</p></div><a href="{{ route('admin.booking', $booking) }}">Foglalás megnyitása ↗</a></div>
     @empty
         <p class="muted">Nincs a keresésnek megfelelő foglalás.</p>
     @endforelse

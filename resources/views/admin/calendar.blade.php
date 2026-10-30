@@ -134,7 +134,7 @@
                                             $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
                                             $eventHeight = max(28, min($timelineHeight - $eventTop, $eventStart->diffInMinutes($eventEnd) * 1.5));
                                         @endphp
-                                        <a class="calendar-timeline-event {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" aria-label="{{ $eventStart->format('H:i') }} {{ $booking->guest->name }}, {{ $booking->service_name }}, {{ $booking->label() }}"><strong>{{ $eventStart->format('H:i') }} · {{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif @if($eventHeight >= 50)<small>{{ $booking->service_name }}</small>@endif</a>
+                                        <a class="calendar-timeline-event {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" aria-label="{{ $eventStart->format('H:i') }} {{ $booking->guest->name }}, {{ $booking->service_name }}, {{ $booking->visitLabel() }}"><strong>{{ $eventStart->format('H:i') }} · {{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif @if($eventHeight >= 50)<small>{{ $booking->service_name }}</small>@endif</a>
                                     @endforeach
                                     @foreach($blocks->where('staff_id', $person->id) as $block)
                                         @php
@@ -167,7 +167,7 @@
                 <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA · MINDEN ÁLLAPOT</p><h3 id="agenda-heading">Időpontok</h3></div><span>{{ $bookings->count() }}</span></div>
                 <ol class="calendar-agenda-list">
                     @forelse($bookings as $booking)
-                        <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }} · {{ $booking->label() }}</small></span></a></li>
+                        <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }} · {{ $booking->visitLabel() }}</small></span></a></li>
                     @empty<li class="calendar-agenda-empty"><strong>Még nincs foglalás.</strong><span>Az új időpontok itt jelennek meg.</span></li>@endforelse
                 </ol>
             </section>
@@ -186,4 +186,7 @@
     <div class="calendar-foot"><span>{{ $salon->timezone === 'Europe/Budapest' ? 'Magyar idő' : $salon->timezone }} · Online, telefonos és személyes foglalások</span><a href="{{ route('admin.create', ['date' => $date]) }}">Szabad időpontok keresése ↗</a></div>
 </section>
 </div>
+@endsection
+@section('day-review')
+@include('admin.calendar-day-review')
 @endsection

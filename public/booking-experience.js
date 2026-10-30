@@ -40,7 +40,7 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         else advanceToReview(origin);
     };
     const advanceAvailability = detail => {
-        if (!filter || !detail?.step) return;
+        if (!filter || !detail?.step || detail.step === 'extra_service_ids[]') return;
         const staff = filter.querySelector('select[name="staff_id"]');
         const date = filter.querySelector('input[name="date"]');
         if (detail.step === 'service_id') advance(staff?.options.length > 1 ? staff : date, detail.origin);
@@ -59,8 +59,10 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         review.querySelector('[data-review-price]').textContent = review.dataset.price;
         review.querySelector('[data-review-duration]').textContent = review.dataset.duration;
         review.querySelector('[data-review-slot]').textContent = time && staff ? `${time} · ${staff}` : 'Válassz egy szabad időpontot.';
-        if (submit) submit.disabled = !selected || form.getAttribute('aria-busy') === 'true';
+        if (submit) submit.disabled = !selected || form.getAttribute('aria-busy') === 'true' || form.dataset.repeatReady === 'false';
         if (guestFields) guestFields.hidden = !selected;
+        const extrasDone = filter?.querySelector('[data-extras-done]');
+        if (extrasDone) extrasDone.disabled = form.getAttribute('aria-busy') === 'true';
     };
     form.addEventListener('change', event => {
         const input = event.target;
@@ -94,7 +96,15 @@ document.querySelectorAll('.booking-submit').forEach(form => {
     form.addEventListener('keyup', () => { browsingSlots = false; });
     form.addEventListener('pointerdown', () => { browsingSlots = false; });
     form.addEventListener('booking:guest-selected', () => advanceGuest(document.activeElement));
+    form.addEventListener('booking:advance-guest', () => advanceGuest(document.activeElement));
+    form.addEventListener('booking:repeat-updated', update);
     form.addEventListener('booking:updated', event => { update(); advanceAvailability(event.detail); });
+    filter?.addEventListener('click', event => {
+        const done = event.target.closest('[data-extras-done]');
+        if (!done) return;
+        done.closest('details').open = false;
+        advanceAvailability({step: 'service_id', origin: done});
+    });
     update();
     if (!guestFields && new URLSearchParams(location.search).has('nearest')) {
         advanceAvailability({step: 'date', origin: document.activeElement});
@@ -143,4 +153,50 @@ document.querySelectorAll('.hours-row').forEach(row => {
     };
     closed.addEventListener('change', update);
     update();
+});
+
+document.querySelectorAll('[data-waitlist-preferences]').forEach(form => {
+    const service = form.querySelector('[name="service_id"]');
+    const staff = form.querySelector('[name="staff_id"]');
+    const update = () => {
+        Array.from(staff.options).forEach(option => {
+            const available = !option.value || option.dataset.services.split(',').includes(service.value);
+            option.hidden = !available;
+            option.disabled = !available;
+        });
+        if (staff.selectedOptions[0]?.disabled) staff.value = '';
+    };
+    service.addEventListener('change', update);
+    update();
+});
+
+document.querySelectorAll('.public [data-availability-submit]:not(.booking-submit), [data-admin-reschedule] form[method="post"]').forEach(form => {
+    const submit = form.querySelector('button[type="submit"], button:not([type])');
+    const scope = form.querySelector('select[name="repeat_scope"]');
+    let browsingSlots = false;
+    const advance = (target, origin) => {
+        if (!target) return;
+        requestAnimationFrame(() => {
+            if (document.activeElement !== origin && document.activeElement !== document.body) return;
+            if (target.disabled || !target.getClientRects().length || document.querySelector('dialog[open]')) return;
+            target.focus({preventScroll:true});
+            (target.closest('label') || target).scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+        });
+    };
+    form.addEventListener('change', event => {
+        if (event.target.name === 'slot' && !browsingSlots) advance(scope || submit, event.target);
+        if (event.target.name === 'repeat_scope') advance(submit, event.target);
+    });
+    form.addEventListener('keydown', event => {
+        if (event.target.name === 'slot') browsingSlots = event.key.startsWith('Arrow');
+    });
+    form.addEventListener('keyup', () => { browsingSlots = false; });
+    form.addEventListener('pointerdown', () => { browsingSlots = false; });
+    form.addEventListener('booking:updated', event => {
+        if (event.detail?.step !== 'date') return;
+        const slot = form.querySelector('input[name="slot"]');
+        const period = slot?.closest('details');
+        if (period) period.open = true;
+        advance(slot, event.detail.origin);
+    });
 });

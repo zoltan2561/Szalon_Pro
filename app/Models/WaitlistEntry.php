@@ -15,9 +15,11 @@ class WaitlistEntry extends Model
 
     protected $guarded = ['id'];
 
+    protected $hidden = ['token_hash', 'manage_token'];
+
     protected function casts(): array
     {
-        return ['preferred_date' => 'immutable_date'];
+        return ['preferred_date' => 'immutable_date', 'preferred_until' => 'immutable_date', 'manage_token' => 'encrypted', 'token_expires_at' => 'immutable_datetime', 'notification_consent_at' => 'immutable_datetime', 'last_offered_at' => 'immutable_datetime'];
     }
 
     public function guest(): BelongsTo

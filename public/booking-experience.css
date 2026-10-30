@@ -16,6 +16,10 @@
 .public .booking-wrap{padding-top:28px}
 .public .booking-wrap>.page-title{font-size:38px}
 .public .localized-field-picker{background:transparent}
+.calendar-save{margin:20px 0;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.calendar-save>summary{font-weight:600;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.calendar-save-options{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.calendar-save .muted{font-size:13px;margin:12px 0 0}
 .booking-submit label,.booking-submit .slots-field,[data-manual-filters] label,#booking-service label,[data-booking-review]{scroll-margin-top:96px;scroll-margin-bottom:96px}
 @media(max-width:1000px){
  .slot-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -37,3 +41,10 @@
  .public .selected-slot-note{display:none}
  .slot-period>summary{font-size:15px}
 }
+.service-extras{padding:12px 0;margin:8px 0;border-top:1px solid var(--line)}.service-extras summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}.service-extras p{margin:10px 0}.service-extras small{display:block;font-weight:400}.service-extras [data-extras-done]{margin-top:10px}
+.repeat-booking{padding:14px 0;margin:14px 0;border-top:1px solid var(--line)}.repeat-booking summary{min-height:44px;display:flex;align-items:center;font-weight:600;cursor:pointer}.repeat-booking .form-grid{margin-top:16px}.repeat-dates{padding-left:22px;margin:14px 0}.repeat-dates li{padding:8px 0;font-size:14px;line-height:1.6}.repeat-conflict{color:#9b372c;font-weight:600}
+.series-summary ul{padding:0;list-style:none;margin:0 0 16px}.series-summary li{padding:14px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:14px}.series-summary small{display:block;margin-top:4px}.series-summary li a{flex:none;text-decoration:underline;min-height:44px;display:flex;align-items:center}
+.series-summary>summary{min-height:44px;display:flex;align-items:center;font-size:20px;cursor:pointer}.series-summary[open]>summary{margin-bottom:14px}
+.repeat-selection{padding:14px 16px;background:var(--soft);border-radius:8px;font-weight:600;font-size:14px;line-height:1.6}
+.service-extras>summary::after,.repeat-booking>summary::after,.calendar-save>summary::after,.series-summary>summary::after,.work-notes>summary::after{content:'+';margin-left:auto;padding-left:12px;font-size:22px;font-weight:400;flex:none}
+.service-extras[open]>summary::after,.repeat-booking[open]>summary::after,.calendar-save[open]>summary::after,.series-summary[open]>summary::after,.work-notes[open]>summary::after{content:'−'}
