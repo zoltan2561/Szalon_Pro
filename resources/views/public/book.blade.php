@@ -30,7 +30,7 @@
                 @include('components.service-extras')
                 <div class="form-grid">
                     <label>Szakember
-                        <select name="staff_id"><option value="">Mindegy, kihez</option>
+                        <select name="staff_id" data-staff-picker><option value="">Mindegy, kihez</option>
                             @foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach
                         </select>
                     </label>

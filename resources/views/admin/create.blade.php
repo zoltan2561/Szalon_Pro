@@ -7,7 +7,7 @@
         <label>Szolgáltatás<select name="service_id" aria-describedby="manual-service-label">@foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach</select><span id="manual-service-label" class="manual-service-label" data-manual-service-label>{{ $service ? $service->name.' · '.$service->duration_minutes.' perc' : 'Nincs választható szolgáltatás' }}</span></label>
     @include('components.service-extras')
     <div class="form-grid">
-    @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
+    @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id" data-staff-picker><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
         <label>Nap<input type="date" name="date" value="{{ $date }}" required></label>
     </div>
     @if(request()->filled('guest_id'))<input type="hidden" name="guest_id" value="{{ request('guest_id') }}">@endif

@@ -11,6 +11,7 @@ document.querySelectorAll('.booking-submit').forEach(form => {
             if (document.querySelector('dialog[open]') || !target.isConnected || target.disabled) return;
             if (document.activeElement !== origin && document.activeElement !== document.body) return;
             if (target.classList.contains('localized-field-native')) target = target.closest('.localized-field').querySelector('.localized-field-text');
+            if (target.matches('[data-staff-picker]') && target.hidden) target = target.parentElement.querySelector('.staff-picker-trigger');
             if (!target.getClientRects().length) return;
             target.focus({preventScroll: true});
             section.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
