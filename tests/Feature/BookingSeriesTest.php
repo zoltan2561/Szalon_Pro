@@ -40,7 +40,8 @@ class BookingSeriesTest extends TestCase
         $this->assertSame($first->id, app(BookingService::class)->create($data)->id);
         $this->assertDatabaseCount('bookings', 3);
         $this->assertSame(3, OutboxMessage::where('kind', 'confirmation')->count());
-        $this->assertDatabaseCount('outbox_messages', 5);
+        $this->assertDatabaseCount('outbox_messages', 8);
+        $this->assertSame(3, OutboxMessage::where('kind', 'new_booking')->count());
     }
 
     public function test_a_conflict_rolls_back_every_visit_guest_and_notification(): void

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BenefitsController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BookingCalendarController;
+use App\Http\Controllers\BookingInboxController;
 use App\Http\Controllers\BookingListController;
 use App\Http\Controllers\BookingPolicyController;
 use App\Http\Controllers\BookingReorganizationController;
@@ -61,6 +62,9 @@ Route::get('/uj-jelszo/{token}', [PasswordResetController::class, 'edit'])->wher
 Route::post('/uj-jelszo', [PasswordResetController::class, 'update'])->middleware('throttle:password-reset-save')->name('password.update');
 Route::post('/kilepes', [AuthController::class, 'logout'])->name('logout');
 Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): void {
+    Route::get('/foglalasi-jelzesek', [BookingInboxController::class, 'index'])->middleware('throttle:120,1')->name('inbox.index');
+    Route::post('/foglalasi-jelzesek/olvasott', [BookingInboxController::class, 'read'])->name('inbox.read');
+    Route::post('/foglalasi-jelzesek/{notification}/megnyitas', [BookingInboxController::class, 'open'])->whereUuid('notification')->name('inbox.open');
     Route::get('/', [AdminController::class, 'today'])->name('today');
     Route::get('/naptar', [AdminController::class, 'today'])->name('calendar');
     Route::get('/uj-foglalas', [AdminController::class, 'create'])->name('create');

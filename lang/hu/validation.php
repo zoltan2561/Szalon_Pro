@@ -69,6 +69,6 @@ return [
         'loyalty_points_per_visit' => 'látogatásonként járó hűségpont', 'loyalty_reward_threshold' => 'jutalomhoz szükséges pontszám',
         'loyalty_reward_label' => 'jutalom megnevezése', 'loyalty_points' => 'hűségpont', 'visits_total' => 'alkalmak száma',
         'validity_days' => 'érvényességi idő', 'pass_plan_id' => 'bérlettípus', 'guest_pass_id' => 'vendégbérlet',
-        'buffer_before' => 'előkészítési puffer', 'buffer_after' => 'utópuffer', 'staff' => 'szakemberek', 'staff.*' => 'szakember',
+        'buffer_before' => 'előkészítési puffer', 'buffer_after' => 'utópuffer', 'staff' => 'szakemberek', 'staff.*' => 'szakember', 'through_id' => 'megtekintési határ',
     ],
 ];

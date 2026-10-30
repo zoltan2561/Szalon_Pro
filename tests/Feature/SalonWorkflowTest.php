@@ -43,11 +43,11 @@ class SalonWorkflowTest extends TestCase
     {
         $booking = $this->create();
         $baseline = DB::transactionLevel();
-        Mail::shouldReceive('send')->once()->andReturnUsing(function () use ($baseline): void {
+        Mail::shouldReceive('send')->twice()->andReturnUsing(function (array $views, array $data) use ($baseline): void {
             $this->assertSame($baseline, DB::transactionLevel());
-            $this->assertDatabaseHas('outbox_messages', ['kind' => 'confirmation', 'status' => 'sending']);
+            $this->assertDatabaseHas('outbox_messages', ['kind' => $data['kind'], 'status' => 'sending']);
         });
-        $this->assertSame(1, app(NotificationSender::class)->sendDue());
+        $this->assertSame(2, app(NotificationSender::class)->sendDue());
         $this->assertSame('confirmed', $booking->fresh()->status);
     }
 
@@ -56,8 +56,8 @@ class SalonWorkflowTest extends TestCase
         $this->create();
         $message = OutboxMessage::where('kind', 'confirmation')->first();
         $message->update(['status' => 'sending', 'attempts' => 1, 'updated_at' => now()->subMinutes(6)]);
-        Mail::shouldReceive('send')->once()->andReturn(null);
-        $this->assertSame(1, app(NotificationSender::class)->sendDue());
+        Mail::shouldReceive('send')->twice()->andReturn(null);
+        $this->assertSame(2, app(NotificationSender::class)->sendDue());
         $this->assertSame(2, $message->fresh()->attempts);
         $this->assertSame('sent', $message->fresh()->status);
     }
@@ -126,7 +126,8 @@ class SalonWorkflowTest extends TestCase
         $this->post(route('booking.store'), $data)->assertRedirect(route('booking.success'));
         $this->assertDatabaseCount('bookings', 1);
         $this->assertDatabaseCount('guests', 1);
-        $this->assertDatabaseCount('outbox_messages', 2);
+        $this->assertDatabaseCount('outbox_messages', 3);
+        $this->assertSame(1, OutboxMessage::where('kind', 'new_booking')->count());
         $this->get(route('booking.success'))->assertOk()->assertSee('Várunk szeretettel!');
     }
 
@@ -321,7 +322,8 @@ class SalonWorkflowTest extends TestCase
         $moved = app(BookingService::class)->change($booking, ['revision' => 1, 'action' => 'move', 'staff_id' => $this->staff->id, 'starts_at' => '2026-10-20T10:00:00+02:00'], $this->owner);
         $this->assertSame(2, $moved->revision);
         $this->assertSame(2, OutboxMessage::where('status', 'obsolete')->count());
-        $this->assertSame(2, OutboxMessage::where('revision', 2)->where('status', 'pending')->count());
+        $this->assertSame(3, OutboxMessage::where('revision', 2)->where('status', 'pending')->count());
+        $this->assertDatabaseHas('outbox_messages', ['booking_id' => $booking->id, 'kind' => 'new_booking', 'status' => 'pending']);
         $this->expectException(ValidationException::class);
         app(BookingService::class)->change($booking, ['revision' => 1, 'action' => 'cancel'], $this->owner);
     }
@@ -339,15 +341,15 @@ class SalonWorkflowTest extends TestCase
     public function test_mail_failure_keeps_booking_and_retries_without_recreating_it(): void
     {
         $booking = $this->create();
-        Mail::shouldReceive('send')->once()->andThrow(new \RuntimeException('private provider details'));
+        Mail::shouldReceive('send')->twice()->andThrow(new \RuntimeException('private provider details'));
         $this->assertSame(0, app(NotificationSender::class)->sendDue());
         $message = OutboxMessage::where('kind', 'confirmation')->first();
         $this->assertSame('retry', $message->status);
         $this->assertSame('RuntimeException', $message->error_code);
         $this->assertSame('confirmed', $booking->fresh()->status);
         $this->travel(3)->minutes();
-        Mail::shouldReceive('send')->once()->andReturn(null);
-        $this->assertSame(1, app(NotificationSender::class)->sendDue());
+        Mail::shouldReceive('send')->twice()->andReturn(null);
+        $this->assertSame(2, app(NotificationSender::class)->sendDue());
         $this->assertDatabaseCount('bookings', 1);
         $this->assertSame('sent', $message->fresh()->status);
     }
@@ -356,7 +358,8 @@ class SalonWorkflowTest extends TestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-19T05:00:00+00:00'));
         $this->create();
-        $this->assertDatabaseCount('outbox_messages', 1);
+        $this->assertDatabaseCount('outbox_messages', 2);
+        $this->assertDatabaseMissing('outbox_messages', ['kind' => 'reminder']);
     }
 
     public function test_staff_can_only_view_own_calendar_guests_and_authorized_notes(): void

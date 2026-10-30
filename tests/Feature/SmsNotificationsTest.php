@@ -46,7 +46,9 @@ class SmsNotificationsTest extends TestCase
             'request_key' => (string) Str::uuid(),
         ]);
 
-        $this->assertDatabaseCount('outbox_messages', 0);
+        $this->assertDatabaseCount('outbox_messages', 1);
+        $this->assertDatabaseHas('outbox_messages', ['booking_id' => $booking->id, 'kind' => 'new_booking']);
+        $this->assertDatabaseMissing('outbox_messages', ['booking_id' => $booking->id, 'kind' => 'confirmation']);
         $message = SmsOutboxMessage::sole();
         $this->assertSame('reminder', $message->kind);
         $this->assertSame('pending', $message->status);

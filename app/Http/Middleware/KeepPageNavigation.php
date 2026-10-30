@@ -9,7 +9,7 @@ class KeepPageNavigation extends StartSession
 {
     protected function storeCurrentUrl(Request $request, mixed $session): void
     {
-        if ($request->routeIs('booking.calendar', 'admin.booking.calendar', 'admin.booking.photo')) {
+        if ($request->routeIs('booking.calendar', 'admin.booking.calendar', 'admin.booking.photo', 'admin.inbox.index')) {
             return;
         }
 

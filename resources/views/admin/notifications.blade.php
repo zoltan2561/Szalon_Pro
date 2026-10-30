@@ -25,7 +25,7 @@
         <div>
             <a href="{{ route('admin.booking', $message->booking_id) }}">{{ $message->booking?->guest?->name ?? 'Foglalás #'.$message->booking_id }}</a>
             @if($message->booking)<p>{{ $message->booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $message->booking->service_name }}</p>@endif
-            <p>{{ ['confirmation' => 'Visszaigazolás', 'changed' => 'Módosítás', 'cancelled' => 'Lemondás', 'reminder' => 'Emlékeztető'][$message->kind] ?? $message->kind }} · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
+            <p>{{ ['confirmation' => 'Visszaigazolás', 'changed' => 'Módosítás', 'cancelled' => 'Lemondás', 'reminder' => 'Emlékeztető', 'new_booking' => 'Új foglalás a szalonnak és a szakembernek'][$message->kind] ?? $message->kind }} · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
             <small>{{ $message->attempts }} próbálkozás @if($message->error_code)· {{ $message->error_code }}@endif</small>
         </div>
         <span class="badge">{{ ['pending' => 'Sorban áll', 'sending' => 'Küldés folyamatban', 'retry' => 'Újrapróbálkozásra vár', 'sent' => config('mail.default') === 'array' ? 'Helyi próba feldolgozva' : 'Küldő átvette', 'failed' => 'Sikertelen', 'obsolete' => 'Elavult, nem küldhető'][$message->status] ?? $message->status }}</span>

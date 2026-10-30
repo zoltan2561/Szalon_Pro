@@ -30,13 +30,14 @@ class RestoreSalon extends Command
                 1 => BackupSalon::LEGACY_TABLES,
                 2 => BackupSalon::V2_TABLES,
                 3 => BackupSalon::V3_TABLES,
-                4 => BackupSalon::TABLES,
+                4 => BackupSalon::V4_TABLES,
+                5 => BackupSalon::TABLES,
                 default => null,
             };
             if ($tables === null || ! isset($snapshot['tables']) || array_keys($snapshot['tables']) !== $tables) {
                 throw new \RuntimeException('format');
             }
-            if (($snapshot['format'] ?? null) === 4) {
+            if (in_array($snapshot['format'] ?? null, [4, 5], true)) {
                 $referenced = [];
                 foreach ($snapshot['tables']['bookings'] as $booking) {
                     foreach (json_decode($booking['work_photos'] ?? '[]', true, flags: JSON_THROW_ON_ERROR) ?? [] as $path) {

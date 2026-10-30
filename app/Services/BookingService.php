@@ -108,6 +108,9 @@ class BookingService
                 'token_hash' => hash('sha256', $token), 'manage_token' => $token, 'token_expires_at' => $start->addDays(30),
             ]);
             $this->event($booking, 'created', [], $actor);
+            if (! $actor) {
+                app(BookingInbox::class)->record($booking);
+            }
             $this->notify($booking, 'confirmation');
             $this->smsNotifications->queue($booking, 'confirmation');
             $waitlistEntry?->update(['status' => 'booked', 'booked_booking_id' => $booking->id]);
@@ -193,7 +196,12 @@ class BookingService
                 $this->benefits->completeBooking($booking, $data['guest_pass_id'] ?? null);
             }
             $this->event($booking, $data['action'], ['before' => $before, 'after' => $booking->only(array_keys($before))], $actor);
-            OutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
+            $supersededMessages = OutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed']);
+            if ($data['action'] === 'move') {
+                (clone $supersededMessages)->where('kind', 'new_booking')->update(['revision' => $booking->revision]);
+                $supersededMessages->where('kind', '!=', 'new_booking');
+            }
+            $supersededMessages->update(['status' => 'obsolete']);
             SmsOutboxMessage::where('booking_id', $booking->id)->whereIn('status', ['pending', 'retry', 'failed'])->update(['status' => 'obsolete']);
             if ($data['action'] === 'complete') {
                 app(ReviewRequests::class)->queue($booking);

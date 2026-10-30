@@ -31,7 +31,8 @@ class NotificationSender
                 continue;
             }
             $booking = Booking::with('guest', 'staff')->findOrFail($message->booking_id);
-            if (! $this->current($message, $booking) || ! $booking->guest->email) {
+            $recipients = $message->kind === 'new_booking' ? app(BookingInbox::class)->businessRecipients($booking) : array_filter([$booking->guest->email]);
+            if (! $this->current($message, $booking) || $recipients === []) {
                 $this->finish($message, ['status' => 'obsolete']);
 
                 continue;
@@ -42,12 +43,16 @@ class NotificationSender
                     throw new \LogicException('Private links require a direct, non-logging transport.');
                 }
                 $unsubscribeUrl = $message->kind === 'review' ? app(ReviewRequests::class)->unsubscribeUrl($booking->guest) : null;
-                $view = $message->kind === 'review' ? 'emails.review' : 'emails.booking';
+                $view = match ($message->kind) {
+                    'review' => 'emails.review',
+                    'new_booking' => 'emails.new-booking',
+                    default => 'emails.booking',
+                };
                 $cancellation = $message->kind === 'cancelled' ? $booking->events()->where('action', 'cancel')->latest('id')->first() : null;
                 $guestCancelled = $cancellation && $cancellation->actor_id === null;
-                Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl, 'guestCancelled' => $guestCancelled], function (Message $mail) use ($booking, $message, $unsubscribeUrl): void {
-                    $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?'];
-                    $mail->to($booking->guest->email)->subject($titles[$message->kind].' – '.Salon::current()->name);
+                Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl, 'guestCancelled' => $guestCancelled], function (Message $mail) use ($booking, $message, $unsubscribeUrl, $recipients): void {
+                    $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?', 'new_booking' => 'Új foglalás érkezett'];
+                    $mail->to($recipients)->subject($titles[$message->kind].' – '.Salon::current()->name);
                     $mail->from(config('mail.from.address'), Salon::current()->name)->replyTo(Salon::current()->email, Salon::current()->name);
                     $mail->getSymfonyMessage()->getHeaders()->addIdHeader('Message-ID', 'booking-'.$booking->id.'-'.$message->revision.'-'.$message->kind.'@'.parse_url(config('app.url'), PHP_URL_HOST));
                     if ($unsubscribeUrl) {
@@ -94,8 +99,11 @@ class NotificationSender
         }, 5);
     }
 
-    private function current(OutboxMessage $message, Booking $booking): bool
+    public function current(OutboxMessage $message, Booking $booking): bool
     {
+        if ($message->kind === 'new_booking') {
+            return $booking->status === 'confirmed';
+        }
         if ($message->kind === 'review') {
             return $message->revision === $booking->revision && app(ReviewRequests::class)->eligible($booking, $booking->guest);
         }

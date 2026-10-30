@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Salon;
+use App\Services\BookingInbox;
 use App\Services\Branding;
 use App\Services\DemoAccess;
 use App\Services\OperationsHealth;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with($context);
         });
         View::composer('layouts.admin', function ($view): void {
+            $view->with('bookingInbox', app(BookingInbox::class)->summary(auth()->user()));
             $view->with('operationWarnings', auth()->user()?->role === 'owner' && ! auth()->user()->isDemoViewer() ? app(OperationsHealth::class)->warnings() : []);
         });
         RateLimiter::for('login', fn (Request $r) => [Limit::perMinute(5)->by($r->ip()), Limit::perMinute(5)->by(strtolower($r->input('email', '')).'|'.$r->ip())]);

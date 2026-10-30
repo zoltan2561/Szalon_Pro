@@ -27,6 +27,7 @@ use App\Services\BookingSeries;
 use App\Services\BookingService;
 use App\Services\BookingWorkNotes;
 use App\Services\Branding;
+use App\Services\NotificationSender;
 use App\Services\OperationsHealth;
 use App\Services\ServiceSelection;
 use App\Services\SmsGateway;
@@ -587,7 +588,7 @@ class AdminController extends Controller
         $this->mutate(function () use ($message): void {
             $message->refresh();
             abort_unless(in_array($message->status, ['failed', 'retry']), 422);
-            abort_unless($message->booking->revision === $message->revision, 422);
+            abort_unless(app(NotificationSender::class)->current($message, $message->booking), 422);
             $message->update(['status' => 'pending', 'attempts' => 0, 'scheduled_at' => now(), 'error_code' => null]);
         });
 

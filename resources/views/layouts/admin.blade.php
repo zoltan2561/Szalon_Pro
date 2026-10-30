@@ -6,7 +6,7 @@
 <aside class="sidebar">
 <a class="brand" href="{{ route('admin.today') }}" aria-label="Mai nap · {{ $salon->name }}"><span class="brand-mark"><img src="{{ asset('assets/branding/sp-mark.png') }}" alt="" width="31" height="31"></span><span>Szalon<span class="muted">PRO</span></span></a>
 <div class="mobile-admin-identity"><strong>@yield('title', 'Mai nap')</strong><small>{{ $salon->name }}@if($salon->demo) · Demó@endif</small></div>
-<button type="button" class="mobile-admin-account" data-open-more aria-label="Menü és fiók" aria-controls="admin-more-menu" aria-expanded="false"><x-icon name="user" /></button>
+<div class="mobile-admin-actions">@include('components.booking-inbox')<button type="button" class="mobile-admin-account" data-open-more aria-label="Menü és fiók" aria-controls="admin-more-menu" aria-expanded="false"><x-icon name="user" /></button></div>
 <p class="workspace-label">{{ $salon->name }}</p>
 <nav aria-label="Munkafelület">
 @foreach(['today'=>['clock','Mai nap'],'calendar'=>['calendar-blank','Naptár'],'guests'=>['users','Vendégeim']] as $key=>$item)
@@ -27,6 +27,7 @@
 <header class="admin-top">
 <span class="eyebrow">A SZALONOD, ÁTLÁTHATÓAN</span>
 <div><span class="live-dot" aria-hidden="true"></span>{{ $salon->demo ? 'Bemutató környezet':'Munkafelület' }}</div>
+@include('components.booking-inbox')
 <form class="mobile-logout" method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kilépés</button></form>
 </header>
 <main id="main" class="admin-content">@include('components.flash')
@@ -67,5 +68,6 @@
 @if(request()->routeIs('admin.booking', 'admin.booking.reorganize.preview'))<script src="{{ asset('booking-reorganization.js').'?v='.substr(hash_file('sha256', public_path('booking-reorganization.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif
 <script src="{{ asset('mobile-experience.js').'?v='.substr(hash_file('sha256', public_path('mobile-experience.js')), 0, 12) }}" defer></script>
+@unless($demoViewer)<script src="{{ asset('booking-inbox.js').'?v='.substr(hash_file('sha256', public_path('booking-inbox.js')), 0, 12) }}" defer></script>@endunless
 @if($demoViewer)<script src="{{ asset('demo-readonly.js').'?v='.substr(hash_file('sha256', public_path('demo-readonly.js')), 0, 12) }}" defer></script>@endif
 </body></html>

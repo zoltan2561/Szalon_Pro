@@ -8,8 +8,10 @@ use App\Models\LeaveRequest;
 use App\Models\Salon;
 use App\Models\User;
 use App\Models\WaitlistOffer;
+use App\Notifications\NewBookingArrived;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -78,10 +80,14 @@ class BookingWorkNotesTest extends TestCase
         $booking->update(['work_photos' => [$photo]]);
         LeaveRequest::factory()->create();
         WaitlistOffer::factory()->create();
+        $viewer = User::factory()->create();
+        $viewer->notify(new NewBookingArrived($booking->id));
         $backup = storage_path('framework/workflow-backup-'.Str::uuid().'.backup');
         try {
             $this->artisan('salon:backup', ['--path' => $backup])->assertSuccessful();
             $this->assertStringNotContainsString('private-reference-bytes', file_get_contents($backup));
+            $snapshot = json_decode(Crypt::decryptString(file_get_contents($backup)), true);
+            $this->assertArrayHasKey('notifications', $snapshot['tables']);
             foreach (array_reverse(BackupSalon::TABLES) as $table) {
                 DB::table($table)->delete();
             }
@@ -91,6 +97,7 @@ class BookingWorkNotesTest extends TestCase
             $this->assertSame('7.1 / 6%', Booking::findOrFail($booking->id)->work_notes['formula']);
             $this->assertDatabaseCount('leave_requests', 1);
             $this->assertDatabaseCount('waitlist_offers', 1);
+            $this->assertDatabaseCount('notifications', 1);
         } finally {
             if (file_exists($backup)) {
                 unlink($backup);

@@ -23,7 +23,9 @@ class BackupSalon extends Command
 
     public const V3_TABLES = [...self::V2_TABLES, 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
 
-    public const TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'leave_requests', 'work_exceptions', 'outbox_messages', 'booking_events', 'google_calendar_connections', 'google_calendar_events', 'google_calendar_busies', 'sms_outbox_messages', 'waitlist_entries', 'waitlist_offers', 'benefit_settings', 'pass_plans', 'guest_passes', 'pass_uses', 'loyalty_entries', 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
+    public const V4_TABLES = ['salons', 'staff', 'services', 'service_staff', 'guests', 'users', 'bookings', 'time_blocks', 'leave_requests', 'work_exceptions', 'outbox_messages', 'booking_events', 'google_calendar_connections', 'google_calendar_events', 'google_calendar_busies', 'sms_outbox_messages', 'waitlist_entries', 'waitlist_offers', 'benefit_settings', 'pass_plans', 'guest_passes', 'pass_uses', 'loyalty_entries', 'gift_vouchers', 'voucher_redemptions', 'fiscal_documents'];
+
+    public const TABLES = [...self::V4_TABLES, 'notifications'];
 
     protected $signature = 'salon:backup {--path= : Titkosított mentés célfájlja}';
 
@@ -62,7 +64,7 @@ class BackupSalon extends Command
                 }
             }
 
-            return ['format' => 4, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media, 'private_media' => $privateMedia];
+            return ['format' => 5, 'created_at' => now()->toIso8601String(), 'tables' => $tables, 'media' => $media, 'private_media' => $privateMedia];
         }, 5);
         File::ensureDirectoryExists(dirname($path));
         if (file_put_contents($path, Crypt::encryptString(json_encode($snapshot, JSON_THROW_ON_ERROR)), LOCK_EX) === false) {
