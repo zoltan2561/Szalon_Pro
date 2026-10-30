@@ -8,6 +8,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BookingCalendarController;
 use App\Http\Controllers\BookingListController;
 use App\Http\Controllers\BookingPolicyController;
+use App\Http\Controllers\BookingReorganizationController;
 use App\Http\Controllers\BookingSeriesController;
 use App\Http\Controllers\BookingWorkNotesController;
 use App\Http\Controllers\CatalogManagementController;
@@ -66,6 +67,9 @@ Route::prefix('admin')->middleware('admin')->name('admin.')->group(function (): 
     Route::get('/foglalasok', BookingListController::class)->name('bookings.index');
     Route::post('/foglalas', [AdminController::class, 'store'])->name('store');
     Route::get('/foglalas/{booking}', [AdminController::class, 'booking'])->name('booking');
+    Route::get('/foglalas/{booking}/csere-lehetosegek', [BookingReorganizationController::class, 'options'])->name('booking.reorganize.options');
+    Route::post('/foglalas/{booking}/atszervezes-elonezet', [BookingReorganizationController::class, 'preview'])->name('booking.reorganize.preview');
+    Route::post('/foglalas/{booking}/atszervezes', [BookingReorganizationController::class, 'commit'])->name('booking.reorganize.commit');
     Route::get('/foglalas/{booking}/naptar', [BookingCalendarController::class, 'admin'])->name('booking.calendar');
     Route::post('/foglalas/{booking}/munkalap', [BookingWorkNotesController::class, 'store'])->name('booking.notes');
     Route::get('/foglalas/{booking}/foto/{photo}', [BookingWorkNotesController::class, 'photo'])->whereNumber('photo')->name('booking.photo');

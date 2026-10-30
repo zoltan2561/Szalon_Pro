@@ -35,6 +35,7 @@ return [
     'min' => ['numeric' => 'A(z) :attribute minimuma :min.', 'string' => 'A(z) :attribute legalább :min karakter legyen.', 'file' => 'A(z) :attribute legalább :min kB legyen.', 'array' => 'Legalább :min elem szükséges.'],
     'max' => ['numeric' => 'A(z) :attribute maximuma :max.', 'string' => 'A(z) :attribute legfeljebb :max karakter legyen.', 'file' => 'A(z) :attribute legfeljebb :max kB lehet.', 'array' => 'Legfeljebb :max elem adható meg.'],
     'attributes' => [
+        'mode' => 'módosítás módja', 'shift_minutes' => 'eltolás percben', 'swap_booking_id' => 'csere másik foglalással', 'swap_date' => 'csere napja', 'plan_token' => 'módosítási előnézet',
         'extra_service_ids' => 'további szolgáltatások', 'extra_service_ids.*' => 'további szolgáltatás',
         'repeat_count' => 'alkalmak száma', 'repeat_weeks' => 'ismétlés gyakorisága', 'repeat_scope' => 'módosított alkalmak',
         'notes_revision' => 'munkalap változata', 'work_notes' => 'munkalap', 'work_notes.*' => 'szakmai feljegyzés', 'photos' => 'referenciafotók', 'photos.*' => 'referenciafotó', 'remove_photos' => 'törlendő fotók', 'remove_photos.*' => 'törlendő fotó',

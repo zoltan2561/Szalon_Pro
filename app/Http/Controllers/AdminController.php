@@ -22,6 +22,7 @@ use App\Models\WaitlistOffer;
 use App\Models\WorkException;
 use App\Services\Availability;
 use App\Services\BenefitsService;
+use App\Services\BookingReorganization;
 use App\Services\BookingSeries;
 use App\Services\BookingService;
 use App\Services\BookingWorkNotes;
@@ -214,7 +215,11 @@ class AdminController extends Controller
 
         $seriesBookings = $booking->series_key ? Booking::visibleTo($request->user())->with('staff')->where('series_key', $booking->series_key)->where('guest_id', $booking->guest_id)->orderBy('starts_at')->get() : collect();
 
-        return view('admin.booking', compact('booking', 'date', 'seriesBookings') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
+        $swapDate = $request->validate(['swap_date' => 'nullable|date_format:Y-m-d'])['swap_date'] ?? $booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString();
+        $swapCandidates = ($request->user()->role === 'owner' || $request->user()->can_manage_bookings) && $booking->status === 'confirmed'
+            ? app(BookingReorganization::class)->candidates($booking, $request->user(), $swapDate) : collect();
+
+        return view('admin.booking', compact('booking', 'date', 'seriesBookings', 'swapDate', 'swapCandidates') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
     }
 
     public function updateBooking(Booking $booking, Request $request, BookingService $bookings): RedirectResponse

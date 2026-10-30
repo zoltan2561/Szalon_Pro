@@ -61,5 +61,6 @@
 <script src="{{ asset('booking-series.js').'?v='.substr(hash_file('sha256', public_path('booking-series.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('admin-live-filters.js').'?v='.substr(hash_file('sha256', public_path('admin-live-filters.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('admin.booking'))<script src="{{ asset('admin-appointment-refresh.js').'?v='.substr(hash_file('sha256', public_path('admin-appointment-refresh.js')), 0, 12) }}" defer></script>@endif
+@if(request()->routeIs('admin.booking', 'admin.booking.reorganize.preview'))<script src="{{ asset('booking-reorganization.js').'?v='.substr(hash_file('sha256', public_path('booking-reorganization.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif
 </body></html>
