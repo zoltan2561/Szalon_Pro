@@ -21,6 +21,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
         controller?.abort();
         button.disabled = true;
         slotList.replaceChildren();
+        booking.querySelector('.booking-slot-help')?.setAttribute('hidden', '');
         const selectedNote = booking.querySelector('.selected-slot-note');
         if (selectedNote) selectedNote.hidden = true;
         status.hidden = false;
@@ -92,6 +93,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                 slotList.replaceChildren(...Array.from(freshSlots.childNodes));
                 slotList.className = freshSlots.className;
                 const hasSlots = Boolean(slotList.querySelector('input[name="slot"]'));
+                booking.querySelector('.booking-slot-help')?.toggleAttribute('hidden', !hasSlots);
                 button.disabled = !hasSlots;
                 status.textContent = hasSlots ? 'A szabad időpontok frissültek. Válassz időpontot.' : 'Erre a napra nincs szabad időpont. Válassz másik napot.';
                 loaded = true;

@@ -15,7 +15,12 @@
     const parse = (type, value) => {
         const match = value.trim().match(definitions[type].pattern);
         if (!match) return null;
-        if (type === 'time') return `${pad(match[1])}:${match[2]}`;
+        if (type === 'time') return Number(match[1]) < 24 && Number(match[2]) < 60 ? `${pad(match[1])}:${match[2]}` : null;
+        if (Number(match[1]) < 1) return null;
+        const calendar = new Date(0);
+        calendar.setUTCFullYear(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        if (calendar.getUTCFullYear() !== Number(match[1]) || calendar.getUTCMonth() !== Number(match[2]) - 1 || calendar.getUTCDate() !== Number(match[3])) return null;
+        if (type === 'datetime-local' && (Number(match[4]) > 23 || Number(match[5]) > 59)) return null;
         const date = `${match[1]}-${pad(match[2])}-${pad(match[3])}`;
         return type === 'date' ? date : `${date}T${pad(match[4])}:${match[5]}`;
     };
@@ -196,7 +201,7 @@
         return picker;
     };
     document.querySelectorAll('input[type="date"], input[type="time"], input[type="datetime-local"]').forEach(native => {
-        const type = native.type;
+        const type = native.getAttribute('type');
         const definition = definitions[type];
         const accessibleName = native.getAttribute('aria-label') || Array.from(native.labels ?? []).map(label => label.textContent.trim().replace(/\s+/g, ' ')).join(' ') || definition.label;
         const wrapper = document.createElement('span');
@@ -223,7 +228,9 @@
             const value = raw ? parse(type, raw) : '';
             native.setCustomValidity('');
             native.value = value ?? '';
-            const valid = !raw || (value !== null && native.value === value && native.validity.valid);
+            const precision = type === 'date' ? 10 : type === 'time' ? 5 : 16;
+            const inRange = native.type === type || ((!native.min || value >= native.min.slice(0, precision)) && (!native.max || value <= native.max.slice(0, precision)));
+            const valid = !raw || (value !== null && native.value === value && native.validity.valid && inRange);
             const message = valid ? '' : `Érvényes ${definition.label.toLowerCase()} szükséges: ${definition.placeholder}.`;
             text.setCustomValidity(message);
             native.setCustomValidity(message);

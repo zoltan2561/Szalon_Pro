@@ -63,6 +63,7 @@
                 <p class="eyebrow">02 · IDŐPONT</p>
                 <h2 id="booking-slots">Mikor érkezel?</h2>
                 <p class="booking-date-label">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>
+                <p class="booking-slot-help" @if(!$slots) hidden @endif>Válassz időpontot, utána megadhatod az adataidat.</p>
                 @include('components.slots', ['groupAnyStaff' => ! $staffId, 'showAvailabilityRecovery' => true])
                 <div data-booking-guest-fields><hr>
                 <p class="eyebrow">03 · ADATAID</p>
