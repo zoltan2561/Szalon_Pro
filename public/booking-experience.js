@@ -3,6 +3,7 @@ document.querySelectorAll('.booking-submit').forEach(form => {
     if (!review) return;
     const submit = form.querySelector('button[type="submit"], button:not([type])');
     const guestFields = form.querySelector('[data-booking-guest-fields]');
+    const manualGuestFields = form.querySelector('[data-manual-guest-fields]');
     const filter = document.querySelector(guestFields ? '#booking-service' : '[data-manual-filters]');
     let browsingSlots = false;
     const advance = (target, origin = document.activeElement, section = target?.closest('label') || target) => {
@@ -24,12 +25,13 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         if (slot) {
             const period = slot.closest('details');
             if (period) period.open = true;
-            advance(slot, origin, slot.closest('.slots-field'));
+            const section = form.querySelector('[data-manual-slots]') || slot.closest('.slots-field');
+            advance(slot.disabled || document.body.hasAttribute('data-demo-readonly') ? section.querySelector('h2') : slot, origin, section);
         } else {
             const empty = form.querySelector('.slot-recovery');
             if (empty) {
                 empty.tabIndex = -1;
-                advance(empty.querySelector('a') || empty, origin, empty);
+                advance(empty.querySelector('a') || empty, origin, form.querySelector('[data-manual-slots]') || empty);
             }
         }
     };
@@ -46,9 +48,7 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         const date = filter.querySelector('input[name="date"]');
         if (detail.step === 'service_id') advance(staff?.options.length > 1 ? staff : date, detail.origin);
         else if (detail.step === 'staff_id') advance(date, detail.origin);
-        else if (guestFields) advanceToSlots(detail.origin);
-        else if (form.querySelector('#manual-guest')?.value) advanceGuest(detail.origin);
-        else advance(form.querySelector('[data-guest-search]'), detail.origin);
+        else advanceToSlots(detail.origin);
     };
     const update = () => {
         const selected = form.querySelector('input[name="slot"]:checked');
@@ -69,7 +69,10 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         const input = event.target;
         if (input.name === 'slot') {
             update();
-            if (!browsingSlots) advanceGuest(input);
+            if (!browsingSlots) {
+                if (manualGuestFields) advance(form.querySelector('[data-guest-search]'), input, manualGuestFields);
+                else advanceGuest(input);
+            }
         } else if (input instanceof HTMLInputElement && ['name', 'email', 'phone', 'terms'].includes(input.name) && input.validity.valid) {
             advanceGuest(input);
         }
@@ -82,7 +85,8 @@ document.querySelectorAll('.booking-submit').forEach(form => {
                 event.preventDefault();
                 input.checked = true;
                 update();
-                advanceGuest(input);
+                if (manualGuestFields) advance(form.querySelector('[data-guest-search]'), input, manualGuestFields);
+                else advanceGuest(input);
             }
             return;
         }
@@ -107,8 +111,8 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         advanceAvailability({step: 'service_id', origin: done});
     });
     update();
-    if (!guestFields && new URLSearchParams(location.search).has('nearest')) {
-        advanceAvailability({step: 'date', origin: document.activeElement});
+    if (!guestFields && (new URLSearchParams(location.search).has('nearest') || location.hash === '#manual-booking-slots')) {
+        advanceToSlots(document.activeElement);
     } else if (guestFields && location.hash === '#booking-slots') advanceToSlots(document.activeElement);
 });
 

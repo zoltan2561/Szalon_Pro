@@ -17,7 +17,11 @@
         return $hour < 12 ? 'Délelőtt' : ($hour < 17 ? 'Délután' : 'Este');
     }) : ($displaySlots->isNotEmpty() ? collect(['' => $displaySlots]) : collect());
 @endphp
-<fieldset class="slots-field"><legend>Szabad időpontok</legend><div class="slots{{ $groupPeriods ? ' slots-grouped' : '' }}">
+<fieldset class="slots-field"><legend>Szabad időpontok</legend>
+@if($showSlotDate ?? false)
+<p class="manual-slot-date" data-slot-date><span>Időpontválasztás erre a napra</span><time datetime="{{ $date }}">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</time></p>
+@endif
+<div class="slots{{ $groupPeriods ? ' slots-grouped' : '' }}">
     @forelse($periods as $period => $periodSlots)
         @if($groupPeriods)<details class="slot-period" @if($loop->first || $periodSlots->contains(fn (array $slot): bool => $selectedSlot === $slot['staff_id'].'|'.$slot['starts_at'])) open @endif><summary>{{ $period }} <span>{{ $periodSlots->count() }} időpont</span></summary><div class="slot-options">@endif
         @foreach($periodSlots as $slot)

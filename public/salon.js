@@ -192,7 +192,8 @@ if (manualFilters && manualBooking) {
         const time = slot?.querySelector('strong')?.textContent?.trim();
         const staff = slot?.querySelector('small')?.textContent?.trim();
         if (manualSelection && time && staff) {
-            manualSelection.textContent = `Kiválasztva: ${manualDate.value} · ${time} · ${staff}`;
+            const dateLabel = manualBooking.querySelector('[data-slot-date] time')?.textContent.trim() || manualDate.value;
+            manualSelection.textContent = `Kiválasztva: ${dateLabel} · ${time} · ${staff}`;
             manualSelection.hidden = false;
         }
     };
@@ -218,7 +219,10 @@ if (manualFilters && manualBooking) {
         manualBooking.querySelector('.slots-field').replaceChildren();
         manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
         try {
-            const response = await fetch(`${manualFilters.action || location.pathname}?${params}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: availabilityRequest.signal, cache: 'no-store' });
+            const target = new URL(manualFilters.action || location.href);
+            target.hash = '';
+            target.search = params.toString();
+            const response = await fetch(target, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: availabilityRequest.signal, cache: 'no-store' });
             if (!response.ok) throw new Error('Availability request failed');
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
             if (search !== latestSearch) return;

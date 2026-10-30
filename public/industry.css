@@ -6,7 +6,7 @@
 .premium.barber.public-home .system-section{background:#131917}
 .premium.nails.public-home .system-section{background:#523b4a}
 .premium.nails.public-home .system-grid .icon{color:#efd0dc}
-.premium.nails.public-home .system-action .button{color:#523b4a}
+.premium.nails.public-home .system-action .button:not(.secondary){color:#523b4a}
 
 /* Barber: a poster-like opening, a compact service menu, and a vertical visit guide. */
 .premium.barber.public-home .brand{font-family:'DM Sans',Arial,sans-serif;font-size:23px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}

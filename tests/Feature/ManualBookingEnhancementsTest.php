@@ -42,6 +42,23 @@ class ManualBookingEnhancementsTest extends TestCase
             ->assertOk()->assertSee('data-guest-search', false)->assertSee('Kereshet? Vend?g')->assertSee('selected', false);
     }
 
+    public function test_manual_booking_shows_the_chosen_day_before_slots_and_guest_details_after_slots(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-10-19 06:00:00', 'UTC'));
+        Salon::factory()->create(['min_notice_minutes' => 0, 'horizon_days' => 7]);
+        $service = Service::factory()->create();
+        $staff = $service->staff()->firstOrFail();
+        TimeBlock::factory()->create(['staff_id' => $staff->id, 'starts_at' => '2026-10-19 00:00:00', 'ends_at' => '2026-10-20 00:00:00']);
+        $this->actingAs(User::factory()->create(['role' => 'owner']));
+
+        foreach ([['date' => '2026-10-23'], ['date' => '2026-10-23', 'nearest' => 1]] as $choice) {
+            $date = isset($choice['nearest']) ? '2026-10-20' : '2026-10-23';
+            $response = $this->get(route('admin.create', $choice + ['service_id' => $service->id, 'staff_id' => $staff->id]))->assertOk();
+            $response->assertSeeInOrder(['data-manual-slots', 'data-slot-date', 'datetime="'.$date.'"', 'name="slot"', 'data-manual-guest-fields', 'data-guest-search', 'data-manual-finalize'], false)
+                ->assertSee(CarbonImmutable::parse($date, 'Europe/Budapest')->locale('hu')->isoFormat('YYYY. MMMM D., dddd'));
+        }
+    }
+
     public function test_calendar_prefills_the_selected_staff_and_exact_available_instant(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-16T06:00:00Z'));

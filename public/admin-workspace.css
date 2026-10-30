@@ -1,7 +1,7 @@
 .mobile-admin-identity,.mobile-admin-account,.mobile-section-title{display:none}
 .more-account-info{display:flex;gap:12px;align-items:center;padding:14px;border-radius:14px;background:#f0f5f1;margin:16px 0}
 .more-account-info>.icon{width:26px;height:26px;color:#314f42}.more-account-info strong,.more-account-info small{display:block}.more-account-info small{margin-top:3px;font-size:12px;color:#52685b}.more-build{display:block;text-align:center;color:#52685b;font-size:11px;margin-top:14px}
-.admin.premium-admin{--admin-page:#F5F4F2;--admin-surface:#FFFFFF;--admin-soft:#F0EFED;--admin-ink:#28292E;--admin-muted:#606169;--admin-line:#DDDDE1;--admin-line-strong:#AAAAB3;--admin-action:#35343B;--admin-on-action:#FFFFFF;--paper:var(--admin-page);--ink:var(--admin-ink);--muted:var(--admin-muted);--green:var(--admin-action);--soft:var(--admin-soft);--line:var(--admin-line);background:var(--admin-page);color:var(--admin-ink);font-family:'DM Sans',Arial,sans-serif}
+.admin.premium-admin{--admin-page:#F5F4F2;--admin-surface:#FFFFFF;--admin-soft:#F0EFED;--admin-ink:#28292E;--admin-muted:#606169;--admin-line:#DDDDE1;--admin-line-strong:#AAAAB3;--admin-action:#465E83;--admin-on-action:#FFFFFF;--admin-action-soft:#EDF2F9;--admin-info:#324C74;--admin-success:#35664C;--admin-success-soft:#EAF3ED;--admin-warning:#825C23;--admin-warning-soft:#FFF4DF;--paper:var(--admin-page);--ink:var(--admin-ink);--muted:var(--admin-muted);--green:var(--admin-action);--soft:var(--admin-soft);--line:var(--admin-line);background:var(--admin-page);color:var(--admin-ink);font-family:'DM Sans',Arial,sans-serif}
 .admin .admin-content{padding-top:24px;max-width:1500px}
 .calendar-day-context{display:contents}
 .admin-menu-group{display:flex;flex-direction:column;gap:2px;margin:8px 0 12px}
@@ -11,7 +11,7 @@
 .admin .admin-more-sheet .admin-menu-label{grid-column:1/-1;padding:12px 2px 2px}
 .admin .admin-more-sheet nav>a{grid-column:1/-1}
 .admin .active-visits{padding:18px 20px;margin-bottom:16px;border:1px solid var(--admin-line);border-radius:10px;background:var(--admin-soft)}
-.admin.premium-admin .active-visits .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;margin-bottom:8px}
+.admin.premium-admin .active-visits .section-heading{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;text-align:left;margin-bottom:8px}
 .active-visits h2{font-size:20px;margin:4px 0}
 .active-visits-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
 .active-visit{display:flex;justify-content:space-between;gap:12px;min-height:64px;padding:12px;background:#fff;border-radius:8px;color:var(--admin-action);text-decoration:none}
@@ -221,11 +221,11 @@
 .admin.premium-admin .button.secondary:hover{background:var(--admin-soft);border-color:var(--admin-line-strong)}
 .admin.premium-admin .button:focus-visible,.admin.premium-admin a:focus-visible,.admin.premium-admin summary:focus-visible{outline:2px solid var(--admin-action);outline-offset:3px}
 .admin.premium-admin .panel,.admin.premium-admin .calendar-workspace{background:var(--admin-surface);border-color:var(--admin-line);box-shadow:0 3px 16px #28292E04}
-.admin.premium-admin .next-guest{background:var(--admin-surface);background-image:none;color:var(--admin-ink);border:1px solid var(--admin-line);border-left:4px solid var(--admin-action);box-shadow:0 3px 16px #28292E04;border-radius:12px;padding:18px 20px}
+.admin.premium-admin .next-guest{background:var(--admin-action-soft);background-image:none;color:var(--admin-ink);border:1px solid var(--admin-line);border-left:4px solid var(--admin-action);box-shadow:0 3px 16px #28292E04;border-radius:12px;padding:18px 20px}
 .admin.premium-admin .next-guest::before,.admin.premium-admin .next-guest::after{display:none}
 .admin.premium-admin .next-guest h2,.admin.premium-admin .next-guest .next-time,.admin.premium-admin .next-guest-actions a{color:var(--admin-ink)}
 .admin.premium-admin .next-guest p,.admin.premium-admin .next-guest .eyebrow,.admin.premium-admin .next-guest .next-time small{color:var(--admin-muted)}
-.admin.premium-admin .active-visits{background:var(--admin-soft);border-color:var(--admin-line);border-radius:12px}
+.admin.premium-admin .active-visits{background:var(--admin-action-soft);border-color:var(--admin-line);border-radius:12px}
 .admin.premium-admin .active-visit{background:var(--admin-surface);border:1px solid var(--admin-line);color:var(--admin-ink)}
 .admin.premium-admin .calendar-summary article{background:var(--admin-surface);border-color:var(--admin-line);border-radius:12px;box-shadow:none}
 .admin.premium-admin .calendar-summary article>strong{color:var(--admin-ink)}
@@ -238,14 +238,29 @@
 .admin.premium-admin .calendar-period-nav,.admin.premium-admin .calendar-view-switch{border-color:var(--admin-line)}
 .admin.premium-admin .calendar-period-nav a,.admin.premium-admin .calendar-view-switch a{color:var(--admin-ink)}
 .admin.premium-admin .calendar-view-switch a.active{background:var(--admin-action);color:var(--admin-on-action)}
-.admin.premium-admin .badge.confirmed{background:var(--admin-soft);color:var(--admin-ink)}
+.admin.premium-admin .badge.confirmed{background:var(--admin-action-soft);color:var(--admin-info)}
+.admin.premium-admin .badge.completed{background:var(--admin-success-soft);color:var(--admin-success)}
+.admin.premium-admin .badge.no_show{background:var(--admin-warning-soft);color:var(--admin-warning)}
+.admin.premium-admin .calendar-summary article:nth-child(2){border-top:3px solid var(--admin-action)}
+.admin.premium-admin .calendar-summary article:nth-child(3){border-top:3px solid var(--admin-success)}
+.admin.premium-admin .calendar-summary article:nth-child(3)>strong{color:var(--admin-success)}
+.admin.premium-admin .calendar-timeline-head a{color:var(--admin-info)}
+.admin.premium-admin .calendar-agenda-heading .eyebrow,.admin.premium-admin .calendar-week-booking.cancelled small{color:var(--admin-muted)}
+.admin.premium-admin .calendar-week-booking.cancelled small{opacity:1}
+.admin.premium-admin .calendar-timeline-event.confirmed,.admin.premium-admin .calendar-week-booking.confirmed{background:var(--admin-action-soft);color:var(--admin-info);border-color:#B4C3D8}
+.admin.premium-admin .sidebar nav a[aria-current=page],.admin.premium-admin .mobile-admin-tabs [aria-current=page]:not(.mobile-new-booking){background:var(--admin-action-soft);color:var(--admin-info)}
+.admin.premium-admin .manual-slot-date{display:flex;flex-direction:column;gap:4px;margin:8px 0 18px;padding:13px 16px;background:var(--admin-action-soft);border-left:3px solid var(--admin-action);border-radius:4px;color:var(--admin-info)}
+.admin.premium-admin .manual-slot-date>span{font-size:12px}.admin.premium-admin .manual-slot-date time{font-size:16px;font-weight:700}
+.admin.premium-admin [data-manual-slots],.admin.premium-admin .manual-guest-fields{scroll-margin-top:88px}
+.admin.premium-admin .manual-guest-fields{border-top:1px solid var(--admin-line);padding-top:24px;margin-top:28px}
+.admin.premium-admin .manual-selection{background:var(--admin-action-soft);color:var(--admin-info);border-color:var(--admin-line)}
 .admin.premium-admin input:not([type=checkbox]):not([type=radio]),.admin.premium-admin select,.admin.premium-admin textarea{background:var(--admin-surface);border-color:var(--admin-line);color:var(--admin-ink)}
 .admin.premium-admin input:focus-visible,.admin.premium-admin select:focus-visible,.admin.premium-admin textarea:focus-visible{outline:2px solid var(--admin-action);outline-offset:2px;border-color:var(--admin-action)}
 .admin.premium-admin .more-account-info,.admin.premium-admin .mobile-admin-account{background:var(--admin-soft);border-color:var(--admin-line);color:var(--admin-ink)}
 .admin.premium-admin .more-account-info small,.admin.premium-admin .more-build,.admin.premium-admin .mobile-admin-identity small{color:var(--admin-muted)}
 .admin.premium-admin .mobile-admin-tabs{border-radius:0;border-color:var(--admin-line);box-shadow:0 -4px 18px #28292E06}
 .admin.premium-admin .mobile-admin-tabs .mobile-new-booking{background:var(--admin-action);color:var(--admin-on-action)}
-.admin.premium-admin .mobile-admin-tabs [aria-current=page]:not(.mobile-new-booking){background:var(--admin-soft);color:var(--admin-ink)}
+.admin.premium-admin .mobile-admin-tabs [aria-current=page]:not(.mobile-new-booking){background:var(--admin-action-soft);color:var(--admin-info)}
 .admin.premium-admin .admin-more-sheet nav a{background:var(--admin-surface);border-color:var(--admin-line);color:var(--admin-ink)}
 .admin.premium-admin .admin-more-sheet nav a[aria-current=page]{background:var(--admin-soft);border-color:var(--admin-line-strong)}
 .admin.premium-admin .demo-viewer-banner{margin:0 0 18px;border:1px solid var(--admin-line);border-radius:10px;background:var(--admin-surface);color:var(--admin-ink)}

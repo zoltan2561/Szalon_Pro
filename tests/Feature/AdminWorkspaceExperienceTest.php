@@ -103,13 +103,13 @@ class AdminWorkspaceExperienceTest extends TestCase
             ->assertViewHas('nextAvailableUrl', fn ($url) => str_starts_with($url, route('booking.rebook.form', $token)));
     }
 
-    public function test_manual_booking_selects_existing_guest_before_slots_and_uses_a_complete_review(): void
+    public function test_manual_booking_places_guest_details_after_slots_and_uses_a_complete_review(): void
     {
         Salon::factory()->create();
         $service = Service::factory()->create();
         $owner = User::factory()->create(['role' => 'owner']);
         $this->actingAs($owner)->get(route('admin.create'))->assertOk()
-            ->assertSeeInOrder(['id="manual-booking-guest"', 'class="slots-field"', 'data-booking-review', 'Foglalás mentése'], false)
+            ->assertSeeInOrder(['class="slots-field"', 'id="manual-booking-guest"', 'data-booking-review', 'Foglalás mentése'], false)
             ->assertSee($service->staff()->firstOrFail()->name)->assertDontSee('Elérhető szakember');
         $this->get(route('admin.today'))->assertOk()
             ->assertSee('href="'.route('admin.create', ['nearest' => 1]).'"', false)
