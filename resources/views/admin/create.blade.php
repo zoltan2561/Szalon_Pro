@@ -3,11 +3,12 @@
 @section('content')
 <div class="page-heading"><div><p class="eyebrow">TELEFONON, SZEMÉLYESEN, ÜZENETBEN</p><h1>Új foglalás</h1><p class="muted">A telefonos vagy személyes foglalás is a közös naptárba kerül.</p></div></div>
 <div class="booking-grid"><div>
-    <form method="get" class="panel" data-manual-filters><div class="form-grid">
+    <form method="get" class="panel" data-manual-filters>
         <label>Szolgáltatás<select name="service_id" aria-describedby="manual-service-label">@foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach</select><span id="manual-service-label" class="manual-service-label" data-manual-service-label>{{ $service ? $service->name.' · '.$service->duration_minutes.' perc' : 'Nincs választható szolgáltatás' }}</span></label>
+    <div class="form-grid">
+    @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
         <label>Nap<input type="date" name="date" value="{{ $date }}" required></label>
     </div>
-    @if(auth()->user()->role === 'owner')<label>Szakember<select name="staff_id"><option value="">Bármelyik alkalmas szakember</option>@foreach($service?->staff->where('active', true) ?? [] as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}</option>@endforeach</select></label>@endif
     @if(request()->filled('guest_id'))<input type="hidden" name="guest_id" value="{{ request('guest_id') }}">@endif
     @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
     <div class="actions"><button class="button secondary">Szabad időpontok mutatása</button><button class="button" name="nearest" value="1">Legközelebbi szabad időpont</button></div><p class="muted" data-nearest-status aria-live="polite"></p></form>

@@ -16,6 +16,7 @@
 .public .booking-wrap{padding-top:28px}
 .public .booking-wrap>.page-title{font-size:38px}
 .public .localized-field-picker{background:transparent}
+.booking-submit label,.booking-submit .slots-field,[data-manual-filters] label,#booking-service label,[data-booking-review]{scroll-margin-top:96px;scroll-margin-bottom:96px}
 @media(max-width:1000px){
  .slot-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .admin .booking-submit .slots,.admin [data-admin-reschedule] .slots{max-height:none;overflow:visible}

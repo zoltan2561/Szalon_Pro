@@ -29,7 +29,9 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
         booking.dispatchEvent(new Event('booking:updated'));
     };
 
-    const schedule = () => {
+    const schedule = event => {
+        const origin = document.activeElement;
+        const step = event.target.name;
         invalidate('Szabad időpontok keresése…');
         if (!date.value || !date.checkValidity()) {
             status.textContent = 'Adj meg érvényes napot a szabad időpontok kereséséhez.';
@@ -38,6 +40,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
         }
         const current = sequence;
         timer = setTimeout(async () => {
+            let loaded = false;
             controller = new AbortController();
             const url = new URL(filter.action);
             url.search = new URLSearchParams(new FormData(filter)).toString();
@@ -86,6 +89,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                 const hasSlots = Boolean(slotList.querySelector('input[name="slot"]'));
                 button.disabled = !hasSlots;
                 status.textContent = hasSlots ? 'A szabad időpontok frissültek. Válassz időpontot.' : 'Erre a napra nincs szabad időpont. Válassz másik napot.';
+                loaded = true;
             } catch (error) {
                 if (current !== sequence || error.name === 'AbortError') return;
                 status.textContent = error.message === 'limit'
@@ -96,7 +100,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
             } finally {
                 if (current === sequence) {
                     booking.removeAttribute('aria-busy');
-                    booking.dispatchEvent(new Event('booking:updated'));
+                    booking.dispatchEvent(new CustomEvent('booking:updated', {detail: loaded ? {step, origin} : null}));
                 }
             }
         }, 350);

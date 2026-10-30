@@ -37,7 +37,7 @@ const publicBookingFilters = document.querySelector('.public #booking-service');
 if (publicBookingFilters) {
     publicBookingFilters.addEventListener('submit', () => {
         const action = new URL(publicBookingFilters.action);
-        action.hash = window.matchMedia('(max-width: 640px)').matches ? 'booking-slots' : '';
+        action.hash = 'booking-slots';
         publicBookingFilters.action = action.toString();
     });
 }
@@ -77,19 +77,11 @@ document.querySelectorAll('.booking-submit').forEach(form => {
         showSelectedSlot(selectedInput);
     }
 
-    let pointerSelection = false;
-    slots.addEventListener('pointerdown', () => { pointerSelection = true; });
     slots.addEventListener('change', event => {
         if (!(event.target instanceof HTMLInputElement) || event.target.name !== 'slot') {
             return;
         }
         showSelectedSlot(event.target);
-        const shouldAdvance = pointerSelection && window.matchMedia('(max-width: 640px)').matches;
-        pointerSelection = false;
-        if (shouldAdvance) {
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            guestHeading.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
-        }
     });
 });
 
@@ -167,7 +159,7 @@ if (manualGuestSearch && manualGuestSelect && manualGuestResults && manualGuestF
                 manualGuestResults.hidden = true;
                 manualGuestStatus.textContent = 'Vendég kiválasztva.';
                 updateGuestSelection();
-                manualSelectedGuest.querySelector('[data-clear-guest]').focus();
+                manualGuestSelect.closest('form').dispatchEvent(new Event('booking:guest-selected'));
             });
             manualGuestResults.append(button);
         });
@@ -186,7 +178,6 @@ if (manualFilters && manualBooking) {
     const manualServiceLabel = manualFilters.querySelector('[data-manual-service-label]');
     const manualDate = manualFilters.querySelector('input[name="date"]');
     const manualSelection = manualBooking.querySelector('[data-manual-selection]');
-    const manualGuestHeading = manualBooking.querySelector('[data-manual-finalize]');
     const showManualSelection = input => {
         const slot = input.closest('.slot');
         const time = slot?.querySelector('strong')?.textContent?.trim();
@@ -198,20 +189,13 @@ if (manualFilters && manualBooking) {
     };
     const selectedManualSlot = manualBooking.querySelector('input[name="slot"]:checked');
     if (selectedManualSlot) showManualSelection(selectedManualSlot);
-    let pointerSlotSelection = false;
-    manualBooking.addEventListener('pointerdown', event => {
-        pointerSlotSelection = Boolean(event.target.closest('.slot'));
-    });
     manualBooking.addEventListener('change', event => {
         if (!(event.target instanceof HTMLInputElement) || event.target.name !== 'slot') return;
         showManualSelection(event.target);
-        if (pointerSlotSelection && manualGuestHeading && window.matchMedia('(max-width: 640px)').matches) {
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            manualGuestHeading.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
-        }
-        pointerSlotSelection = false;
     });
-    const refreshSlots = async (nearest = false) => {
+    const refreshSlots = async (nearest = false, step = null) => {
+        const origin = document.activeElement;
+        let loaded = false;
         const search = ++latestSearch;
         availabilityRequest?.abort();
         availabilityRequest = new AbortController();
@@ -247,24 +231,25 @@ if (manualFilters && manualBooking) {
             const freshLabel = page.querySelector('[data-manual-service-label]');
             if (manualServiceLabel && freshLabel) manualServiceLabel.textContent = freshLabel.textContent;
             status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value.replaceAll('-', '. ')}.` : 'Erre a napra nincs szabad időpont.';
+            loaded = true;
         } catch (error) {
             if (search === latestSearch && error.name !== 'AbortError') status.textContent = 'Nem sikerült betölteni az időpontokat. Használd a Szabad időpontok mutatása gombot.';
         } finally {
             if (search === latestSearch) {
                 manualBooking.removeAttribute('aria-busy');
-                manualBooking.dispatchEvent(new Event('booking:updated'));
+                manualBooking.dispatchEvent(new CustomEvent('booking:updated', {detail: loaded ? {step, origin} : null}));
             }
         }
     };
     manualService.addEventListener('change', () => {
         if (manualServiceLabel) manualServiceLabel.textContent = manualService.selectedOptions[0]?.textContent || '';
-        refreshSlots();
+        refreshSlots(false, 'service_id');
     });
-    manualDate.addEventListener('change', () => refreshSlots());
-    manualStaff?.addEventListener('change', () => refreshSlots());
+    manualDate.addEventListener('change', () => refreshSlots(false, 'date'));
+    manualStaff?.addEventListener('change', () => refreshSlots(false, 'staff_id'));
     manualFilters.addEventListener('submit', event => {
         event.preventDefault();
-        refreshSlots(event.submitter?.name === 'nearest');
+        refreshSlots(event.submitter?.name === 'nearest', 'date');
     });
 }
 
