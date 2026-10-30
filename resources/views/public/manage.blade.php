@@ -3,7 +3,45 @@
 @section('calendar-actions')
     @include('components.calendar-actions', ['calendarUrl' => route('booking.calendar', $token)])
 @endsection
-@section('content')<div class="wrap narrow"><p class="eyebrow">A TE IDŐPONTOD</p><h1 class="page-title">Foglalásod kezelése</h1><div class="panel"><span class="badge {{ $booking->status }}">{{ $booking->label() }}</span><h2>{{ $booking->service_name }}</h2><p>{{ $booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $booking->staff->name }} · {{ $booking->duration_minutes }} perc</p><p>{{ $salon->address }}</p>@if($booking->status !== 'cancelled')<p class="preserve">{{ $salon->terms }}</p>@endif</div>@if($booking->status==='confirmed' && now()->lt($booking->starts_at->subHours($salon->cancel_notice_hours)))<div class="panel"><h2>Másik időpontot szeretnél?</h2><form method="get" action="{{ route('booking.manage', $token) }}" data-availability-filter><label>Új nap<input name="date" type="date" value="{{ $date }}" required></label><p class="muted" data-availability-status role="status" hidden></p><button class="button secondary">Szabad időpontok</button></form><form method="post" action="{{ route('booking.update',$token) }}" data-availability-submit>@csrf<input type="hidden" name="action" value="move"><input type="hidden" name="revision" value="{{ $booking->revision }}">@include('components.slots')@include('components.series-scope')<button class="button" @disabled(!$slots)>Áthelyezés megerősítése</button></form></div><form method="post" action="{{ route('booking.update',$token) }}" class="panel">@csrf<input type="hidden" name="revision" value="{{ $booking->revision }}"><input type="hidden" name="action" value="cancel"><h2>Lemondanád?</h2><p>A gomb megnyomásával felszabadítod a foglalásod időpontját.</p>@include('components.series-scope')<button class="button danger" data-confirm-cancel>Igen, lemondom a foglalást</button></form>
+@section('content')
+<div class="wrap narrow">
+    <p class="eyebrow">A TE IDŐPONTOD</p>
+    <h1 class="page-title">Foglalásod kezelése</h1>
+    <div class="panel">
+        <span class="badge {{ $booking->status }}">{{ $booking->label() }}</span>
+        <h2>{{ $booking->service_name }}</h2>
+        <p>{{ $booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $booking->staff->name }} · {{ $booking->duration_minutes }} perc</p>
+        <p>{{ $salon->address }}</p>
+        @if($booking->status !== 'cancelled')<p class="preserve">{{ $salon->terms }}</p>@endif
+    </div>
+    @if($booking->status==='confirmed' && now()->lt($booking->starts_at->subHours($salon->cancel_notice_hours)))
+    <div class="panel">
+        <h2>Másik időpontot szeretnél?</h2>
+        <p>A jelenlegi időpontod az áthelyezés megerősítéséig megmarad.</p>
+        <form method="get" action="{{ route('booking.manage', $token) }}" data-availability-filter>
+            <label>Szakember<select name="staff_id" data-staff-picker><option value="" @selected(!$staffId)>Mindegy kihez</option>@foreach($staff as $person)<option value="{{ $person->id }}" @selected($staffId === $person->id)>{{ $person->name }}{{ $person->id === $booking->staff_id ? ' · eredeti szakembered' : '' }}</option>@endforeach</select></label>
+            <label>Új nap<input name="date" type="date" min="{{ now($salon->timezone)->toDateString() }}" max="{{ now($salon->timezone)->addDays($salon->horizon_days)->toDateString() }}" value="{{ $date }}" required></label>
+            <p class="muted" data-availability-status role="status" hidden></p>
+            <button class="button secondary">Szabad időpontok</button>
+        </form>
+        <form method="post" action="{{ route('booking.update',$token) }}" data-availability-submit>
+            @csrf
+            <input type="hidden" name="action" value="move">
+            <input type="hidden" name="revision" value="{{ $booking->revision }}">
+            <div id="booking-slots">@include('components.slots', ['groupAnyStaff' => !$staffId, 'showAvailabilityRecovery' => true])</div>
+            @include('components.series-scope')
+            <button class="button" @disabled(!$slots)>Áthelyezés megerősítése</button>
+        </form>
+    </div>
+    <form method="post" action="{{ route('booking.update',$token) }}" class="panel">
+        @csrf
+        <input type="hidden" name="revision" value="{{ $booking->revision }}">
+        <input type="hidden" name="action" value="cancel">
+        <h2>Lemondanád?</h2>
+        <p>A gomb megnyomásával felszabadítod a foglalásod időpontját.</p>
+        @include('components.series-scope')
+        <button class="button danger" data-confirm-cancel>Igen, lemondom a foglalást</button>
+    </form>
 @else
 <div class="notice">Online már nem módosítható. Egyeztetéshez keresd a szalont: {{ $salon->phone }}.</div>
 @endif

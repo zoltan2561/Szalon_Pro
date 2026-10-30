@@ -53,6 +53,7 @@ Route::get('/kezeles/{token}/ujra', [PublicController::class, 'rebook'])->middle
 Route::get('/kezeles/{token}/naptar', [BookingCalendarController::class, 'guest'])->middleware('throttle:booking')->name('booking.calendar');
 Route::post('/kezeles/{token}/ujra', [PublicController::class, 'storeRebooking'])->middleware('throttle:booking-submission')->name('booking.rebook.store');
 Route::get('/belepes', fn () => view('auth.login'))->name('login');
+Route::post('/demo-belepes', [AuthController::class, 'demo'])->middleware('throttle:login')->name('demo.login');
 Route::post('/belepes', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::get('/elfelejtett-jelszo', [PasswordResetController::class, 'request'])->name('password.request');
 Route::post('/elfelejtett-jelszo', [PasswordResetController::class, 'send'])->middleware('throttle:password-reset-link')->name('password.email');

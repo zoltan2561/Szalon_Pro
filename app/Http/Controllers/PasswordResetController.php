@@ -41,7 +41,7 @@ class PasswordResetController extends Controller
         $email = $request->query('email');
         $email = is_string($email) && strlen($email) <= 200 ? $email : '';
         $user = $this->findUser($email);
-        $valid = $user && Password::broker()->tokenExists($user, $token);
+        $valid = $user && ! $user->isDemoViewer() && Password::broker()->tokenExists($user, $token);
 
         return response()->view('auth.reset-password', ['email' => $user?->email ?? $email, 'token' => $token, 'valid' => (bool) $valid])->header('Cache-Control', 'no-store, private');
     }
@@ -50,6 +50,9 @@ class PasswordResetController extends Controller
     {
         $data = $request->validate(['email' => 'required|string|email|max:200', 'token' => 'required|string|max:200', 'password' => 'required|string|min:12|max:200'.($request->filled('password_confirmation') ? '|confirmed' : ''), 'password_confirmation' => 'required|string|max:200'], ['password_confirmation.required' => 'Add meg újra az új jelszót.']);
         $user = $this->findUser($data['email']);
+        if ($user?->isDemoViewer()) {
+            return redirect()->route('password.request')->withErrors(['email' => 'Ehhez a fiókhoz nem állítható vissza jelszó.']);
+        }
         $data['email'] = $user?->email ?? $data['email'];
         $changedUser = null;
         $status = DB::transaction(function () use ($data, &$changedUser): string {

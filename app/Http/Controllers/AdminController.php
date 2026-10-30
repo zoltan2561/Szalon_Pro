@@ -50,6 +50,11 @@ class AdminController extends Controller
 {
     public function today(Request $request): View
     {
+        $filters = $request->validate(['staff_id' => 'nullable|integer|exists:staff,id']);
+        $selectedStaffId = isset($filters['staff_id']) ? (int) $filters['staff_id'] : null;
+        abort_if($selectedStaffId && $request->user()->role !== 'owner' && $selectedStaffId !== (int) $request->user()->staff_id, 403);
+        $staffOptions = Staff::query()->when($request->user()->role !== 'owner', fn ($query) => $query->whereKey($request->user()->staff_id ?? 0))->orderBy('sort_order')->orderBy('id')->get();
+        $visibleStaffIds = $selectedStaffId ? [$selectedStaffId] : $staffOptions->modelKeys();
         $date = $request->query('date', now(Salon::current()->timezone)->toDateString());
         try {
             $day = CarbonImmutable::createFromFormat('!Y-m-d', $date, Salon::current()->timezone);
@@ -62,18 +67,23 @@ class AdminController extends Controller
             $day = $day->startOfWeek(CarbonImmutable::MONDAY);
         }
         $end = $week ? $day->addDays(7) : $day->addDay();
-        $bookings = Booking::visibleTo($request->user())->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff', 'events'])
+        $bookings = Booking::visibleTo($request->user())->whereIn('staff_id', $visibleStaffIds)->with(['guest' => fn ($query) => $query->withCount(['bookings as no_show_count' => fn ($bookings) => $bookings->visibleTo($request->user())->where('status', 'no_show')]), 'staff', 'events'])
             ->when($week, fn ($query) => $query->where('ends_at', '>', $day->utc()), fn ($query) => $query->where('starts_at', '>=', $day->utc()))
             ->where('starts_at', '<', $end->utc())->orderBy('starts_at')->get();
-        $next = Booking::visibleTo($request->user())->with('guest', 'staff')->where('status', 'confirmed')->where('starts_at', '>=', now())->orderBy('starts_at')->first();
-        $visibleStaffIds = $request->user()->role === 'owner' ? Staff::pluck('id')->all() : [$request->user()->staff_id];
+        $today = CarbonImmutable::now(Salon::current()->timezone)->startOfDay();
+        $activeBookings = Booking::visibleTo($request->user())->whereIn('staff_id', $visibleStaffIds)->with('guest', 'staff')->where('status', 'confirmed')
+            ->where('starts_at', '>=', $today->utc())->where('starts_at', '<', $today->addDay()->utc())
+            ->where(function (Builder $query): void {
+                $query->whereNotNull('arrived_at')->orWhereNotNull('started_at')->orWhere(fn (Builder $query) => $query->where('starts_at', '<=', now())->where('ends_at', '>', now()));
+            })->orderBy('starts_at')->get();
+        $next = Booking::visibleTo($request->user())->whereIn('staff_id', $visibleStaffIds)->with('guest', 'staff')->where('status', 'confirmed')->whereNull('arrived_at')->whereNull('started_at')->where('starts_at', '>', now())->orderBy('starts_at')->first();
         $calendarStaff = Staff::whereIn('id', $visibleStaffIds)->orderBy('sort_order')->orderBy('id')->get();
         $blocks = TimeBlock::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
         $exceptions = WorkException::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('date', '>=', $day->toDateString())->where('date', '<', $end->toDateString())->orderBy('date')->get();
         $googleBusy = GoogleCalendarBusy::with('connection.staff')->whereHas('connection', fn ($query) => $query->whereIn('staff_id', $visibleStaffIds))->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
         $reviewBookings = $bookings->filter(fn (Booking $booking): bool => $booking->isAutomaticallyCompleted());
 
-        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff', 'reviewBookings') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
+        return view('admin.calendar', compact('bookings', 'next', 'activeBookings', 'selectedStaffId', 'staffOptions', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff', 'reviewBookings') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View|JsonResponse
@@ -219,7 +229,15 @@ class AdminController extends Controller
         $swapCandidates = ($request->user()->role === 'owner' || $request->user()->can_manage_bookings) && $booking->status === 'confirmed'
             ? app(BookingReorganization::class)->candidates($booking, $request->user(), $swapDate) : collect();
 
-        return view('admin.booking', compact('booking', 'date', 'seriesBookings', 'swapDate', 'swapCandidates') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
+        $previousWorkNotes = null;
+        if ($request->user()->canViewGuestNotes() && ! $booking->guest->anonymized_at) {
+            $previousWorkNotes = Booking::visibleTo($request->user())->where('guest_id', $booking->guest_id)->where('status', 'completed')
+                ->where('starts_at', '<', $booking->starts_at)->where('ends_at', '<=', now())->whereKeyNot($booking->id)
+                ->where(fn (Builder $query) => $query->whereNotNull('work_notes')->orWhereNotNull('work_photos'))
+                ->orderByDesc('starts_at')->get()->first(fn (Booking $visit): bool => collect($visit->work_notes ?? [])->contains(fn ($note): bool => filled($note)) || filled($visit->work_photos));
+        }
+
+        return view('admin.booking', compact('previousWorkNotes', 'booking', 'date', 'seriesBookings', 'swapDate', 'swapCandidates') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
     }
 
     public function updateBooking(Booking $booking, Request $request, BookingService $bookings): RedirectResponse
@@ -253,7 +271,12 @@ class AdminController extends Controller
         $guests = $this->guestQuery($request)
             ->withCount(['bookings as visit_count' => $visibleVisits])
             ->withMax(['bookings as last_visit_at' => $visibleVisits], 'starts_at')
-            ->when($search !== '', function ($query) use ($search, $digits): void {
+            ->when($search !== '', function ($query) use ($search, $digits, $request): void {
+                if ($request->user()->isDemoViewer()) {
+                    $query->matchingDemoIdentity($search);
+
+                    return;
+                }
                 $query->where(function ($guest) use ($search, $digits): void {
                     $guest->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%')->orWhere('phone', 'like', '%'.$search.'%');
                     if ($digits !== '') {
@@ -296,7 +319,7 @@ class AdminController extends Controller
     public function notes(Guest $guest, Request $request): RedirectResponse
     {
         abort_if($guest->anonymized_at, 422);
-        abort_unless(($request->user()->role === 'owner' || $request->user()->can_view_notes) && $this->guestQuery($request)->whereKey($guest->id)->exists(), 403);
+        abort_unless($request->user()->canViewGuestNotes() && $this->guestQuery($request)->whereKey($guest->id)->exists(), 403);
         $data = $request->validate(['notes' => 'nullable|string|max:3000']);
         $guest->update($data);
 

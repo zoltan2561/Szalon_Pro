@@ -5,6 +5,9 @@ return [
     'backup_directory' => storage_path('app/private/backups'),
     'backup_retention_days' => 30,
     'admin_password' => env('SALON_ADMIN_PASSWORD'),
+    'demo_hub' => env('SALON_DEMO_HUB', false),
+    'demo_viewer_enabled' => env('SALON_DEMO_VIEWER_ENABLED', false),
+    'demo_viewer_email' => env('SALON_DEMO_VIEWER_EMAIL', 'demo@example.test'),
     'demo_urls' => [
         'salon' => env('SALON_DEMO_SALON_URL'),
         'barber' => env('SALON_DEMO_BARBER_URL'),

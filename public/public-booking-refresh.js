@@ -32,7 +32,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
 
     const schedule = event => {
         const origin = document.activeElement;
-        const step = event.target.name;
+        const step = event.target.name || 'date';
         invalidate('Szabad időpontok keresése…');
         if (!date.value || !date.checkValidity()) {
             status.textContent = 'Adj meg érvényes napot a szabad időpontok kereséséhez.';
@@ -126,6 +126,10 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
     date.addEventListener('change', schedule);
     service?.addEventListener('change', schedule);
     staff?.addEventListener('change', schedule);
+    filter.addEventListener('submit', event => {
+        event.preventDefault();
+        schedule(event);
+    });
     filter.addEventListener('change', event => {
         if (event.target.name === 'extra_service_ids[]') schedule(event);
     });

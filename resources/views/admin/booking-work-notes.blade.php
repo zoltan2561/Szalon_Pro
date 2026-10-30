@@ -1,7 +1,15 @@
-@if((auth()->user()->role === 'owner' || auth()->user()->can_view_notes) && !$booking->guest->anonymized_at)
+@if(auth()->user()->canViewGuestNotes() && !$booking->guest->anonymized_at)
 <details id="work-notes" class="panel work-notes" @if($errors->hasAny(['work_notes', 'work_notes.*', 'photos', 'photos.*'])) open @endif>
     <summary><span><strong>Szakmai munkalap</strong><small>{{ count($booking->work_photos ?? []) ? count($booking->work_photos).' referenciafotó · ' : '' }}{{ \Illuminate\Support\Str::limit($booking->work_notes['formula'] ?? $booking->work_notes['style'] ?? $booking->work_notes['note'] ?? 'Szín, termék, fazon és megjegyzés ehhez a látogatáshoz', 110) }}</small></span></summary>
     <p class="muted">Jegyezd fel, mivel dolgoztál, hogy legközelebb könnyű legyen folytatni. A vendég ezt nem látja.</p>
+    @if($previousWorkNotes)
+    <aside class="previous-work-notes" aria-label="Előző munkalap előnézete">
+        <strong>Előző munkalap · {{ $previousWorkNotes->starts_at->setTimezone($salon->timezone)->format('Y. m. d.') }}</strong>
+        <p>{{ \Illuminate\Support\Str::limit(collect($previousWorkNotes->work_notes ?? [])->filter()->implode(' · '), 180) ?: 'Referenciafotók az előző látogatásról.' }}</p>
+        <a href="{{ route('admin.booking', $previousWorkNotes) }}#work-notes">Előző munkalap megnyitása ↗</a>
+        <small>A korábbi munkalap külön látogatáshoz tartozik.</small>
+    </aside>
+    @endif
     <form method="post" enctype="multipart/form-data" action="{{ route('admin.booking.notes', $booking) }}">@csrf
         <input type="hidden" name="notes_revision" value="{{ $booking->notes_revision }}">
         <div class="form-grid">

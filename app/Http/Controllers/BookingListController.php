@@ -29,7 +29,12 @@ class BookingListController extends Controller
         $scope = $filters['scope'] ?? ($request->filled('q') || $date || $status ? 'all' : 'upcoming');
 
         $bookings = Booking::visibleTo($request->user())->with(['guest', 'staff'])
-            ->when($search !== '', function ($query) use ($search, $phoneDigits): void {
+            ->when($search !== '', function ($query) use ($search, $phoneDigits, $request): void {
+                if ($request->user()->isDemoViewer()) {
+                    $query->whereHas('guest', fn ($guest) => $guest->matchingDemoIdentity($search));
+
+                    return;
+                }
                 $query->whereHas('guest', function ($guest) use ($search, $phoneDigits): void {
                     $guest->where('name', 'like', '%'.$search.'%')->orWhere('phone', 'like', '%'.$search.'%');
                     if ($phoneDigits !== '') {

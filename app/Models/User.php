@@ -16,6 +16,16 @@ class User extends Authenticatable
 
     protected function casts(): array
     {
-        return ['password' => 'hashed', 'email_verified_at' => 'datetime', 'can_manage_bookings' => 'boolean', 'can_view_notes' => 'boolean'];
+        return ['password' => 'hashed', 'email_verified_at' => 'datetime', 'can_manage_bookings' => 'boolean', 'can_view_notes' => 'boolean', 'is_demo_viewer' => 'boolean'];
+    }
+
+    public function isDemoViewer(): bool
+    {
+        return (bool) $this->is_demo_viewer;
+    }
+
+    public function canViewGuestNotes(): bool
+    {
+        return ! $this->isDemoViewer() && ($this->role === 'owner' || $this->can_view_notes);
     }
 }

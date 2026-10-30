@@ -44,10 +44,13 @@ document.querySelectorAll('form[data-auto-filter]').forEach(form => {
                 const newForm = newOverview?.querySelector('form[data-auto-filter="calendar"]');
                 const oldHeading = document.querySelector('.calendar-page-heading');
                 const newHeading = page.querySelector('.calendar-page-heading');
-                if (!oldOverview || !newOverview || !newForm || !oldHeading || !newHeading) throw new Error('Calendar response incomplete');
+                const oldContext = document.querySelector('[data-calendar-day-context]');
+                const newContext = page.querySelector('[data-calendar-day-context]');
+                if (!oldOverview || !newOverview || !newForm || !oldHeading || !newHeading || !oldContext || !newContext) throw new Error('Calendar response incomplete');
                 newForm.replaceWith(form);
                 oldOverview.replaceWith(newOverview);
                 oldHeading.replaceWith(newHeading);
+                oldContext.replaceWith(newContext);
                 bindCalendarTracks(newOverview);
             } else {
                 const oldResults = document.querySelector('[data-auto-filter-results]');
@@ -76,7 +79,7 @@ document.querySelectorAll('form[data-auto-filter]').forEach(form => {
     };
     form.addEventListener('change', event => {
         if (event.target instanceof HTMLInputElement && event.target.name === 'date'
-            || event.target instanceof HTMLSelectElement && ['status', 'period'].includes(event.target.name)) queue(0);
+            || event.target instanceof HTMLSelectElement && ['status', 'period', 'staff_id'].includes(event.target.name)) queue(0);
     });
     form.querySelector('input[name="date"]')?.addEventListener('input', () => {
         ++sequence;

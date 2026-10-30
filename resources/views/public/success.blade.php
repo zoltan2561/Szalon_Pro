@@ -20,10 +20,19 @@
         <p>{{ $booking->staff->name }} · {{ $salon->address }}</p>
         <strong>@include('components.price', ['amount'=>$booking->price, 'kind'=>$booking->price_kind]){{ $booking->price_kind==='indicative' ? ' · tájékoztató ár':'' }}</strong>
     </div>
-    <p>A saját foglalásodat ezen a bizalmas linken kezelheted. Őrizd meg, és ne oszd meg másokkal.</p>
-    <p><a class="button secondary" href="{{ route('booking.manage', $booking->manage_token) }}">Foglalásom kezelése</a></p>
+    <div class="panel" data-booking-link-save>
+        <h2>Mentsd el a foglalásod linkjét</h2>
+        <p>Ezen a bizalmas linken helyezheted át vagy mondhatod le az időpontodat. Őrizd meg, és ne oszd meg másokkal.</p>
+        <p><button type="button" class="button" data-copy-booking-link aria-describedby="booking-link-status" hidden>Kezelési link másolása</button></p>
+        <p><a class="button secondary" href="{{ route('booking.manage', $booking->manage_token) }}" data-booking-management-link>Foglalásom kezelése</a></p>
+        <p id="booking-link-status" class="muted" role="status" aria-live="polite">A kezelőoldalt megnyitva a böngésződben is elmentheted a linket.</p>
+        <div data-booking-link-fallback hidden><label>Foglalásod bizalmas linkje<input type="text" value="{{ route('booking.manage', $booking->manage_token) }}" readonly autocomplete="off" spellcheck="false" data-booking-link-value></label></div>
+    </div>
     @include('components.calendar-actions', ['calendarUrl' => route('booking.calendar', $booking->manage_token)])
     @include('components.series-summary')
-    <a class="button" href="{{ route('home') }}">Vissza a szalon oldalára</a>
+    @if($salon->demo)
+        <div class="panel"><p class="eyebrow">DEMÓ · MINTAFOGLALÁS</p><h2>Így látja a tulajdonos</h2><p>Nézd meg a napi áttekintést és a munkafolyamatokat egy olvasó demófiókkal.</p>@if($demoAccessAvailable)@include('components.demo-entry', ['label' => 'Nézd meg a tulajdonosi oldalt', 'secondary' => true])@else<a class="button secondary" href="{{ route('admin.today') }}">Nézd meg a tulajdonosi oldalt</a>@endif</div>
+    @endif
+    <a class="button" href="{{ $demoGuestHomeUrl }}">Vissza a szalon oldalára</a>
 </section>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Salon;
 use App\Services\Branding;
+use App\Services\DemoAccess;
 use App\Services\OperationsHealth;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with($context);
         });
         View::composer('layouts.admin', function ($view): void {
-            $view->with('operationWarnings', auth()->user()?->role === 'owner' ? app(OperationsHealth::class)->warnings() : []);
+            $view->with('operationWarnings', auth()->user()?->role === 'owner' && ! auth()->user()->isDemoViewer() ? app(OperationsHealth::class)->warnings() : []);
         });
         RateLimiter::for('login', fn (Request $r) => [Limit::perMinute(5)->by($r->ip()), Limit::perMinute(5)->by(strtolower($r->input('email', '')).'|'.$r->ip())]);
         RateLimiter::for('booking', fn (Request $r) => Limit::perMinute(10)->by($r->ip()));
@@ -51,7 +52,16 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.*', 'public.*', 'admin.*', 'auth.*'], function ($view): void {
             $salon = Salon::current();
             $branding = app(Branding::class);
-            $view->with('salon', $salon)->with('brand', $branding->forSalon($salon))->with('demoUrls', $branding->demoUrls())->with('demoSalesContactUrl', $branding->demoSalesContactUrl());
+            $demoHubEnabled = $salon->demo && (bool) config('salon.demo_hub');
+            if (! request()->attributes->has('demo_access_available')) {
+                request()->attributes->set('demo_access_available', app(DemoAccess::class)->available());
+            }
+            $view->with('salon', $salon)->with('brand', $branding->forSalon($salon))->with('demoUrls', $branding->demoUrls())->with('demoSalesContactUrl', $branding->demoSalesContactUrl())
+                ->with('demoViewer', auth()->user()?->isDemoViewer() ?? false)
+                ->with('demoAccessAvailable', request()->attributes->get('demo_access_available'))
+                ->with('isDemoHub', $demoHubEnabled && request()->routeIs('home') && request()->query('view') !== 'guest')
+                ->with('demoOverviewUrl', route('home').'#'.($demoHubEnabled ? 'napi-munka' : 'rendszer'))
+                ->with('demoGuestHomeUrl', route('home', $demoHubEnabled ? ['view' => 'guest'] : []));
         });
     }
 }

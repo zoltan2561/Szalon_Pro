@@ -54,7 +54,7 @@
             <thead><tr><th scope="col">Idő</th>
             @foreach($weekDays as $index => $weekData)
                 <th scope="col" class="{{ $weekData['weekDay']->toDateString() === now($salon->timezone)->toDateString() ? 'is-today' : '' }}">
-                    <a href="{{ route('admin.calendar', ['date' => $weekData['weekDay']->toDateString()]) }}">{{ $weekDayNames[$index] }}<br>{{ $weekData['weekDay']->format('Y. m. d.') }}</a>
+                    <a href="{{ route('admin.calendar', ['date' => $weekData['weekDay']->toDateString()] + $calendarFilter) }}">{{ $weekDayNames[$index] }}<br>{{ $weekData['weekDay']->format('Y. m. d.') }}</a>
                     <small>{{ $weekData['dayBookings']->where('status', '!=', 'cancelled')->count() }} időpont</small>
                     @if($weekData['end']->timestamp - $weekData['start']->timestamp !== 86400)<small>Óraátállítás napja</small>@endif
                     @foreach($weekData['dayExceptions'] as $exception)<small>{{ $exception->staff->name }} · {{ empty($exception->hours) ? 'Zárva' : 'Eltérő munkarend' }}</small>@endforeach
@@ -100,7 +100,7 @@
                                 @if($entry['type'] === 'booking')
                                     <a class="calendar-week-booking {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><span class="calendar-week-booking-time">{{ $startText }}–{{ $endText }}</span><strong>{{ $item->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $item->guest->no_show_count)<small>Nem jelent meg: {{ $item->guest->no_show_count }}</small>@endif<span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->visitLabel() }}</small></a>
                                 @else
-                                    <div class="calendar-week-unavailable {{ $entry['type'] === 'google' ? 'google' : '' }}"><strong>{{ $startText }} · {{ $entry['type'] === 'google' ? 'Google-foglaltság' : $item->reason }}</strong><small>Vége: {{ $endText }} · {{ $entry['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
+                                    <div class="calendar-week-unavailable {{ $entry['type'] === 'google' ? 'google' : '' }}"><strong>{{ $startText }} · {{ $entry['type'] === 'google' ? 'Google-foglaltság' : ($demoViewer ? 'Bemutató blokkolás' : $item->reason) }}</strong><small>Vége: {{ $endText }} · {{ $entry['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
                                 @endif
                             @endforeach
                         @endif

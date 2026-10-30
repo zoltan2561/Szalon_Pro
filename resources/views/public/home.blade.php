@@ -1,6 +1,9 @@
 @extends('layouts.public')
-@section('title','Kezdőlap')
+@section('title', $isDemoHub ? 'Vendégfoglalás és szalonkezelés' : 'Kezdőlap')
 @section('content')
+@if($isDemoHub)
+    @include('public.home-demo')
+@else
 @switch($brand['theme'])
     @case('barber')
         @include('public.home-hero')
@@ -28,4 +31,5 @@
 @endswitch
 @include('public.home-system')
 @include('public.home-contact')
+@endif
 @endsection

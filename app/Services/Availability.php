@@ -85,11 +85,11 @@ class Availability
         return $slots;
     }
 
-    public function firstAvailableDay(Service $service, CarbonImmutable $start, CarbonImmutable $end, ?int $staffId = null): ?array
+    public function firstAvailableDay(Service $service, CarbonImmutable $start, CarbonImmutable $end, ?int $staffId = null, ?Booking $ignore = null): ?array
     {
         for ($chunkStart = $start; $chunkStart->lte($end); $chunkStart = $chunkEnd) {
             $chunkEnd = $chunkStart->addDays(30)->min($end->addDay());
-            $data = $this->loadSlotData($service, $chunkStart, $chunkEnd, $staffId);
+            $data = $this->loadSlotData($service, $chunkStart, $chunkEnd, $staffId, $ignore);
             if ($data['staff']->isEmpty()) {
                 return null;
             }
@@ -99,7 +99,7 @@ class Availability
                     continue;
                 }
                 $date = $day->toDateString();
-                $slots = $this->slots($service, $date, $staffId, slotData: $data);
+                $slots = $this->slots($service, $date, $staffId, $ignore, slotData: $data);
                 if ($slots) {
                     return ['date' => $date, 'slots' => $slots];
                 }

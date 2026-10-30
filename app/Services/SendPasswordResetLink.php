@@ -28,6 +28,9 @@ class SendPasswordResetLink implements ShouldBeEncrypted, ShouldQueue
                 return;
             }
             $user = User::whereRaw('LOWER(email) = ?', [mb_strtolower(trim($this->email))])->first();
+            if ($user?->isDemoViewer()) {
+                return;
+            }
             Password::broker()->sendResetLink(['email' => $user?->email ?? trim($this->email)], function (User $user, string $token): void {
                 $user->notify(new PasswordResetLink($token));
             });

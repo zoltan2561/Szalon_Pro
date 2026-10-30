@@ -159,6 +159,15 @@ document.querySelectorAll('.hours-row').forEach(row => {
 document.querySelectorAll('[data-waitlist-preferences]').forEach(form => {
     const service = form.querySelector('[name="service_id"]');
     const staff = form.querySelector('[name="staff_id"]');
+    const email = form.querySelector('[name="email"]');
+    const phone = form.querySelector('[name="phone"]');
+    if (email?.hasAttribute('aria-describedby') && phone) {
+        const updateContact = () => {
+            email.required = !phone.value.trim();
+        };
+        phone.addEventListener('input', updateContact);
+        updateContact();
+    }
     const update = () => {
         Array.from(staff.options).forEach(option => {
             const available = !option.value || option.dataset.services.split(',').includes(service.value);

@@ -35,7 +35,9 @@ class WaitlistOfferController extends Controller
         }
         $date = min($date, now(Salon::current()->timezone)->addDays(Salon::current()->horizon_days)->toDateString());
 
-        return view('public.waitlist-join', compact('services', 'service', 'staffId', 'date') + ['automatic' => $offers->enabled()]);
+        $phoneOnly = Salon::current()->featureEnabled('phone_booking') && Salon::current()->featureEnabled('sms') && app(SmsGateway::class)->configured();
+
+        return view('public.waitlist-join', compact('services', 'service', 'staffId', 'date', 'phoneOnly') + ['automatic' => $offers->enabled()]);
     }
 
     public function store(Request $request): RedirectResponse

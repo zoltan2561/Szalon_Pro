@@ -1,10 +1,22 @@
+@if($demoViewer)
+<div class="admin-menu-group" role="group" aria-label="A bemutatóban"><p class="admin-menu-label">A bemutatóban</p>
+@foreach(['bookings.index'=>['list','Foglalások'],'services'=>['scissors','Szolgáltatások'],'staff'=>['users','Csapat és munkarend']] as $key=>$item)
+<a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" />{{ $item[1] }}</a>
+@endforeach
+@if($salon->featureEnabled('statistics'))<a href="{{ route('admin.statistics.index') }}" @if(request()->routeIs('admin.statistics.*')) aria-current="page" @endif><x-icon name="squares-four" />Statisztika</a>@endif
+</div>
+@else
+<div class="admin-menu-group" role="group" aria-label="Napi működés"><p class="admin-menu-label">Napi működés</p>
 <a href="{{ route('admin.bookings.index') }}" @if(request()->routeIs('admin.bookings.*')) aria-current="page" @endif><x-icon name="list" />Foglalások</a>
 <a href="{{ route('admin.leave.index') }}" @if(request()->routeIs('admin.leave.*')) aria-current="page" @endif><x-icon name="calendar-blank" />Szabadnapok</a>
 @if($salon->featureEnabled('waitlist'))
 <a href="{{ route('admin.waitlist.index') }}" @if(request()->routeIs('admin.waitlist.*')) aria-current="page" @endif><x-icon name="list" />Várólista</a>
 @endif
 @if(auth()->user()->role !== 'owner')<a href="{{ route('admin.google.index') }}" @if(request()->routeIs('admin.google.*')) aria-current="page" @endif><x-icon name="calendar-blank" />Saját Google Naptár</a>@endif
+</div>
 @if(auth()->user()->role === 'owner')
+@if($salon->featureEnabled('billing') || $salon->featureEnabled('statistics') || $salon->featureEnabled('vouchers') || $salon->featureEnabled('sharing') || $salon->featureEnabled('passes') || $salon->featureEnabled('loyalty'))
+<div class="admin-menu-group" role="group" aria-label="Üzlet"><p class="admin-menu-label">Üzlet</p>
 @if($salon->featureEnabled('billing'))<a href="{{ route('admin.billing.index') }}" @if(request()->routeIs('admin.billing.*')) aria-current="page" @endif><x-icon name="list" />Bizonylatok</a>@endif
 @if($salon->featureEnabled('statistics'))<a href="{{ route('admin.statistics.index') }}" @if(request()->routeIs('admin.statistics.*')) aria-current="page" @endif><x-icon name="squares-four" />Statisztika</a>@endif
 @if($salon->featureEnabled('vouchers'))<a href="{{ route('admin.vouchers.index') }}" @if(request()->routeIs('admin.vouchers.*')) aria-current="page" @endif><x-icon name="sparkle" />Ajándékutalványok</a>@endif
@@ -12,7 +24,12 @@
 @if($salon->featureEnabled('passes') || $salon->featureEnabled('loyalty'))
 <a href="{{ route('admin.benefits.index') }}" @if(request()->routeIs('admin.benefits.*')) aria-current="page" @endif><x-icon name="sparkle" />Bérletek és hűségpontok</a>
 @endif
+</div>
+@endif
+<div class="admin-menu-group" role="group" aria-label="Beállítások"><p class="admin-menu-label">Beállítások</p>
 @foreach(['services'=>['scissors','Szolgáltatások'],'staff'=>['user','Munkatársak'],'notifications'=>['envelope-simple','Értesítések'],'modules.index'=>['squares-four','Modulok'],'settings'=>['gear-six','Beállítások'],'account'=>['user','Fiók']] as $key=>$item)
 <a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
+</div>
+@endif
 @endif

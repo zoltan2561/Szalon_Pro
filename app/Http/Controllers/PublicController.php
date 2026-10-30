@@ -144,12 +144,33 @@ class PublicController extends Controller
     public function manage(string $token, Request $request, Availability $availability): View
     {
         $booking = $this->byToken($token);
-        $date = $request->query('date', $booking->starts_at->setTimezone(Salon::current()->timezone)->toDateString());
+        $salon = Salon::current();
         $service = app(ServiceSelection::class)->forBooking($booking);
+        $staff = $service->staff->where('active', true)->sortBy('sort_order')->values();
+        $request->validate([
+            'date' => 'nullable|date_format:Y-m-d',
+            'staff_id' => ['nullable', 'integer', Rule::in($staff->modelKeys())],
+        ]);
+        $staffId = $request->has('staff_id') ? ($request->integer('staff_id') ?: null) : $booking->staff_id;
+        $date = $request->query('date') ?: $booking->starts_at->setTimezone($salon->timezone)->toDateString();
+        $slots = $availability->slots($service, $date, $staffId, $booking);
+        $nextAvailable = null;
+        $nextAvailableUrl = null;
+        if (! $slots && $booking->status === 'confirmed' && now()->lt($booking->starts_at->subHours($salon->cancel_notice_hours))) {
+            $today = CarbonImmutable::now($salon->timezone)->startOfDay();
+            $searchStart = CarbonImmutable::parse($date, $salon->timezone)->addDay()->max($today);
+            $searchEnd = $today->addDays($salon->horizon_days);
+            if ($searchStart->lte($searchEnd)) {
+                $nextAvailable = $availability->firstAvailableDay($service, $searchStart, $searchEnd, $staffId, $booking);
+            }
+            if ($nextAvailable) {
+                $nextAvailableUrl = route('booking.manage', ['token' => $token, 'date' => $nextAvailable['date'], 'staff_id' => $staffId ?? '']);
+            }
+        }
 
         $seriesBookings = $booking->series_key ? Booking::with('staff')->where('series_key', $booking->series_key)->where('guest_id', $booking->guest_id)->orderBy('starts_at')->get() : collect();
 
-        return view('public.manage', compact('booking', 'token', 'date', 'seriesBookings') + ['slots' => $availability->slots($service, $date, null, $booking)]);
+        return view('public.manage', compact('booking', 'token', 'date', 'seriesBookings', 'service', 'staff', 'staffId', 'slots', 'nextAvailable', 'nextAvailableUrl'));
     }
 
     public function update(string $token, Request $request, BookingService $bookings): RedirectResponse

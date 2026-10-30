@@ -4,7 +4,7 @@
             @php
                 $weekDate = $entry['weekDay']->toDateString();
             @endphp
-            <a data-week-day="{{ $weekDate }}" href="{{ route('admin.calendar', ['date' => $weekDate, 'view' => 'day']) }}" @if($weekDate === $date) aria-current="date" @endif aria-label="{{ $entry['weekDay']->locale('hu')->isoFormat('MMMM D., dddd') }}"><span>{{ $entry['weekDay']->locale('hu')->isoFormat('ddd') }}</span><strong>{{ $entry['weekDay']->format('d') }}</strong></a>
+            <a data-week-day="{{ $weekDate }}" href="{{ route('admin.calendar', ['date' => $weekDate, 'view' => 'day'] + $calendarFilter) }}" @if($weekDate === $date) aria-current="date" @endif aria-label="{{ $entry['weekDay']->locale('hu')->isoFormat('MMMM D., dddd') }}"><span>{{ $entry['weekDay']->locale('hu')->isoFormat('ddd') }}</span><strong>{{ $entry['weekDay']->format('d') }}</strong></a>
         @endforeach
     </nav>
     @foreach($weekDays as $entry)
@@ -24,13 +24,13 @@
                 @if($event['type'] === 'booking')
                     <a class="calendar-week-entry {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><strong>{{ $timeRange }} · {{ $item->guest->name }}</strong><span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->visitLabel() }}</small></a>
                 @else
-                    <div class="calendar-week-entry"><strong>{{ $timeRange }} · {{ $event['type'] === 'google' ? 'Google Naptár foglaltság' : $item->reason }}</strong><small>{{ $event['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
+                    <div class="calendar-week-entry"><strong>{{ $timeRange }} · {{ $event['type'] === 'google' ? 'Google Naptár foglaltság' : ($demoViewer ? 'Bemutató blokkolás' : $item->reason) }}</strong><small>{{ $event['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
                 @endif
             @empty
                 <p class="muted">Erre a napra nincs foglalás vagy blokkolás.</p>
             @endforelse
             @foreach($entry['dayExceptions'] as $exception)<p class="muted">{{ $exception->staff->name }} · {{ $exception->hours ? 'Eltérő munkarend' : 'Szabadnap' }}</p>@endforeach
-            @if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="button secondary" href="{{ route('admin.create', ['date' => $weekDate]) }}">+ Új foglalás erre a napra</a>@endif
+            @if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="button secondary" href="{{ route('admin.create', ['date' => $weekDate] + $calendarFilter) }}">+ Új foglalás erre a napra</a>@endif
         </section>
     @endforeach
 </div>

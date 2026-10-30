@@ -170,6 +170,13 @@ if (manualGuestSearch && manualGuestSelect && manualGuestResults && manualGuestF
     });
 }
 
+document.querySelectorAll('[data-open-work-notes]').forEach(link => {
+    link.addEventListener('click', () => {
+        const notes = document.getElementById('work-notes');
+        if (notes instanceof HTMLDetailsElement) notes.open = true;
+    });
+});
+
 const manualFilters = document.querySelector('[data-manual-filters]');
 const manualStaff = manualFilters?.querySelector('select[name="staff_id"]');
 const manualBooking = document.querySelector('.admin .booking-submit');
