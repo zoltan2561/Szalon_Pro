@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => '1.4.0',
+    'version' => '1.4.1',
     'backup_directory' => storage_path('app/private/backups'),
     'backup_retention_days' => 30,
     'admin_password' => env('SALON_ADMIN_PASSWORD'),

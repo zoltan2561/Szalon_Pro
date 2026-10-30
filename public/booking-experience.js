@@ -36,7 +36,7 @@ document.querySelectorAll('.booking-submit').forEach(form => {
     const advanceToReview = origin => advance(submit, origin, review);
     const advanceGuest = origin => {
         const missing = missingGuestField();
-        if (missing) advance(missing, origin);
+        if (missing) advance(missing, origin, guestFields && missing.name === 'name' ? guestFields : missing.closest('label'));
         else if (!form.querySelector('input[name="slot"]:checked')) advanceToSlots(origin);
         else advanceToReview(origin);
     };

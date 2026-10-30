@@ -6,7 +6,7 @@
 <div class="booking-wrap wrap">
     <p class="eyebrow">EGY LÉPÉSSEL KÖZELEBB</p>
     <h1 class="page-title">{{ $salon->demo ? $brand['demo_copy']['booking_heading'] : 'A következő énidőd.' }}</h1>
-    <ol class="steps"><li><a href="#booking-service">01 <span>Szolgáltatás</span></a></li><li><a href="#booking-slots">02 <span>Időpont</span></a></li><li><a href="#booking-guest">03 <span>Adataid és véglegesítés</span></a></li></ol>
+    <ol class="steps booking-steps" data-booking-steps aria-label="A foglalás lépései"><li><a href="#booking-service" data-booking-step="1" aria-current="step"><span class="step-number">1</span><span>Szolgáltatás</span></a></li><li><a href="#booking-slots" data-booking-step="2"><span class="step-number">2</span><span>Időpont</span></a></li><li><a href="#booking-guest" data-booking-step="3"><span class="step-number">3</span><span>Adataid</span></a></li></ol>
     @if($salon->demo)<div class="notice demo-booking-notice">Ez egy bemutató. A foglalás kipróbálható, de kérjük, ne adj meg valódi személyes adatot.</div>@endif
     @if(!$ready || !$salon->published)
         <div class="notice">Az online foglalás még nem aktív. Kérjük, keresd a szalont az elérhetőségein.</div>
@@ -28,6 +28,7 @@
                     </select>
                 </label>
                 @include('components.service-extras')
+                <div class="booking-service-brief" data-service-brief><x-icon name="scissors" /><div><strong>{{ $service?->name }}</strong><small>{{ $service?->duration_minutes }} perc{{ $service?->price_kind === 'indicative' ? ' · Tájékoztató ár' : '' }}</small></div><b>@include('components.price', ['amount' => $service?->price ?? 0, 'kind' => $service?->price_kind])</b></div>
                 <div class="form-grid">
                     <label>Szakember
                         <select name="staff_id" data-staff-picker><option value="">Mindegy, kihez</option>
@@ -39,6 +40,7 @@
                 <p class="muted" data-availability-status role="status" hidden></p><button class="button secondary">Szabad időpontok mutatása <x-icon name="arrow-right" /></button>
             </form>
             <aside class="booking-summary panel" aria-label="Foglalási összesítő">
+                <details class="booking-salon-details" open><summary>Szalon és foglalási feltételek</summary><div class="booking-salon-copy">
                 <span class="eyebrow">A FOGLALÁSOD</span>
                 <h2>{{ $service?->name }}</h2>
                 @if($service?->description && ! ($salon->demo && Str::startsWith($service->description, 'Bemutató szolgáltatás')))<p>{{ $service->description }}</p>@endif
@@ -52,6 +54,7 @@
                 <p class="preserve">{{ $salon->terms }}</p>
                 @if($salon->featureEnabled('no_show_protection'))<p>Online módosítás és lemondás: legalább {{ $salon->cancel_notice_hours }} órával az időpont előtt. Egyeztetés: <a href="tel:{{ preg_replace('/[^+0-9]/', '', $salon->phone) }}">{{ $salon->phone }}</a>.</p>@endif
                 @unless($salon->demo)<p class="muted">A visszaigazolást és a kezelési linket e-mailben, e-mail nélkül beállított SMS-kapcsolat esetén SMS-ben küldjük. A visszaigazoló oldalon is megkapod a linket.</p>@endunless
+                </div></details>
             </aside>
             <form method="post" action="{{ $rebookToken ? route('booking.rebook.store', $rebookToken) : route('booking.store') }}" class="panel booking-submit" data-availability-submit>
                 @csrf
@@ -65,7 +68,7 @@
                 <p class="booking-date-label">{{ \Carbon\CarbonImmutable::parse($date, $salon->timezone)->locale('hu')->isoFormat('YYYY. MMMM D., dddd') }}</p>
                 <p class="booking-slot-help" @if(!$slots) hidden @endif>Válassz időpontot, utána megadhatod az adataidat.</p>
                 @include('components.slots', ['groupAnyStaff' => ! $staffId, 'showAvailabilityRecovery' => true])
-                <div data-booking-guest-fields><hr>
+                <div data-booking-guest-fields><hr><div class="booking-selection-card" data-current-selection hidden><x-icon name="calendar-blank" /><div><strong data-selection-slot></strong><small data-selection-date></small></div></div>
                 <p class="eyebrow">03 · ADATAID</p>
                 <h2 id="booking-guest">Hogyan érhetünk el?</h2>
                 @if($rebookingGuest)

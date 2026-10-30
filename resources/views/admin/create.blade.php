@@ -4,6 +4,7 @@
 <div class="page-heading"><div><p class="eyebrow">TELEFONON, SZEMÉLYESEN, ÜZENETBEN</p><h1>Új foglalás</h1><p class="muted">A telefonos vagy személyes foglalás is a közös naptárba kerül.</p></div></div>
 <div class="booking-grid"><div>
     <form method="get" class="panel" data-manual-filters>
+        <h2 class="mobile-section-title"><span>1</span> Szolgáltatás és nap</h2>
         <label>Szolgáltatás<select name="service_id" aria-describedby="manual-service-label">@foreach($services as $item)<option value="{{ $item->id }}" @selected($service?->id === $item->id)>{{ $item->name }} · {{ $item->duration_minutes }} perc</option>@endforeach</select><span id="manual-service-label" class="manual-service-label" data-manual-service-label>{{ $service ? $service->name.' · '.$service->duration_minutes.' perc' : 'Nincs választható szolgáltatás' }}</span></label>
     @include('components.service-extras')
     <div class="form-grid">

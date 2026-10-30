@@ -1,13 +1,15 @@
-const moreButton = document.querySelector('[data-open-more]');
+const moreButtons = document.querySelectorAll('[data-open-more]');
 const moreSheet = document.querySelector('#admin-more-menu');
-if (moreButton && moreSheet instanceof HTMLDialogElement) {
-    moreButton.addEventListener('click', () => {
-        moreSheet.showModal();
-        moreButton.setAttribute('aria-expanded', 'true');
-    });
+if (moreButtons.length && moreSheet instanceof HTMLDialogElement) {
+    let activeMoreButton;
+    moreButtons.forEach(button => button.addEventListener('click', () => {
+        activeMoreButton = button;
+        if (!moreSheet.open) moreSheet.showModal();
+        moreButtons.forEach(control => control.setAttribute('aria-expanded', 'true'));
+    }));
     moreSheet.addEventListener('close', () => {
-        moreButton.setAttribute('aria-expanded', 'false');
-        moreButton.focus();
+        moreButtons.forEach(control => control.setAttribute('aria-expanded', 'false'));
+        if (activeMoreButton?.getClientRects().length) activeMoreButton.focus({preventScroll:true});
     });
     moreSheet.addEventListener('click', event => {
         if (event.target === moreSheet) {

@@ -6,14 +6,14 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/branding/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('industry.css').'?v='.substr(hash_file('sha256', public_path('industry.css')), 0, 12) }}">
     <link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}">
-<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"></head>
-<body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }} {{ request()->routeIs('login') ? 'login-page' : '' }}"
+<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('mobile-experience.css').'?v='.substr(hash_file('sha256', public_path('mobile-experience.css')), 0, 12) }}"></head>
+<body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }} {{ request()->routeIs('login') ? 'login-page' : '' }}{{ request()->routeIs('booking.*') ? ' booking-page' : '' }}"
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['surface'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 @unless(request()->routeIs('login'))
 @if($salon->demo && count($demoUrls) === 3)
 <div class="demo-strip"><div class="wrap demo-strip-inner">
-    <span class="demo-strip-label"><span class="demo-strip-desktop">SzalonPRO · három külön szakági bemutató</span><span class="demo-strip-mobile">3 külön demó · saját adatokkal</span></span>
+    <span class="demo-strip-label"><span class="demo-strip-desktop">SzalonPRO · három külön szakági bemutató</span><span class="demo-strip-mobile">{{ request()->routeIs('booking.*') ? 'DEMÓ' : '3 külön demó · saját adatokkal' }}</span></span>
     <nav class="demo-style-nav" aria-label="Szakági demó kiválasztása; mindegyik külön szolgáltatásokkal és foglalási adatokkal működik">
         @foreach(['salon' => 'Fodrászat', 'barber' => 'Barber', 'nails' => 'Körmös'] as $style => $label)
             <a href="{{ $demoUrls[$style] }}" @if($brand['theme'] === $style) aria-current="true" @endif>{{ $label }}</a>
@@ -53,4 +53,5 @@
 <script src="{{ asset('booking-experience.js').'?v='.substr(hash_file('sha256', public_path('booking-experience.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('staff-picker.js').'?v='.substr(hash_file('sha256', public_path('staff-picker.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('booking-series.js').'?v='.substr(hash_file('sha256', public_path('booking-series.js')), 0, 12) }}" defer></script>
+<script src="{{ asset('mobile-experience.js').'?v='.substr(hash_file('sha256', public_path('mobile-experience.js')), 0, 12) }}" defer></script>
 </body></html>

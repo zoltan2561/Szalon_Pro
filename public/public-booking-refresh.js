@@ -68,6 +68,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                     const freshService = freshBooking.querySelector('input[name="service_id"]');
                     const freshSummary = page.querySelector('.booking-summary');
                     const currentSummary = document.querySelector('.booking-summary');
+                    const summaryOpen = currentSummary?.querySelector('.booking-salon-details')?.open;
                     const freshDate = freshBooking.querySelector('.booking-date-label');
                     const currentDate = booking.querySelector('.booking-date-label');
                     if (!freshStaff || !freshService || !freshSummary || !currentSummary || !freshDate || !currentDate || !staff) throw new Error('response');
@@ -80,6 +81,11 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                     const extras = filter.querySelector('[data-service-extras]');
                     const freshExtras = freshFilter.querySelector('[data-service-extras]');
                     if (extras && freshExtras) { freshExtras.open = extras.open; extras.replaceWith(freshExtras); }
+                    const brief = filter.querySelector('[data-service-brief]');
+                    const freshBrief = freshFilter.querySelector('[data-service-brief]');
+                    if (brief && freshBrief) brief.replaceWith(freshBrief);
+                    const freshDetails = freshSummary.querySelector('.booking-salon-details');
+                    if (freshDetails && summaryOpen !== undefined) freshDetails.open = summaryOpen;
                     currentSummary.replaceChildren(...Array.from(freshSummary.childNodes));
                     currentDate.textContent = freshDate.textContent;
                     const review = booking.querySelector('[data-booking-review]');
