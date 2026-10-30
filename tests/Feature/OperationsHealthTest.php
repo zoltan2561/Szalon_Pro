@@ -83,6 +83,6 @@ class OperationsHealthTest extends TestCase
         $this->assertSame(now()->timestamp, $health->lastRun('email')->timestamp);
         $this->assertSame(now()->timestamp, $health->lastRun('sms')->timestamp);
         $owner = User::factory()->create(['role' => 'owner']);
-        $this->actingAs($owner)->get(route('admin.notifications'))->assertOk()->assertSee('2026.10.25. 08:00')->assertSee('Esedékes sor: 0');
+        $this->actingAs($owner)->get(route('admin.notifications'))->assertOk()->assertSee('2026.10.25. 08:00')->assertSee('0 értesítés vár feldolgozásra vagy ellenőrzésre.');
     }
 }

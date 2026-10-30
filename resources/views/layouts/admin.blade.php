@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hu">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('upload-controls.css').'?v='.substr(hash_file('sha256', public_path('upload-controls.css')), 0, 12) }}">@if(request()->routeIs('admin.settings'))<link rel="stylesheet" href="{{ asset('settings-tabs.css').'?v='.substr(hash_file('sha256', public_path('settings-tabs.css')), 0, 12) }}">@endif</head>
-<body class="admin premium-admin">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>@yield('title','Mai nap') · SzalonPRO</title><link rel="icon" href="{{ asset('assets/branding/favicon.png') }}"><link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('upload-controls.css').'?v='.substr(hash_file('sha256', public_path('upload-controls.css')), 0, 12) }}">@if(request()->routeIs('admin.settings'))<link rel="stylesheet" href="{{ asset('settings-tabs.css').'?v='.substr(hash_file('sha256', public_path('settings-tabs.css')), 0, 12) }}">@endif<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('admin-workspace.css').'?v='.substr(hash_file('sha256', public_path('admin-workspace.css')), 0, 12) }}"></head>
+<body class="admin premium-admin {{ request()->routeIs('admin.today') ? 'admin-today-page' : '' }}">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 <aside class="sidebar">
 <a class="brand" href="{{ route('admin.today') }}"><span class="brand-mark"><img src="{{ asset('assets/branding/sp-mark.png') }}" alt="" width="31" height="31"></span><span>Szalon<span class="muted">PRO</span></span></a>
@@ -14,7 +14,9 @@
 </nav>
 <div class="sidebar-bottom">
 <a href="{{ route('home') }}" target="_blank" rel="noopener">Weboldal előnézete ↗</a>
-@php($roleLabel = auth()->user()->role === 'owner' ? 'Tulajdonos' : 'Munkatárs')
+@php
+    $roleLabel = auth()->user()->role === 'owner' ? 'Tulajdonos' : 'Munkatárs';
+@endphp
 <p>{{ auth()->user()->name }}@if(mb_strtolower(trim(auth()->user()->name)) !== mb_strtolower($roleLabel))<small>{{ $roleLabel }}</small>@endif</p>
 <form method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kijelentkezés</button></form>
 </div>
@@ -26,7 +28,19 @@
 <form class="mobile-logout" method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kilépés</button></form>
 </header>
 <main id="main" class="admin-content">@include('components.flash')
-@if(!empty($operationWarnings))<details class="notice compact-warning" aria-label="Működési figyelmeztetések"><summary>Figyelem · {{ count($operationWarnings) }} probléma</summary><ul>@foreach($operationWarnings as $warning)<li>{{ $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Értesítések és feldolgozási állapot →</a></details>@endif
+@php
+    $displayWarnings = collect($operationWarnings ?? [])->except($salon->demo ? ['mail', 'password_reset'] : []);
+    if ($displayWarnings->has('mail')) {
+        $displayWarnings->forget('password_reset');
+    }
+    $warningLabels = [
+        'mail' => 'Az e-mail értesítések és a jelszó-visszaállító levelek küldése még nincs beállítva. Kérd az üzemeltető segítségét.',
+        'password_reset_queue' => 'Néhány jelszó-visszaállító levél késik. Kérd az üzemeltető segítségét.',
+        'password_reset' => 'A jelszó-visszaállító levelek küldését be kell állítani.',
+        'sqlite_wal' => 'A foglalási adatbázis beállítását ellenőrizni kell. Kérd az üzemeltető segítségét.',
+    ];
+@endphp
+@if($displayWarnings->isNotEmpty())<details class="notice compact-warning operation-status" aria-label="Működési figyelmeztetések"><summary>{{ $displayWarnings->count() }} működési teendő</summary><ul>@foreach($displayWarnings as $key => $warning)<li>{{ $warningLabels[$key] ?? $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Állapot és teendők megnyitása →</a></details>@endif
 @yield('content')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>
@@ -42,6 +56,7 @@
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('upload-controls.js').'?v='.substr(hash_file('sha256', public_path('upload-controls.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
+<script src="{{ asset('booking-experience.js').'?v='.substr(hash_file('sha256', public_path('booking-experience.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('admin-live-filters.js').'?v='.substr(hash_file('sha256', public_path('admin-live-filters.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('admin.booking'))<script src="{{ asset('admin-appointment-refresh.js').'?v='.substr(hash_file('sha256', public_path('admin-appointment-refresh.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif

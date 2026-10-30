@@ -24,6 +24,9 @@
             tab.tabIndex = selected ? 0 : -1;
             panels[tabIndex].hidden = !selected;
         });
+        document.querySelectorAll('[data-settings-extra]').forEach(extra => {
+            extra.hidden = extra.dataset.settingsExtra !== panels[index].id;
+        });
     };
     tabs.forEach((tab, index) => {
         tab.addEventListener('click', event => {
@@ -71,7 +74,11 @@
     }
     if (serverErrorField && panelForField(serverErrorField) >= 0) activeIndex = panelForField(serverErrorField);
     selectTab(activeIndex < 0 ? 0 : activeIndex);
-    if (serverErrorField) focusableField(serverErrorField).focus();
+    if (serverErrorField) {
+        const field = focusableField(serverErrorField);
+        field.focus();
+        field.scrollIntoView({block: 'center', behavior: 'instant'});
+    }
 
     const validationMessage = form.querySelector('[data-settings-validation]');
     let showingInvalid = false;
@@ -88,10 +95,27 @@
             validationMessage.hidden = false;
         }
         field.focus();
+        field.scrollIntoView({block: 'center', behavior: 'instant'});
         window.setTimeout(() => { showingInvalid = false; }, 0);
     }, true);
     form.addEventListener('input', event => {
         if (event.target instanceof HTMLElement) event.target.removeAttribute('aria-invalid');
         if (validationMessage) validationMessage.hidden = true;
+    });
+    let dirty = false;
+    const dirtyNotice = form.querySelector('[data-settings-dirty]');
+    const markDirty = () => {
+        dirty = true;
+        form.classList.add('has-changes');
+        if (dirtyNotice) dirtyNotice.hidden = false;
+    };
+    form.addEventListener('input', markDirty);
+    form.addEventListener('change', markDirty);
+    if (serverErrorField) markDirty();
+    form.addEventListener('submit', () => { dirty = false; });
+    window.addEventListener('beforeunload', event => {
+        if (!dirty) return;
+        event.preventDefault();
+        event.returnValue = '';
     });
 })();

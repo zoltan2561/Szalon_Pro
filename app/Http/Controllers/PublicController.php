@@ -58,7 +58,28 @@ class PublicController extends Controller
             }
         }
 
-        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId', 'slots') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready(), 'rebookToken' => $request->attributes->get('rebookToken'), 'rebookingGuest' => $request->attributes->get('rebookingGuest'), 'smsReady' => $salon->featureEnabled('sms') && $smsGateway->configured()]);
+        $nextAvailable = null;
+        $nextAvailableUrl = null;
+        if ($service && ! $slots && $request->filled('date')) {
+            $today = CarbonImmutable::now($salon->timezone)->startOfDay();
+            $searchStart = CarbonImmutable::parse($date, $salon->timezone)->addDay()->max($today);
+            $searchEnd = $today->addDays($salon->horizon_days);
+            if ($searchStart->lte($searchEnd)) {
+                $nextAvailable = $availability->firstAvailableDay($service, $searchStart, $searchEnd, $staffId);
+            }
+            if ($nextAvailable) {
+                $parameters = ['service_id' => $service->id, 'staff_id' => $staffId, 'date' => $nextAvailable['date']];
+                if ($salon->featureEnabled('sharing') && in_array($request->query('utm_source'), BookingLinks::Sources, true)) {
+                    $parameters['utm_source'] = $request->query('utm_source');
+                }
+                $rebookToken = $request->attributes->get('rebookToken');
+                $nextAvailableUrl = $rebookToken
+                    ? route('booking.rebook.form', ['token' => $rebookToken] + $parameters)
+                    : route('booking.form', $parameters);
+            }
+        }
+
+        return view('public.book', compact('salon', 'services', 'service', 'date', 'staffId', 'slots', 'nextAvailable', 'nextAvailableUrl') + ['requestKey' => old('request_key', Str::uuid()->toString()), 'ready' => $availability->ready(), 'rebookToken' => $request->attributes->get('rebookToken'), 'rebookingGuest' => $request->attributes->get('rebookingGuest'), 'smsReady' => $salon->featureEnabled('sms') && $smsGateway->configured()]);
     }
 
     public function store(Request $request, BookingService $bookings): RedirectResponse

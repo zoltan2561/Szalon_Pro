@@ -90,7 +90,7 @@ class SalonWorkflowTest extends TestCase
         $response = $this->get(route('booking.form', ['service_id' => $this->service->id, 'date' => '2026-10-19']))->assertOk();
         $html = $response->getContent();
         $this->assertSame(1, preg_match_all('/name="slot" value="[0-9]+\|2026-10-19T10:00:00\+02:00"/', $html));
-        $response->assertSee('Elérhető szakember');
+        $response->assertSee('<small>'.e($this->staff->name).'</small>', false)->assertDontSee('Elérhető szakember');
         $this->post(route('booking.store'), ['service_id' => $this->service->id, 'slot' => $this->staff->id.'|2026-10-19T10:00:00+02:00', 'name' => 'Teszt Vendég', 'email' => 'guest@example.test', 'terms' => 1, 'request_key' => Str::uuid()->toString()])->assertRedirect(route('booking.success'));
         $this->assertDatabaseHas('bookings', ['staff_id' => $this->staff->id]);
     }

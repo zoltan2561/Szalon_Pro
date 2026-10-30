@@ -26,6 +26,7 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
         status.hidden = false;
         status.textContent = message;
         booking.setAttribute('aria-busy', 'true');
+        booking.dispatchEvent(new Event('booking:updated'));
     };
 
     const schedule = () => {
@@ -72,12 +73,16 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                     booking.querySelector('input[name="service_id"]').value = freshService.value;
                     currentSummary.replaceChildren(...Array.from(freshSummary.childNodes));
                     currentDate.textContent = freshDate.textContent;
+                    const review = booking.querySelector('[data-booking-review]');
+                    const freshReview = freshBooking.querySelector('[data-booking-review]');
+                    if (review && freshReview) Object.assign(review.dataset, freshReview.dataset);
                     const explanation = booking.querySelector('[data-availability-explanation]');
                     const freshExplanation = freshBooking.querySelector('[data-availability-explanation]');
                     if (explanation && freshExplanation) explanation.textContent = freshExplanation.textContent;
                 }
                 freshSlots.querySelectorAll('input[name="slot"]:checked').forEach(input => { input.checked = false; });
                 slotList.replaceChildren(...Array.from(freshSlots.childNodes));
+                slotList.className = freshSlots.className;
                 const hasSlots = Boolean(slotList.querySelector('input[name="slot"]'));
                 button.disabled = !hasSlots;
                 status.textContent = hasSlots ? 'A szabad időpontok frissültek. Válassz időpontot.' : 'Erre a napra nincs szabad időpont. Válassz másik napot.';
@@ -89,7 +94,10 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
                         ? 'A foglalás időközben megváltozott vagy már nem módosítható. Nyisd meg újra a kezelőoldalt.'
                         : 'Nem sikerült frissíteni az időpontokat. Használd a Szabad időpontok gombot.';
             } finally {
-                if (current === sequence) booking.removeAttribute('aria-busy');
+                if (current === sequence) {
+                    booking.removeAttribute('aria-busy');
+                    booking.dispatchEvent(new Event('booking:updated'));
+                }
             }
         }, 350);
     };
@@ -101,4 +109,12 @@ document.querySelectorAll('.public [data-availability-filter]').forEach(filter =
     date.addEventListener('change', schedule);
     service?.addEventListener('change', schedule);
     staff?.addEventListener('change', schedule);
+    booking.addEventListener('click', event => {
+        const nextDay = event.target.closest('[data-next-available]');
+        if (!nextDay) return;
+        event.preventDefault();
+        date.value = new URL(nextDay.href).searchParams.get('date');
+        date.dispatchEvent(new Event('localized:sync'));
+        date.dispatchEvent(new Event('change', {bubbles: true}));
+    });
 });

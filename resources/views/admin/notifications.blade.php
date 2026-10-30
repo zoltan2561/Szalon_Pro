@@ -13,7 +13,7 @@
 <div class="notice">Helyi levélpróba aktív. A rendszer nem küld valódi e-mailt.</div>
 @endif
 
-<section class="panel"><h2>Időzített feldolgozás</h2>@foreach(['email' => 'E-mail', 'sms' => 'SMS'] as $channel => $label)<p><strong>{{ $label }}</strong> · Utolsó futás: {{ $lastRuns[$channel]?->setTimezone('Europe/Budapest')->format('Y.m.d. H:i') ?? 'még nem ismert' }} (Budapest) · Esedékes sor: {{ $dueCounts[$channel] }}</p>@endforeach<p class="muted">Az utolsó futás nem kézbesítési igazolás; hibánál ellenőrizd a küldési naplót.</p></section>
+<section class="panel"><h2>Küldés állapota</h2>@foreach(['email' => 'E-mail', 'sms' => 'SMS'] as $channel => $label)<p><strong>{{ $label }}</strong> · {{ $dueCounts[$channel] }} értesítés vár feldolgozásra vagy ellenőrzésre.</p>@endforeach<details><summary>Feldolgozási részletek</summary><h3>Időzített feldolgozás</h3>@foreach(['email' => 'E-mail', 'sms' => 'SMS'] as $channel => $label)<p>{{ $label }} · Utolsó futás: {{ $lastRuns[$channel]?->setTimezone('Europe/Budapest')->format('Y.m.d. H:i') ?? 'még nem ismert' }} (Budapest)</p>@endforeach<p class="muted">Az utolsó futás nem kézbesítési igazolás; hibánál ellenőrizd a küldési naplót.</p></details></section>
 @if($salon->featureEnabled('sms') && !$smsConfigured)
 <div class="notice">Az SMS-modul be van kapcsolva, de nincs beállított szolgáltató. SMS nem kerül kiküldésre.</div>
 @endif
@@ -23,7 +23,8 @@
     @forelse($messages as $message)
     <div class="history-row">
         <div>
-            <a href="{{ route('admin.booking', $message->booking_id) }}">Foglalás #{{ $message->booking_id }}</a>
+            <a href="{{ route('admin.booking', $message->booking_id) }}">{{ $message->booking?->guest?->name ?? 'Foglalás #'.$message->booking_id }}</a>
+            @if($message->booking)<p>{{ $message->booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $message->booking->service_name }}</p>@endif
             <p>{{ ['confirmation' => 'Visszaigazolás', 'changed' => 'Módosítás', 'cancelled' => 'Lemondás', 'reminder' => 'Emlékeztető'][$message->kind] ?? $message->kind }} · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
             <small>{{ $message->attempts }} próbálkozás @if($message->error_code)· {{ $message->error_code }}@endif</small>
         </div>
@@ -44,7 +45,8 @@
     @forelse($smsMessages as $message)
     <div class="history-row">
         <div>
-            <a href="{{ route('admin.booking', $message->booking_id) }}">Foglalás #{{ $message->booking_id }}</a>
+            <a href="{{ route('admin.booking', $message->booking_id) }}">{{ $message->booking?->guest?->name ?? 'Foglalás #'.$message->booking_id }}</a>
+            @if($message->booking)<p>{{ $message->booking->starts_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }} · {{ $message->booking->service_name }}</p>@endif
             <p>{{ ['confirmation'=>'Visszaigazolás','changed'=>'Módosítás','cancelled'=>'Lemondás','reminder'=>'Emlékeztető','review'=>'Értékeléskérés'][$message->kind] ?? $message->kind }} · {{ $message->scheduled_at->setTimezone($salon->timezone)->format('Y. m. d. H:i') }}</p>
             <small>{{ $message->attempts }} próbálkozás @if($message->error_code)· {{ $message->error_code }}@endif</small>
         </div>

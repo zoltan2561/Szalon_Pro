@@ -41,7 +41,7 @@ return [
         'logo' => 'logó', 'gallery' => 'galéria', 'gallery.*' => 'kép', 'hero_image' => 'nyitókép', 'appearance' => 'arculat',
         'content_rights' => 'felhasználási jogosultság', 'duration_minutes' => 'időtartam',
         'price' => 'ár', 'price_kind' => 'ár jellege', 'actual_amount' => 'szolgáltatási összeg',
-        'hours' => 'munkaidő', 'date' => 'nap', 'q' => 'keresés', 'sort' => 'rendezés', 'status' => 'állapot', 'address' => 'cím', 'tagline' => 'fő üzenet', 'category' => 'kategória',
+        'hours' => 'munkaidő', 'date' => 'nap', 'q' => 'keresés', 'sort' => 'rendezés', 'status' => 'állapot', 'scope' => 'foglalások időszaka', 'address' => 'cím', 'tagline' => 'fő üzenet', 'category' => 'kategória',
         'accent' => 'arculati szín', 'font' => 'betűkészlet', 'theme' => 'megjelenés', 'preset' => 'arculati profil',
         'min_notice_minutes' => 'minimum előfoglalási idő', 'horizon_days' => 'foglalási horizont',
         'reminder_hours' => 'emlékeztető ideje', 'cancel_notice_hours' => 'lemondási határidő', 'retention_days' => 'adatmegőrzési idő',

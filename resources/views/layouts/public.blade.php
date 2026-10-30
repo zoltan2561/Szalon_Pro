@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/branding/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('industry.css').'?v='.substr(hash_file('sha256', public_path('industry.css')), 0, 12) }}">
     <link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}">
-</head>
+<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"></head>
 <body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }} {{ request()->routeIs('login') ? 'login-page' : '' }}"
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['surface'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
@@ -50,4 +50,5 @@
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('booking.form', 'booking.rebook.form', 'booking.manage'))<script src="{{ asset('public-booking-refresh.js').'?v='.substr(hash_file('sha256', public_path('public-booking-refresh.js')), 0, 12) }}" defer></script>@endif
+<script src="{{ asset('booking-experience.js').'?v='.substr(hash_file('sha256', public_path('booking-experience.js')), 0, 12) }}" defer></script>
 </body></html>

@@ -67,7 +67,7 @@ class AdminController extends Controller
         $exceptions = WorkException::with('staff')->whereIn('staff_id', $visibleStaffIds)->where('date', '>=', $day->toDateString())->where('date', '<', $end->toDateString())->orderBy('date')->get();
         $googleBusy = GoogleCalendarBusy::with('connection.staff')->whereHas('connection', fn ($query) => $query->whereIn('staff_id', $visibleStaffIds))->where('starts_at', '<', $end->utc())->where('ends_at', '>', $day->utc())->orderBy('starts_at')->get();
 
-        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['quickServices' => Service::where('active', true)->when($request->user()->role !== 'owner', fn ($query) => $query->whereHas('staff', fn ($query) => $query->where('staff.id', $request->user()->staff_id)))->orderBy('sort_order')->orderBy('id')->get(), 'requestKey' => old('request_key', Str::uuid()->toString()), 'failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
+        return view('admin.calendar', compact('bookings', 'next', 'date', 'week', 'day', 'blocks', 'exceptions', 'googleBusy', 'calendarStaff') + ['failed' => $request->user()->role === 'owner' ? OutboxMessage::whereIn('status', ['failed', 'retry'])->count() + SmsOutboxMessage::whereIn('status', ['failed', 'retry'])->count() : 0]);
     }
 
     public function create(Request $request, Availability $availability, SmsGateway $smsGateway): View|JsonResponse
@@ -270,7 +270,11 @@ class AdminController extends Controller
         $benefitData = $request->user()->role === 'owner' && (Salon::current()->featureEnabled('passes') || Salon::current()->featureEnabled('loyalty'))
             ? app(BenefitsService::class)->guestData($guest) : [];
 
-        return view('admin.guest', compact('guest', 'bookings', 'duplicates') + $benefitData + ['noShowCount' => $bookings->where('status', 'no_show')->count()]);
+        $upcomingBookings = $bookings->filter(fn (Booking $booking): bool => $booking->status === 'confirmed' && $booking->ends_at->isAfter(now()))->sortBy('starts_at')->values();
+        $pastBookings = $bookings->reject(fn (Booking $booking): bool => $upcomingBookings->contains('id', $booking->id))->values();
+        $lastVisit = $bookings->where('status', 'completed')->first();
+
+        return view('admin.guest', compact('guest', 'bookings', 'duplicates', 'upcomingBookings', 'pastBookings', 'lastVisit') + $benefitData + ['noShowCount' => $bookings->where('status', 'no_show')->count()]);
     }
 
     public function notes(Guest $guest, Request $request): RedirectResponse
@@ -528,8 +532,8 @@ class AdminController extends Controller
     public function notifications(SmsGateway $smsGateway, OperationsHealth $health): View
     {
         return view('admin.notifications', [
-            'messages' => OutboxMessage::orderByDesc('id')->paginate(30, ['*'], 'email_page'),
-            'smsMessages' => SmsOutboxMessage::orderByDesc('id')->paginate(30, ['*'], 'sms_page'),
+            'messages' => OutboxMessage::with('booking.guest', 'booking.staff')->orderByDesc('id')->paginate(30, ['*'], 'email_page'),
+            'smsMessages' => SmsOutboxMessage::with('booking.guest', 'booking.staff')->orderByDesc('id')->paginate(30, ['*'], 'sms_page'),
             'smsConfigured' => $smsGateway->configured(),
             'dueCounts' => $health->dueCounts(),
             'lastRuns' => ['email' => $health->lastRun('email'), 'sms' => $health->lastRun('sms')],

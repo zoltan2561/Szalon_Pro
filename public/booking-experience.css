@@ -1,0 +1,38 @@
+.slots.slots-grouped{display:block;max-height:none;overflow:visible}
+.slot-period{margin:0 0 10px;border-bottom:1px solid #d7ded2;padding-bottom:8px}
+.slot-period>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 2px;cursor:pointer;font-weight:600}
+.slot-period>summary:after{content:'+';font-size:20px}
+.slot-period[open]>summary:after{content:'−'}
+.slot-period>summary span{margin-left:auto;font-size:12px;font-weight:400}
+.slot-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:8px 0}
+.booking-review{padding:18px 0;margin:18px 0 8px;border-top:1px solid #d7ded2}
+.booking-review h2{font-size:20px;margin:0 0 16px}
+.booking-review dl{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0}
+.booking-review dt{font-size:12px;opacity:.8;margin-bottom:4px}
+.booking-review dd{margin:0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.slot-recovery{grid-column:1/-1;padding:16px;text-align:left}
+.slot-recovery .button{margin:8px 0;min-height:44px}
+.public [data-booking-guest-fields][hidden]{display:none}
+.public .booking-wrap{padding-top:28px}
+.public .booking-wrap>.page-title{font-size:38px}
+.public .localized-field-picker{background:transparent}
+@media(max-width:1000px){
+ .slot-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .admin .booking-submit .slots,.admin [data-admin-reschedule] .slots{max-height:none;overflow:visible}
+ .booking-review dl{grid-template-columns:1fr;gap:12px}
+}
+@media(max-width:640px){
+ .public .booking-wrap{padding-top:20px}
+ .public .booking-wrap>.page-title{font-size:32px;line-height:1.15;margin:10px 0 18px}
+ .public .booking-wrap>.eyebrow{display:none}
+ .public .booking-wrap>.steps{margin-bottom:18px}
+ .public .demo-booking-notice{padding:12px 16px;margin-bottom:16px}
+ .public .booking-wrap>.booking-grid{display:flex;flex-direction:column}
+ .public #booking-service{order:1}
+ .public .booking-submit{order:2}
+ .public .booking-summary{order:3}
+ .public .booking-finalize-group{position:static;box-shadow:none}
+ .public .booking-finalize-group .booking-finalize{position:static;box-shadow:none;min-height:48px}
+ .public .selected-slot-note{display:none}
+ .slot-period>summary{font-size:15px}
+}

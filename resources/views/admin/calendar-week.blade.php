@@ -46,6 +46,7 @@
     $weekEndHour = min(24, max($weekStartHour + 1, $weekEndHour));
     $weekDayNames = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat', 'Vasárnap'];
 @endphp
+@include('admin.calendar-week-mobile')
 <div class="calendar-week-grid calendar-week-grid-timed">
     <p class="calendar-week-help">A hosszabb események minden érintett órában láthatók. Az üres mező önmagában nem jelent foglalható időpontot.</p>
     <div class="calendar-week-scroll" tabindex="0" aria-label="Heti időrács, vízszintesen görgethető">

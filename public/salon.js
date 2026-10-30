@@ -133,6 +133,8 @@ if (manualGuestSearch && manualGuestSelect && manualGuestResults && manualGuestF
         manualSelectedGuest.querySelector('[data-selected-guest-name]').textContent = selected ? manualGuestSelect.selectedOptions[0].textContent : '';
         manualNewGuestFields.hidden = selected;
         manualNewGuestFields.querySelectorAll('input').forEach(input => { input.disabled = selected; });
+        const name = manualNewGuestFields.querySelector('input[name="name"]');
+        if (name) name.required = !selected;
     };
     manualGuestFallback.hidden = true;
     updateGuestSelection();
@@ -179,11 +181,12 @@ const manualStaff = manualFilters?.querySelector('select[name="staff_id"]');
 const manualBooking = document.querySelector('.admin .booking-submit');
 if (manualFilters && manualBooking) {
     let latestSearch = 0;
+    let availabilityRequest;
     const manualService = manualFilters.querySelector('select[name="service_id"]');
     const manualServiceLabel = manualFilters.querySelector('[data-manual-service-label]');
     const manualDate = manualFilters.querySelector('input[name="date"]');
     const manualSelection = manualBooking.querySelector('[data-manual-selection]');
-    const manualGuestHeading = manualBooking.querySelector('#manual-booking-guest');
+    const manualGuestHeading = manualBooking.querySelector('[data-manual-finalize]');
     const showManualSelection = input => {
         const slot = input.closest('.slot');
         const time = slot?.querySelector('strong')?.textContent?.trim();
@@ -210,16 +213,19 @@ if (manualFilters && manualBooking) {
     });
     const refreshSlots = async (nearest = false) => {
         const search = ++latestSearch;
+        availabilityRequest?.abort();
+        availabilityRequest = new AbortController();
         const status = manualFilters.querySelector('[data-nearest-status]');
         const params = new URLSearchParams(new FormData(manualFilters));
         if (nearest) params.set('nearest', '1');
         status.textContent = 'Szabad időpontok keresése…';
+        manualBooking.setAttribute('aria-busy', 'true');
         manualBooking.querySelector('[data-calendar-slot-unavailable]')?.remove();
         if (manualSelection) manualSelection.hidden = true;
         manualBooking.querySelector('.slots-field').replaceChildren();
         manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = true;
         try {
-            const response = await fetch(`${manualFilters.action || location.pathname}?${params}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const response = await fetch(`${manualFilters.action || location.pathname}?${params}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: availabilityRequest.signal, cache: 'no-store' });
             if (!response.ok) throw new Error('Availability request failed');
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
             if (search !== latestSearch) return;
@@ -228,18 +234,26 @@ if (manualFilters && manualBooking) {
             const newStaff = page.querySelector('[data-manual-filters] select[name="staff_id"]');
             const newService = page.querySelector('.admin .booking-submit input[name="service_id"]');
             const newSummary = page.querySelector('.booking-grid > aside');
+            const newReview = page.querySelector('[data-booking-review]');
             const currentSlots = manualBooking.querySelector('.slots-field');
-            if (!newSlots || !newDate || !newService || !newSummary || !currentSlots) throw new Error('Availability response incomplete');
+            if (!newSlots || !newDate || !newService || !newSummary || !newReview || !currentSlots) throw new Error('Availability response incomplete');
             currentSlots.replaceWith(newSlots);
             manualDate.value = newDate.value;
             manualDate.dispatchEvent(new Event('localized:sync'));
             if (manualStaff && newStaff) { manualStaff.innerHTML = newStaff.innerHTML; manualStaff.value = newStaff.value; }
             manualBooking.querySelector('input[name="service_id"]').value = newService.value;
             document.querySelector('.booking-grid > aside').replaceWith(newSummary);
-            manualBooking.querySelector('button[type="submit"], button:not([type])').disabled = !newSlots.querySelector('input[name="slot"]');
+            Object.assign(manualBooking.querySelector('[data-booking-review]').dataset, newReview.dataset);
+            const freshLabel = page.querySelector('[data-manual-service-label]');
+            if (manualServiceLabel && freshLabel) manualServiceLabel.textContent = freshLabel.textContent;
             status.textContent = newSlots.querySelector('input[name="slot"]') ? `Szabad időpontok: ${newDate.value.replaceAll('-', '. ')}.` : 'Erre a napra nincs szabad időpont.';
         } catch (error) {
-            if (search === latestSearch) status.textContent = 'Nem sikerült betölteni az időpontokat. Használd a Szabad időpontok mutatása gombot.';
+            if (search === latestSearch && error.name !== 'AbortError') status.textContent = 'Nem sikerült betölteni az időpontokat. Használd a Szabad időpontok mutatása gombot.';
+        } finally {
+            if (search === latestSearch) {
+                manualBooking.removeAttribute('aria-busy');
+                manualBooking.dispatchEvent(new Event('booking:updated'));
+            }
         }
     };
     manualService.addEventListener('change', () => {
@@ -247,9 +261,10 @@ if (manualFilters && manualBooking) {
         refreshSlots();
     });
     manualDate.addEventListener('change', () => refreshSlots());
-    manualStaff?.addEventListener('change', () => refreshSlots(true));
+    manualStaff?.addEventListener('change', () => refreshSlots());
     manualFilters.addEventListener('submit', event => {
-        if (event.submitter?.name === 'nearest') { event.preventDefault(); refreshSlots(true); }
+        event.preventDefault();
+        refreshSlots(event.submitter?.name === 'nearest');
     });
 }
 

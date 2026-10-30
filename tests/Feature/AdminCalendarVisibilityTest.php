@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\WorkException;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminCalendarVisibilityTest extends TestCase
@@ -36,9 +37,10 @@ class AdminCalendarVisibilityTest extends TestCase
             ->assertSee('<span>Heti foglalások</span><strong>2</strong>', false)
             ->assertSee('23:30 · Éjszakai szünet')->assertSee('00:00 · Éjszakai szünet')->assertSee('Vége: 24:00')->assertSee('Vége: 00:30')->assertSee('00:00–00:30')
             ->assertSee('Az üres mező önmagában nem jelent foglalható időpontot.');
-        $this->assertSame(2, substr_count($response->getContent(), 'href="'.route('admin.booking', $first).'"'));
-        $this->assertSame(2, substr_count($response->getContent(), 'href="'.route('admin.booking', $second).'"'));
-        $this->assertSame(1, substr_count($response->getContent(), 'href="'.route('admin.booking', $overnight).'"'));
+        $hourGrid = Str::after($response->getContent(), '<div class="calendar-week-grid calendar-week-grid-timed">');
+        $this->assertSame(2, substr_count($hourGrid, 'href="'.route('admin.booking', $first).'"'));
+        $this->assertSame(2, substr_count($hourGrid, 'href="'.route('admin.booking', $second).'"'));
+        $this->assertSame(1, substr_count($hourGrid, 'href="'.route('admin.booking', $overnight).'"'));
         $staffUser = User::factory()->create(['role' => 'staff', 'staff_id' => $secondStaff->id]);
         $this->actingAs($staffUser)->get(route('admin.calendar', ['date' => '2026-10-23', 'view' => 'week']))
             ->assertOk()->assertDontSee('href="'.route('admin.booking', $overnight).'"', false);
