@@ -1,5 +1,9 @@
 # Változásnapló
 
+## 1.4.6 – 2026-11-02
+
+- A közös indulási lépéssor igazítása, egyszeres számozása és irányjelző nyilai a barber, körmös és fodrász vendégdemón is érvényesülnek.
+
 ## 1.4.5 – 2026-11-02
 
 - A marketingoldal napi munkát bemutató gombjai alapállapotban is kontrasztosak; a címek, leírások és gombok közös sorokhoz igazodnak.
