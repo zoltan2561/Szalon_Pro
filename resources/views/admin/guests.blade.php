@@ -5,7 +5,7 @@
 <form method="get" action="{{ route('admin.guests') }}" class="panel" data-live-guests-form>
     <div class="form-grid"><label>Vendég keresése<input name="q" type="search" inputmode="search" data-live-guests value="{{ $search }}" maxlength="120" placeholder="Név, e-mail vagy telefon"></label>
     <label>Rendezés<select name="sort" data-guest-sort><option value="name" @selected($sort === 'name')>Név szerint</option><option value="last_visit" @selected($sort === 'last_visit')>Legutóbbi látogatás szerint</option></select></label></div>
-    <button class="button secondary">Keresés</button><p class="muted" data-guest-list-status aria-live="polite"></p>
+    <button class="button">Keresés</button><p class="muted" data-guest-list-status aria-live="polite"></p>
 </form>
 <section class="panel guest-list-results" data-guest-list aria-label="Vendéglista">
     <h2>Vendégek · {{ $guests->total() }}</h2>

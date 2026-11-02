@@ -94,13 +94,13 @@ class AdminCalendarVisibilityTest extends TestCase
 
         $this->actingAs($owner)->get(route('admin.calendar', ['date' => '2026-10-25']))
             ->assertOk()
-            ->assertSee('height: 2250px', false)
-            ->assertSee('top: 180px">02:00<small style="display: block; font-size: 9px">UTC+02:00', false)
-            ->assertSee('top: 270px">02:00<small style="display: block; font-size: 9px">UTC+01:00', false)
-            ->assertSee('top: 450px">04:00', false)
-            ->assertSee('style="top: 202.5px; height: 45px"', false)
-            ->assertSee('style="top: 292.5px; height: 45px" title="Google Naptár foglaltság"', false)
-            ->assertSee('calendar-now-line" style="top: 315px"', false);
+            ->assertSee('height: 3000px', false)
+            ->assertSee('top: 240px">02:00<small style="display: block; font-size: 9px">UTC+02:00', false)
+            ->assertSee('top: 360px">02:00<small style="display: block; font-size: 9px">UTC+01:00', false)
+            ->assertSee('top: 600px">04:00', false)
+            ->assertSee('style="top: 270px; height: 60px"', false)
+            ->assertSee('style="top: 390px; height: 60px" title="Google Naptár foglaltság"', false)
+            ->assertSee('calendar-now-line" style="top: 420px"', false);
     }
 
     public function test_calendar_skips_the_missing_spring_hour_and_positions_events_by_elapsed_time(): void
@@ -124,13 +124,13 @@ class AdminCalendarVisibilityTest extends TestCase
 
         $this->actingAs($owner)->get(route('admin.calendar', ['date' => '2026-03-29']))
             ->assertOk()
-            ->assertSee('height: 2070px', false)
-            ->assertSee('top: 90px">01:00', false)
-            ->assertSee('top: 180px">03:00', false)
-            ->assertSee('top: 270px">04:00', false)
+            ->assertSee('height: 2760px', false)
+            ->assertSee('top: 120px">01:00', false)
+            ->assertSee('top: 240px">03:00', false)
+            ->assertSee('top: 360px">04:00', false)
             ->assertDontSee('>02:00</span>', false)
-            ->assertSee('style="top: 225px; height: 45px" title="Google Naptár foglaltság"', false)
-            ->assertSee('calendar-now-line" style="top: 202.5px"', false);
+            ->assertSee('style="top: 300px; height: 60px" title="Google Naptár foglaltság"', false)
+            ->assertSee('calendar-now-line" style="top: 270px"', false);
     }
 
     public function test_calendar_clips_unavailable_intervals_to_the_displayed_day(): void
@@ -160,9 +160,9 @@ class AdminCalendarVisibilityTest extends TestCase
 
         $this->actingAs($owner)->get(route('admin.calendar', ['date' => '2026-10-23']))
             ->assertOk()
-            ->assertSee('style="top: 0px; height: 45px" title="Éjszakai szünet"', false)
-            ->assertSee('style="top: 0px; height: 45px" title="Google Naptár foglaltság"', false)
-            ->assertSee('style="top: 2070px; height: 90px" title="Zárás"', false);
+            ->assertSee('style="top: 0px; height: 60px" title="Éjszakai szünet"', false)
+            ->assertSee('style="top: 0px; height: 60px" title="Google Naptár foglaltság"', false)
+            ->assertSee('style="top: 2760px; height: 120px" title="Zárás"', false);
 
         $this->get(route('admin.calendar', ['date' => '2026-10-23', 'view' => 'week']))
             ->assertOk()

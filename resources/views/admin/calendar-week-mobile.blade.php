@@ -4,7 +4,7 @@
             @php
                 $weekDate = $entry['weekDay']->toDateString();
             @endphp
-            <a data-week-day="{{ $weekDate }}" href="{{ route('admin.calendar', ['date' => $weekDate, 'view' => 'day'] + $calendarFilter) }}" @if($weekDate === $date) aria-current="date" @endif aria-label="{{ $entry['weekDay']->locale('hu')->isoFormat('MMMM D., dddd') }}"><span>{{ $entry['weekDay']->locale('hu')->isoFormat('ddd') }}</span><strong>{{ $entry['weekDay']->format('d') }}</strong></a>
+            <a data-week-day="{{ $weekDate }}" href="{{ route('admin.calendar', ['date' => $weekDate, 'view' => 'day'] + $calendarFilter) }}" @if($weekDate === $date) aria-current="date" @endif aria-label="{{ $entry['weekDay']->locale('hu')->isoFormat('MMMM D., dddd') }}, {{ $entry['dayBookings']->where('status', '!=', 'cancelled')->count() }} időpont"><span>{{ $entry['weekDay']->locale('hu')->isoFormat('ddd') }}</span><strong>{{ $entry['weekDay']->format('d') }}</strong><small>{{ $entry['dayBookings']->where('status', '!=', 'cancelled')->count() }} db</small></a>
         @endforeach
     </nav>
     @foreach($weekDays as $entry)
@@ -22,7 +22,7 @@
                     $timeRange = $localStart->format($transition ? 'H:i P' : 'H:i').'–'.$localEnd->format($transition ? 'H:i P' : 'H:i');
                 @endphp
                 @if($event['type'] === 'booking')
-                    <a class="calendar-week-entry {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><strong>{{ $timeRange }} · {{ $item->guest->name }}</strong><span>{{ $item->service_name }}</span><small>{{ $item->staff->name }} · {{ $item->visitLabel() }}</small></a>
+                    <a class="calendar-week-entry {{ $item->status }}" href="{{ route('admin.booking', $item) }}"><span class="calendar-week-entry-time">{{ $timeRange }}</span><span class="calendar-week-entry-detail"><strong>{{ $item->guest->name }}</strong><span>{{ $item->service_name }}</span><small>{{ $item->staff->name }}</small><span class="calendar-status {{ $item->status }}">{{ $item->visitLabel() }}</span></span></a>
                 @else
                     <div class="calendar-week-entry"><strong>{{ $timeRange }} · {{ $event['type'] === 'google' ? 'Google Naptár foglaltság' : ($demoViewer ? 'Bemutató blokkolás' : $item->reason) }}</strong><small>{{ $event['type'] === 'google' ? $item->connection->staff->name : $item->staff->name }}</small></div>
                 @endif

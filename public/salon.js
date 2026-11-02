@@ -21,12 +21,22 @@ if (moreButtons.length && moreSheet instanceof HTMLDialogElement) {
     });
 }
 
+const calendarMobileLayout = window.matchMedia('(max-width: 640px)');
+const adaptCalendarFilters = () => {
+    document.querySelectorAll('[data-calendar-filters]').forEach(panel => {
+        panel.open = !calendarMobileLayout.matches;
+    });
+};
+adaptCalendarFilters();
+calendarMobileLayout.addEventListener('change', adaptCalendarFilters);
+
 document.querySelectorAll('[data-calendar-create]').forEach(track => {
     track.addEventListener('click', event => {
         if (event.target !== track || event.button !== 0) return;
         const start = Date.parse(track.dataset.calendarStart);
         if (!Number.isFinite(start)) return;
-        const minutes = Math.floor((event.clientY - track.getBoundingClientRect().top) / 1.5 / 15) * 15;
+        const scale = Number(track.dataset.calendarScale) || 1.5;
+        const minutes = Math.floor((event.clientY - track.getBoundingClientRect().top) / scale / 15) * 15;
         if (minutes < 0) return;
         const selected = new Date(start + minutes * 60000).toISOString().replace('.000Z', '+00:00');
         const target = new URL(track.dataset.calendarCreate);

@@ -1,5 +1,11 @@
 # Változásnapló
 
+## 1.4.4 – 2026-11-02
+
+- Egységes admin színkódolás, állapotjelmagyarázat és olvashatóbb napi/heti naptár; mobilon előrébb kerülnek az időpontok, a szűrők összecsukhatók.
+- Szellősebb napi idővonal, a hozzá igazított kattintási pontossággal és megőrzött időzóna-kezeléssel.
+- Igazított, legalább 44 px magas gombok; elkülönített végleges törlés, egységes beállítási fülek, keresés és dátumválasztó.
+
 ## 1.4.3 – 2026-11-02
 
 - A „Vendégként kipróbálom” gombok a mintaoldal főoldalára vezetnek; az olvasó adminból kilépve is először a vendégoldal nyílik meg.

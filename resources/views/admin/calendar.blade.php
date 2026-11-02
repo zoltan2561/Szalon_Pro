@@ -13,6 +13,7 @@
     $summaryBookings = $week ? $bookings->filter(fn ($booking) => $booking->starts_at->gte($day->utc())) : $bookings;
     $confirmedBookings = $summaryBookings->where('status', 'confirmed');
     $completedBookings = $summaryBookings->where('status', 'completed');
+    $timelinePixelsPerMinute = 2;
     $timelineStartHour = 8;
     $timelineEndHour = 20;
 
@@ -35,13 +36,13 @@
     $timelineEndHour = min(24, max($timelineStartHour + 1, $timelineEndHour));
     $timelineStart = $day->setTime($timelineStartHour, 0);
     $timelineEnd = $timelineEndHour === 24 ? $day->addDay() : $day->setTime($timelineEndHour, 0);
-    $timelineHeight = $timelineStart->diffInMinutes($timelineEnd) * 1.5;
+    $timelineHeight = $timelineStart->diffInMinutes($timelineEnd) * $timelinePixelsPerMinute;
     $timelineTicks = collect();
     for ($tick = $timelineStart->utc(); $tick->isBefore($timelineEnd); $tick = $tick->addHour()) {
         $timelineTicks->push($tick->setTimezone($salon->timezone));
     }
     $repeatedTickLabels = $timelineTicks->map(fn ($tick) => $tick->format('H:i'))->countBy();
-    $nowPosition = $isActualToday ? $timelineStart->diffInMinutes(now($salon->timezone), false) * 1.5 : null;
+    $nowPosition = $isActualToday ? $timelineStart->diffInMinutes(now($salon->timezone), false) * $timelinePixelsPerMinute : null;
 @endphp
 
 <div class="page-heading calendar-page-heading">
@@ -105,26 +106,18 @@
 </section>
 
 <section class="panel calendar-workspace" aria-labelledby="calendar-heading">
-    <div class="calendar-toolbar">
-        <div><p class="eyebrow">{{ $week ? 'HÉT ÁTTEKINTÉSE' : 'A NAP MENETE' }}</p><h2 id="calendar-heading">{{ $week ? $day->format('Y. m. d.').' – '.$day->addDays(6)->format('Y. m. d.') : $day->format('Y. m. d.').' · '.$day->locale('hu')->isoFormat('dddd') }}</h2></div>
-        <div class="calendar-controls">
-            <nav class="calendar-period-nav" aria-label="Időszak léptetése"><a href="{{ route('admin.calendar', ['date' => $previousDate, 'view' => $week ? 'week' : 'day'] + $calendarFilter) }}" aria-label="Előző {{ $week ? 'hét' : 'nap' }}">←</a><a class="calendar-period-today" href="{{ route('admin.today', ['view' => $week ? 'week' : 'day'] + $calendarFilter) }}">Ma</a><a href="{{ route('admin.calendar', ['date' => $followingDate, 'view' => $week ? 'week' : 'day'] + $calendarFilter) }}" aria-label="Következő {{ $week ? 'hét' : 'nap' }}">→</a></nav>
-            <nav class="calendar-view-switch" aria-label="Naptárnézet"><a class="{{ $week ? '' : 'active' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'day'] + $calendarFilter) }}" @if(! $week) aria-current="page" @endif>Napi</a><a class="{{ $week ? 'active' : '' }}" href="{{ route('admin.calendar', ['date' => $date, 'view' => 'week'] + $calendarFilter) }}" @if($week) aria-current="page" @endif>Heti</a></nav>
-            <form class="calendar-date-form" data-auto-filter="calendar" method="get" action="{{ route($calendarRoute) }}"><label class="sr-only" for="calendar-date">Ugrás egy napra</label><input id="calendar-date" type="date" name="date" value="{{ $date }}"><input type="hidden" name="view" value="{{ $week ? 'week' : 'day' }}">@if(auth()->user()->role === 'owner')<label class="sr-only" for="calendar-staff">Szakember</label><select id="calendar-staff" name="staff_id"><option value="">Minden szakember</option>@foreach($staffOptions as $person)<option value="{{ $person->id }}" @selected($selectedStaffId === $person->id)>{{ $person->name }}</option>@endforeach</select>@elseif($selectedStaffId)<input type="hidden" name="staff_id" value="{{ $selectedStaffId }}">@endif<button class="button secondary small">Ugrás</button></form>
-        </div>
-    </div>
+    @include('admin.calendar-toolbar')
+    @include('components.calendar-legend')
 
-    @if($canManageBookings && $calendarStaff->where('active', true)->isNotEmpty())
-    <div class="calendar-find-slots" aria-label="Szabad időpontok szakemberenként"><p>Szabad időpontok keresése <small>A foglalható időket a szolgáltatás és a munkarend alapján ellenőrizzük.</small></p><div>@foreach($calendarStaff->where('active', true) as $person)<a href="{{ route('admin.create', ['date' => $date, 'staff_id' => $person->id]) }}"><strong>{{ $person->name }}</strong><span>Szabad időpontok keresése ↗</span></a>@endforeach</div></div>
-    @endif
+    @include('admin.calendar-quick-search')
 
     @if($week)
         @include('admin.calendar-week')
     @else
         <div class="calendar-day-layout">
-            <div class="calendar-timeline" aria-label="Szakemberek napi idősávjai">
+            <div class="calendar-timeline" style="--calendar-hour-height: {{ 60 * $timelinePixelsPerMinute }}px" aria-label="Szakemberek napi idősávjai">
                 @if($calendarStaff->isNotEmpty())
-                    <div class="calendar-timeline-scroll" tabindex="0" aria-label="Idővonal"><div class="calendar-timeline-inner" style="min-width: {{ 64 + $calendarStaff->count() * 190 }}px">
+                    <div class="calendar-timeline-scroll" tabindex="0" aria-label="Idővonal"><div class="calendar-timeline-inner" style="min-width: {{ 64 + $calendarStaff->count() * 230 }}px">
                         <div class="calendar-timeline-head" style="grid-template-columns: 64px repeat({{ $calendarStaff->count() }}, minmax(0, 1fr))">
                             <span>Idő</span>
                             @foreach($calendarStaff as $person)
@@ -137,29 +130,29 @@
                         <div class="calendar-timeline-body" style="grid-template-columns: 64px repeat({{ $calendarStaff->count() }}, minmax(0, 1fr)); height: {{ $timelineHeight }}px">
                             <div class="calendar-time-rail">
                                 @foreach($timelineTicks as $tick)
-                                    <span style="top: {{ $timelineStart->diffInMinutes($tick) * 1.5 }}px">{{ $tick->format('H:i') }}@if($repeatedTickLabels[$tick->format('H:i')] > 1)<small style="display: block; font-size: 9px">UTC{{ $tick->format('P') }}</small>@endif</span>
+                                    <span style="top: {{ $timelineStart->diffInMinutes($tick) * $timelinePixelsPerMinute }}px">{{ $tick->format('H:i') }}@if($repeatedTickLabels[$tick->format('H:i')] > 1)<small style="display: block; font-size: 9px">UTC{{ $tick->format('P') }}</small>@endif</span>
                                 @endforeach
                             </div>
                             @foreach($calendarStaff as $person)
                                 @php
                                     $personException = $exceptions->firstWhere('staff_id', $person->id);
                                 @endphp
-                                <div class="calendar-timeline-track {{ $personException && empty($personException->hours) ? 'is-closed' : '' }}" @if($person->active && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)) data-calendar-create="{{ route('admin.create', ['date' => $date, 'staff_id' => $person->id]) }}" data-calendar-start="{{ $timelineStart->utc()->format('Y-m-d\TH:i:sP') }}" title="Üres idősávra kattintva új foglalás indítható" @endif>
+                                <div class="calendar-timeline-track {{ $personException && empty($personException->hours) ? 'is-closed' : '' }}" @if($person->active && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)) data-calendar-create="{{ route('admin.create', ['date' => $date, 'staff_id' => $person->id]) }}" data-calendar-scale="{{ $timelinePixelsPerMinute }}" data-calendar-start="{{ $timelineStart->utc()->format('Y-m-d\TH:i:sP') }}" title="Üres idősávra kattintva új foglalás indítható" @endif>
                                     @foreach($bookings->where('staff_id', $person->id)->where('status', '!=', 'cancelled') as $booking)
                                         @php
                                             $eventStart = $booking->starts_at->setTimezone($salon->timezone);
                                             $eventEnd = $booking->ends_at->setTimezone($salon->timezone);
-                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
-                                            $eventHeight = max(28, min($timelineHeight - $eventTop, $eventStart->diffInMinutes($eventEnd) * 1.5));
+                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * $timelinePixelsPerMinute);
+                                            $eventHeight = max(28, min($timelineHeight - $eventTop, $eventStart->diffInMinutes($eventEnd) * $timelinePixelsPerMinute));
                                         @endphp
-                                        <a class="calendar-timeline-event {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" aria-label="{{ $eventStart->format('H:i') }} {{ $booking->guest->name }}, {{ $booking->service_name }}, {{ $booking->visitLabel() }}"><strong>{{ $eventStart->format('H:i') }} · {{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif @if($eventHeight >= 50)<small>{{ $booking->service_name }}</small>@endif</a>
+                                        <a class="calendar-timeline-event {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" aria-label="{{ $eventStart->format('H:i') }}–{{ $eventEnd->format('H:i') }} {{ $booking->guest->name }}, {{ $booking->service_name }}, {{ $booking->visitLabel() }}"><strong>{{ $eventStart->format('H:i') }} · {{ $booking->guest->name }}</strong>@if($eventHeight >= 70 && $salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif @if($eventHeight >= 50)<small>{{ $booking->service_name }}</small>@endif @if($eventHeight >= 80)<span class="calendar-event-status">{{ $booking->visitLabel() }}</span>@endif</a>
                                     @endforeach
                                     @foreach($blocks->where('staff_id', $person->id) as $block)
                                         @php
                                             $eventStart = $block->starts_at->setTimezone($salon->timezone)->max($day);
                                             $eventEnd = $block->ends_at->setTimezone($salon->timezone)->min($day->addDay());
-                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
-                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * 1.5));
+                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * $timelinePixelsPerMinute);
+                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * $timelinePixelsPerMinute));
                                         @endphp
                                         <div class="calendar-timeline-unavailable" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" title="{{ $demoViewer ? 'Bemutató blokkolás' : $block->reason }}"><span>{{ $demoViewer ? 'Bemutató blokkolás' : $block->reason }}</span></div>
                                     @endforeach
@@ -167,8 +160,8 @@
                                         @php
                                             $eventStart = $busy->starts_at->setTimezone($salon->timezone)->max($day);
                                             $eventEnd = $busy->ends_at->setTimezone($salon->timezone)->min($day->addDay());
-                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * 1.5);
-                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * 1.5));
+                                            $eventTop = max(0, $timelineStart->diffInMinutes($eventStart, false) * $timelinePixelsPerMinute);
+                                            $eventHeight = min($timelineHeight - $eventTop, max(22, $eventStart->diffInMinutes($eventEnd) * $timelinePixelsPerMinute));
                                         @endphp
                                         <div class="calendar-timeline-unavailable google" style="top: {{ $eventTop }}px; height: {{ $eventHeight }}px" title="Google Naptár foglaltság"><span>Google-foglaltság</span></div>
                                     @endforeach
@@ -185,7 +178,7 @@
                 <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA · MINDEN ÁLLAPOT</p><h3 id="agenda-heading">Időpontok</h3></div><span>{{ $bookings->count() }}</span></div>
                 <ol class="calendar-agenda-list">
                     @forelse($bookings as $booking)
-                        <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }} · {{ $booking->visitLabel() }}</small></span></a></li>
+                        <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }}</small><span class="calendar-status {{ $booking->status }}">{{ $booking->visitLabel() }}</span></span></a></li>
                     @empty<li class="calendar-agenda-empty"><strong>Még nincs foglalás.</strong><span>Az új időpontok itt jelennek meg.</span></li>@endforelse
                 </ol>
             </section>
