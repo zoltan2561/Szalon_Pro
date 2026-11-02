@@ -46,7 +46,7 @@ class LeaveRequestController extends Controller
             throw ValidationException::withMessages(['ends_on' => 'Egy kérés legfeljebb 31 napra, legfeljebb 2 évre előre szólhat.']);
         }
         DB::transaction(function () use ($staffId, $data, $request): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             if (LeaveRequest::where('staff_id', $staffId)->whereIn('status', ['pending', 'approved'])->whereDate('starts_on', '<=', $data['ends_on'])->whereDate('ends_on', '>=', $data['starts_on'])->exists()) {
                 throw ValidationException::withMessages(['starts_on' => 'Erre az időszakra már van függő vagy jóváhagyott kérés.']);
             }
@@ -62,7 +62,7 @@ class LeaveRequestController extends Controller
         $data = $request->validate(['action' => ['required', Rule::in(['approve', 'reject', 'withdraw'])], 'review_note' => 'nullable|string|max:255']);
         abort_unless($request->user()->role === 'owner' || ($data['action'] === 'withdraw' && $leave->status === 'pending'), 403);
         DB::transaction(function () use ($leave, $request, $data): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $current = LeaveRequest::lockForUpdate()->findOrFail($leave->id);
             if ($data['action'] === 'withdraw') {
                 abort_unless($current->status === 'pending' || ($current->status === 'approved' && $request->user()->role === 'owner'), 422);

@@ -28,7 +28,7 @@ class BookingWorkNotes
         $removed = [];
         try {
             DB::transaction(function () use ($booking, $user, $data, $files, &$created, &$removed): void {
-                Salon::whereKey(1)->increment('lock_version');
+                Salon::whereKey(Salon::current()->id)->increment('lock_version');
                 $current = Booking::lockForUpdate()->findOrFail($booking->id);
                 $this->authorize($current, $user);
                 if ($current->notes_revision !== (int) $data['notes_revision']) {

@@ -77,7 +77,7 @@ class NotificationSender
     private function claim(int $id): ?OutboxMessage
     {
         return DB::transaction(function () use ($id): ?OutboxMessage {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $message = OutboxMessage::lockForUpdate()->findOrFail($id);
             if (! in_array($message->status, ['pending', 'retry']) || $message->scheduled_at->isFuture()) {
                 return null;

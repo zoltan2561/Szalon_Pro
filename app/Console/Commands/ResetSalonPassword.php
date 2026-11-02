@@ -2,14 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantContext;
 use Illuminate\Console\Attributes\Aliases;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-#[Signature('salon:reset-password {email : A helyreállítandó felhasználó e-mail-címe}')]
+#[Signature('salon:reset-password {email : A helyreállítandó felhasználó e-mail-címe} {--tenant= : Ügyfélpéldány azonosítója; alapértelmezés a meglévő demo}')]
 #[Aliases(['salon:password'])]
 #[Description('Jelszó helyreállítása SALON_ADMIN_PASSWORD konfigurációból; adatbázisos munkamenetek visszavonása')]
 class ResetSalonPassword extends Command
@@ -18,6 +20,22 @@ class ResetSalonPassword extends Command
      * Execute the console command.
      */
     public function handle(): int
+    {
+        if ($slug = $this->option('tenant')) {
+            $tenant = Tenant::where('slug', $slug)->first();
+            if (! $tenant || $tenant->status !== 'active') {
+                $this->error('Aktív ügyfélpéldány szükséges.');
+
+                return self::FAILURE;
+            }
+
+            return app(TenantContext::class)->run($tenant, fn (): int => $this->resetPassword());
+        }
+
+        return $this->resetPassword();
+    }
+
+    private function resetPassword(): int
     {
         $password = config('salon.admin_password');
         $user = User::where('email', $this->argument('email'))->first();

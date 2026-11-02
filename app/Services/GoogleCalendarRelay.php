@@ -2,12 +2,19 @@
 
 namespace App\Services;
 
+use App\Models\Tenant;
 use RuntimeException;
 
 class GoogleCalendarRelay
 {
     public function state(string $nonce): string
     {
+        $tenant = app(TenantContext::class)->tenant();
+        if ($tenant && $tenant->id !== 1) {
+            $payload = rtrim(strtr(base64_encode(json_encode(['tenant_id' => $tenant->id, 'callback' => $tenant->url().'/admin/google-naptar/visszateres', 'nonce' => $nonce, 'expires' => now()->addMinutes(10)->timestamp], JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
+
+            return $payload.'.'.hash_hmac('sha256', 'shared-tenant:'.$payload, config('app.key'));
+        }
         $callback = config('services.google_calendar.relay_callback');
         $key = config('services.google_calendar.relay_key');
         if (blank($callback) && blank($key)) {
@@ -32,6 +39,18 @@ class GoogleCalendarRelay
         }
         $decoded = base64_decode(strtr($parts[1], '-_', '+/'), true);
         $payload = is_string($decoded) ? json_decode($decoded, true) : null;
+        if (is_array($payload) && isset($payload['tenant_id'])) {
+            if (! is_int($payload['tenant_id']) || ! is_int($payload['expires'] ?? null)
+                || $payload['expires'] < now()->timestamp || $payload['expires'] > now()->addMinutes(10)->timestamp
+                || ! is_string($payload['nonce'] ?? null) || strlen($payload['nonce']) !== 64
+                || ! hash_equals(hash_hmac('sha256', 'shared-tenant:'.$parts[1], config('app.key')), $parts[2])) {
+                return null;
+            }
+            $tenant = Tenant::whereKey($payload['tenant_id'])->where('status', 'active')->first();
+            $callback = $tenant?->url().'/admin/google-naptar/visszateres';
+
+            return $tenant && ($payload['callback'] ?? null) === $callback ? $callback : null;
+        }
         $clients = json_decode((string) config('services.google_calendar.relay_clients', '{}'), true);
         if (! is_array($payload) || ! is_array($clients) || ! $this->validCallback($payload['callback'] ?? null)
             || ! is_string($payload['nonce'] ?? null) || strlen($payload['nonce']) !== 64

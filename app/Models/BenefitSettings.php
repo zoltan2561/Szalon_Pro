@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\BenefitSettingsFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BenefitSettings extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<BenefitSettingsFactory> */
     use HasFactory;
 
@@ -30,6 +33,6 @@ class BenefitSettings extends Model
 
     public static function current(): self
     {
-        return self::firstOrNew(['salon_id' => 1]);
+        return self::firstOrNew(['salon_id' => Salon::current()->id]);
     }
 }

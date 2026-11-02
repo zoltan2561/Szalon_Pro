@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Salon extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $table = 'salons';
@@ -17,7 +19,7 @@ class Salon extends Model
 
     protected function casts(): array
     {
-        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'features' => 'array', 'published' => 'boolean', 'demo' => 'boolean', 'billing_agent_key' => 'encrypted', 'billing_sending_enabled' => 'boolean', 'billing_approved_at' => 'immutable_datetime', 'content_rights_accepted_at' => 'immutable_datetime'];
+        return ['opening_hours' => 'array', 'gallery' => 'array', 'appearance' => 'array', 'content' => 'array', 'features' => 'array', 'published' => 'boolean', 'demo' => 'boolean', 'billing_agent_key' => 'encrypted', 'billing_sending_enabled' => 'boolean', 'billing_approved_at' => 'immutable_datetime', 'content_rights_accepted_at' => 'immutable_datetime'];
     }
 
     public function featureEnabled(string $key): bool
@@ -28,12 +30,12 @@ class Salon extends Model
     public static function current(): self
     {
         if (app()->runningInConsole()) {
-            return self::findOrFail(1);
+            return self::query()->firstOrFail();
         }
         $request = request();
         $salon = $request->attributes->get('current_salon');
         if (! $salon instanceof self) {
-            $salon = self::findOrFail(1);
+            $salon = self::query()->firstOrFail();
             $request->attributes->set('current_salon', $salon);
         }
 

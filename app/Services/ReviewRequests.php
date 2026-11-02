@@ -16,7 +16,7 @@ class ReviewRequests
     public function queue(Booking $booking): void
     {
         DB::transaction(function () use ($booking): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             $guest = $booking->guest()->lockForUpdate()->firstOrFail();
             if (! $this->eligible($booking, $guest) || $this->contactGuests($guest)->where('last_review_requested_at', '>', now()->subDays(90))->exists()) {
@@ -51,7 +51,7 @@ class ReviewRequests
     public function unsubscribe(Guest $guest): void
     {
         DB::transaction(function () use ($guest): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $contactIds = $this->contactGuests($guest)->pluck('id');
             Guest::whereIn('id', $contactIds)->update(['review_opt_in_at' => null, 'review_opt_out_at' => now()]);
             foreach ([OutboxMessage::class, SmsOutboxMessage::class] as $model) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\WaitlistOfferFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WaitlistOffer extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<WaitlistOfferFactory> */
     use HasFactory;
 

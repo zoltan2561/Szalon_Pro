@@ -18,7 +18,7 @@ class DemoAccess
         if (! config('salon.demo_viewer_enabled') || ! Schema::hasColumn('users', 'is_demo_viewer')) {
             return null;
         }
-        $salon = Salon::find(1);
+        $salon = Salon::query()->first();
         if (! $salon?->published || ! $salon->demo) {
             return null;
         }

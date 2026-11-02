@@ -122,7 +122,7 @@ class BookingReorganization
         }
 
         return DB::transaction(function () use ($booking, $payload, $actor): int {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $plan = $this->plan($booking, $payload['input'], $actor);
             if (! hash_equals($payload['fingerprint'], $this->fingerprint($plan)) || ! $plan['available']) {
                 $this->error('A naptár az előnézet óta megváltozott, vagy valamelyik időpont már nem szabad. Nem módosítottunk semmit. Kérj új előnézetet.');

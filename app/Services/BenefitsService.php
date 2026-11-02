@@ -21,7 +21,7 @@ class BenefitsService
     public function completeBooking(Booking $booking, ?int $guestPassId = null): void
     {
         DB::transaction(function () use ($booking, $guestPassId): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::with('service', 'guest')->findOrFail($booking->id);
             if ($booking->status !== 'completed') {
                 $this->error('Csak elvégzett foglaláshoz számolható el bérlet vagy hűségpont.');
@@ -67,7 +67,7 @@ class BenefitsService
     public function reverseBooking(Booking $booking): void
     {
         DB::transaction(function () use ($booking): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             if ($booking->status === 'completed') {
                 $this->error('Előbb vond vissza a foglalás elvégzett állapotát.');
@@ -90,7 +90,7 @@ class BenefitsService
         abort_unless($actor->role === 'owner', 403);
 
         return DB::transaction(function () use ($guest, $plan, $actor, $requestKey): GuestPass {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $existing = GuestPass::where('issue_key', $requestKey)->first();
             if ($existing) {
                 if ($existing->guest_id !== $guest->id || $existing->pass_plan_id !== $plan->id) {
@@ -110,7 +110,7 @@ class BenefitsService
     public function voidPass(GuestPass $guestPass): void
     {
         DB::transaction(function () use ($guestPass): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $guestPass->refresh();
             if (! $guestPass->voided_at) {
                 $guestPass->update(['voided_at' => now()]);
@@ -121,7 +121,7 @@ class BenefitsService
     public function redeemReward(Guest $guest, string $requestKey): LoyaltyEntry
     {
         return DB::transaction(function () use ($guest, $requestKey): LoyaltyEntry {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $key = 'reward:'.$requestKey;
             $existing = LoyaltyEntry::where('request_key', $key)->first();
             if ($existing) {

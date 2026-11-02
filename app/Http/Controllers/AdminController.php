@@ -29,6 +29,7 @@ use App\Services\BookingWorkNotes;
 use App\Services\Branding;
 use App\Services\NotificationSender;
 use App\Services\OperationsHealth;
+use App\Services\PublicContent;
 use App\Services\ServiceSelection;
 use App\Services\SmsGateway;
 use App\Services\SmsNotificationSender;
@@ -476,7 +477,7 @@ class AdminController extends Controller
 
     public function settings(Availability $availability): View
     {
-        return view('admin.settings', ['ready' => $availability->ready()]);
+        return view('admin.settings', ['ready' => $availability->ready(), 'contentGroups' => app(PublicContent::class)->groups(), 'contentDefaults' => app(PublicContent::class)->defaults(Salon::current())]);
     }
 
     public function applyPreset(Request $request, Branding $branding): RedirectResponse
@@ -492,7 +493,7 @@ class AdminController extends Controller
     {
         $request->merge(['_hours_context' => 'salon']);
         $contentRightsRequired = ! Salon::current()->content_rights_accepted_at || $request->hasFile('logo') || $request->hasFile('hero_image') || $request->hasFile('gallery');
-        $data = $request->validate(['name' => 'required|string|max:120', 'tagline' => 'required|string|max:150', 'about' => 'nullable|string|max:3000', 'email' => 'required|email|max:200', 'phone' => 'required|string|max:40', 'address' => 'required|string|max:200', 'theme' => ['required', Rule::in(['salon', 'barber', 'nails'])], 'accent' => 'required|regex:/^#[a-fA-F0-9]{6}$/', 'font' => ['required', Rule::in(['serif', 'sans'])], 'terms' => 'required|string|max:5000', 'privacy' => 'required|string|max:10000', 'min_notice_minutes' => 'required|integer|min:0|max:10080', 'horizon_days' => 'required|integer|min:1|max:365', 'cancel_notice_hours' => 'required|integer|min:0|max:168', 'reminder_hours' => 'required|integer|min:0|max:168', 'retention_days' => 'required|integer|min:30|max:3650', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096', 'appearance' => 'sometimes|array:paper,ink,muted,surface,line,layout,radius,eyebrow,cta_label,show_team,show_gallery', 'appearance.paper' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.ink' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.muted' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.surface' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.line' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.layout' => ['required_with:appearance', Rule::in(['immersive', 'split'])], 'appearance.radius' => ['required_with:appearance', Rule::in(['4', '8', '16', '24'])], 'appearance.eyebrow' => 'required_with:appearance|string|max:100', 'appearance.cta_label' => 'required_with:appearance|string|max:40', 'appearance.show_team' => 'sometimes|boolean', 'appearance.show_gallery' => 'sometimes|boolean', 'gallery' => 'nullable|array|max:8', 'gallery.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096', 'hours' => 'required|array', 'content_rights' => $contentRightsRequired ? 'accepted' : 'sometimes|accepted', 'current_password' => 'nullable|required_with:new_password|current_password', 'new_password' => 'nullable|string|min:12|max:200'], ['content_rights.accepted' => 'Fogadd el a felhasználási jogosultságot.']);
+        $data = $request->validate(['name' => 'required|string|max:120', 'tagline' => 'required|string|max:150', 'about' => 'nullable|string|max:3000', 'email' => 'required|email|max:200', 'phone' => 'required|string|max:40', 'address' => 'required|string|max:200', 'theme' => ['required', Rule::in(['salon', 'barber', 'nails'])], 'accent' => 'required|regex:/^#[a-fA-F0-9]{6}$/', 'font' => ['required', Rule::in(['serif', 'sans'])], 'terms' => 'required|string|max:5000', 'privacy' => 'required|string|max:10000', 'min_notice_minutes' => 'required|integer|min:0|max:10080', 'horizon_days' => 'required|integer|min:1|max:365', 'cancel_notice_hours' => 'required|integer|min:0|max:168', 'reminder_hours' => 'required|integer|min:0|max:168', 'retention_days' => 'required|integer|min:30|max:3650', 'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096', 'appearance' => 'sometimes|array:paper,ink,muted,surface,line,layout,radius,eyebrow,cta_label,show_team,show_gallery,secondary', 'appearance.secondary' => 'sometimes|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.paper' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.ink' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.muted' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.surface' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.line' => 'required_with:appearance|regex:/^#[a-fA-F0-9]{6}$/', 'appearance.layout' => ['required_with:appearance', Rule::in(['immersive', 'split'])], 'appearance.radius' => ['required_with:appearance', Rule::in(['4', '8', '16', '24'])], 'appearance.eyebrow' => 'required_with:appearance|string|max:100', 'appearance.cta_label' => 'required_with:appearance|string|max:40', 'appearance.show_team' => 'sometimes|boolean', 'appearance.show_gallery' => 'sometimes|boolean', 'gallery' => 'nullable|array|max:8', 'gallery.*' => 'image|mimes:jpg,jpeg,png,webp|max:4096', 'hours' => 'required|array', 'content_rights' => $contentRightsRequired ? 'accepted' : 'sometimes|accepted', 'current_password' => 'nullable|required_with:new_password|current_password', 'new_password' => 'nullable|string|min:12|max:200'] + app(PublicContent::class)->rules(), ['content_rights.accepted' => 'Fogadd el a felhasználási jogosultságot.']);
         $this->mutate(function () use ($request, $data, $availability): void {
             $salon = Salon::current();
             if ($request->boolean('published') && ! $salon->demo) {
@@ -512,12 +513,15 @@ class AdminController extends Controller
             if (isset($data['appearance'])) {
                 $branding = app(Branding::class);
                 foreach (['ink', 'muted'] as $color) {
-                    if ($branding->contrast($data['appearance'][$color], $data['appearance']['paper']) < 4.5 || $branding->contrast($data['appearance'][$color], $data['appearance']['surface']) < 4.5) {
+                    if ($branding->contrast($data['appearance'][$color], $data['appearance']['paper']) < 4.5 || $branding->contrast($data['appearance'][$color], $data['appearance']['surface']) < 4.5 || $branding->contrast($data['appearance'][$color], $data['appearance']['secondary'] ?? $data['appearance']['surface']) < 4.5) {
                         throw ValidationException::withMessages(['appearance.'.$color => 'A szövegszín és a háttér kontrasztja legalább 4,5:1 legyen az olvashatósághoz.']);
                     }
                 }
                 $data['appearance']['show_team'] = $request->boolean('appearance.show_team');
                 $data['appearance']['show_gallery'] = $request->boolean('appearance.show_gallery');
+            }
+            if (array_key_exists('content', $data)) {
+                $data['content'] = array_filter($data['content'], static fn (mixed $value): bool => is_string($value) && trim($value) !== '');
             }
             $data['opening_hours'] = $this->hours($request->input('hours'));
             if ($request->boolean('content_rights')) {
@@ -532,14 +536,14 @@ class AdminController extends Controller
                 $salon->hero_image = null;
             }
             if ($request->hasFile('hero_image')) {
-                $salon->hero_image = $request->file('hero_image')->store('branding', 'public');
+                $salon->hero_image = $request->file('hero_image')->store(($salon->tenant_id > 1 ? 'tenants/'.$salon->tenant_id.'/' : '').'branding', 'public');
             }
             if ($request->hasFile('logo')) {
-                $salon->logo = $request->file('logo')->store('branding', 'public');
+                $salon->logo = $request->file('logo')->store(($salon->tenant_id > 1 ? 'tenants/'.$salon->tenant_id.'/' : '').'branding', 'public');
             }
             $gallery = $request->boolean('clear_gallery') ? [] : ($salon->gallery ?? []);
             foreach ($request->file('gallery', []) as $file) {
-                $gallery[] = $file->store('gallery', 'public');
+                $gallery[] = $file->store(($salon->tenant_id > 1 ? 'tenants/'.$salon->tenant_id.'/' : '').'gallery', 'public');
             }
             $salon->gallery = array_slice($gallery, -8);
             $salon->save();
@@ -630,7 +634,7 @@ class AdminController extends Controller
     private function mutate(\Closure $action): mixed
     {
         return DB::transaction(function () use ($action) {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
 
             return $action();
         }, 5);

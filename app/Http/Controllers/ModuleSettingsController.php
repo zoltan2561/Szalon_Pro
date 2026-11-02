@@ -49,7 +49,7 @@ class ModuleSettingsController extends Controller
             throw ValidationException::withMessages(['features.waitlist_auto' => 'Az automatikus ajánlathoz kapcsold be a Várólistát, és előbb állítsd be az e-mail- vagy SMS-küldést.']);
         }
         DB::transaction(function () use ($request): void {
-            $salon = Salon::whereKey(1)->lockForUpdate()->firstOrFail();
+            $salon = Salon::whereKey(Salon::current()->id)->lockForUpdate()->firstOrFail();
             $features = $salon->features ?? [];
             foreach (array_keys(self::Modules) as $key) {
                 $features[$key] = $request->boolean('features.'.$key);

@@ -53,7 +53,7 @@ class CatalogManagementController extends Controller
     {
         $data = $request->validate(['direction' => ['required', Rule::in(['up', 'down'])]]);
         DB::transaction(function () use ($item, $data): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $items = $item->newQuery()->orderBy('sort_order')->orderBy('id')->get();
             $index = $items->search(fn (Model $row): bool => $row->is($item));
             if ($index === false) {
@@ -77,7 +77,7 @@ class CatalogManagementController extends Controller
     {
         $data = $request->validate(['active' => 'required|boolean']);
         DB::transaction(function () use ($item, $data): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $item->newQuery()->findOrFail($item->getKey())->update(['active' => (bool) $data['active']]);
         }, 5);
 
@@ -88,7 +88,7 @@ class CatalogManagementController extends Controller
     private function delete(Model $item, array $tables): RedirectResponse
     {
         DB::transaction(function () use ($item, $tables): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $column = $item instanceof Staff ? 'staff_id' : 'service_id';
             if ($item instanceof Service) {
                 foreach (Booking::whereNotNull('service_items')->select('service_items')->cursor() as $booking) {

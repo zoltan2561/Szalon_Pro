@@ -45,7 +45,7 @@ class BookingSeries
         $data['repeat_weeks'] = $weeks;
 
         return DB::transaction(function () use ($data, $actor, $guest, $count, $weeks): Booking {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $bookings = app(BookingService::class);
             $first = $bookings->create($data + ['_series_occurrence' => true], $actor, $guest);
             if ($first->series_key) {
@@ -78,7 +78,7 @@ class BookingSeries
     public function changeFollowing(Booking $booking, array $data, ?User $actor = null): Booking
     {
         return DB::transaction(function () use ($booking, $data, $actor): Booking {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $current = Booking::findOrFail($booking->id);
             abort_unless($current->series_key && in_array($data['action'], ['move', 'cancel'], true), 422);
             if ($current->revision !== (int) $data['revision']) {

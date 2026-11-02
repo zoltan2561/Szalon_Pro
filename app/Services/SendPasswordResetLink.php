@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\PasswordResetLink;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
@@ -15,12 +16,25 @@ class SendPasswordResetLink implements ShouldBeEncrypted, ShouldQueue
 {
     use Queueable;
 
+    public readonly int $tenantId;
+
     public function __construct(public readonly string $email)
     {
+        $this->tenantId = app(TenantContext::class)->id();
         $this->onConnection('database')->onQueue('password-resets');
     }
 
     public function handle(OperationsHealth $health): void
+    {
+        $tenant = Tenant::find($this->tenantId ?? 1);
+        if (! $tenant || $tenant->status !== 'active') {
+            return;
+        }
+
+        app(TenantContext::class)->run($tenant, fn () => $this->send($health));
+    }
+
+    private function send(OperationsHealth $health): void
     {
         try {
             $transport = config('mail.mailers.'.config('mail.default').'.transport');

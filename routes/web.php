@@ -22,11 +22,17 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ReviewConsentController;
 use App\Http\Controllers\SharingController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\TenantImpersonationController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WaitlistOfferController;
+use App\Http\Middleware\SuperAdminAccess;
 use App\Models\Salon;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/foadmin/peldanyok/{tenant}/belepes', [TenantImpersonationController::class, 'start'])->middleware(SuperAdminAccess::class)->name('tenancy.impersonate.start');
+Route::get('/foadmin/atvetel/{token}', [TenantImpersonationController::class, 'consume'])->where('token', '[a-f0-9]{64}')->middleware('throttle:login')->name('tenancy.impersonate.consume');
+Route::post('/foadmin/visszateres', [TenantImpersonationController::class, 'stop'])->name('tenancy.impersonate.stop');
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/google-naptar/kozponti-visszateres', GoogleCalendarRelayController::class)->name('google.relay');

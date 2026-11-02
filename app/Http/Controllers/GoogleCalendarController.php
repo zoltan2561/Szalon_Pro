@@ -8,6 +8,7 @@ use App\Models\Staff;
 use App\Services\GoogleCalendarClient;
 use App\Services\GoogleCalendarRelay;
 use App\Services\GoogleCalendarSync;
+use App\Services\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class GoogleCalendarController extends Controller
         } catch (\RuntimeException) {
             return back()->withErrors(['google' => 'A közös Google-kapcsolat beállítása hiányos. Kérd az üzemeltető segítségét.']);
         }
-        $request->session()->put('google_calendar_oauth', ['state' => $state, 'staff_id' => $staff->id, 'user_id' => $request->user()->id, 'started_at' => now()->timestamp]);
+        $request->session()->put('google_calendar_oauth', ['state' => $state, 'tenant_id' => app(TenantContext::class)->id(), 'staff_id' => $staff->id, 'user_id' => $request->user()->id, 'started_at' => now()->timestamp]);
 
         return redirect()->away($client->authorizationUrl($state));
     }
@@ -48,6 +49,7 @@ class GoogleCalendarController extends Controller
         $pending = $request->session()->get('google_calendar_oauth');
         if (! is_array($pending) || ! is_string($pending['state'] ?? null) || ! is_string($request->query('state'))
             || ! hash_equals($pending['state'], $request->query('state')) || ($pending['user_id'] ?? null) !== $request->user()->id
+            || ($pending['tenant_id'] ?? 1) !== app(TenantContext::class)->id()
             || ($pending['started_at'] ?? 0) < now()->subMinutes(10)->timestamp) {
             return redirect()->route('admin.google.index')->withErrors(['google' => 'A kapcsolódási kérés lejárt vagy érvénytelen. Indítsd újra.']);
         }

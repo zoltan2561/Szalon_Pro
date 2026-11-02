@@ -20,7 +20,7 @@ class VoucherService
         $this->authorize($actor);
 
         return DB::transaction(function () use ($data, $actor): GiftVoucher {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             if ($existing = GiftVoucher::where('issue_key', $data['request_key'])->first()) {
                 if ($existing->buyer_name !== $data['buyer_name'] || $existing->service_id !== ($data['service_id'] ?? null)
                     || (isset($data['amount']) && $existing->initial_amount !== (int) $data['amount'])
@@ -46,7 +46,7 @@ class VoucherService
         $this->authorize($actor);
 
         return DB::transaction(function () use ($voucher, $booking, $amount, $requestKey, $actor): VoucherRedemption {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             if ($existing = VoucherRedemption::where('request_key', $requestKey)->first()) {
                 if ($existing->gift_voucher_id !== $voucher->id || $existing->booking_id !== $booking->id || $existing->amount !== $amount) {
                     $this->error('Ez a beváltási azonosító másik művelethez tartozik.');
@@ -75,7 +75,7 @@ class VoucherService
     {
         $this->authorize($actor);
         DB::transaction(function () use ($redemption, $reason, $actor): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $redemption = VoucherRedemption::lockForUpdate()->findOrFail($redemption->id);
             if ($redemption->reversed_at) {
                 return;

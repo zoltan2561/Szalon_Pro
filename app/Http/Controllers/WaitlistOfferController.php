@@ -69,7 +69,7 @@ class WaitlistOfferController extends Controller
         }
         $token = bin2hex(random_bytes(32));
         DB::transaction(function () use ($data, $token, $until): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $guest = Guest::create(['name' => $data['name'], 'email' => $data['email'] ?? null, 'phone' => $data['phone'] ?? null]);
             WaitlistEntry::create(['guest_id' => $guest->id, 'service_id' => $data['service_id'], 'staff_id' => $data['staff_id'] ?? null, 'preferred_date' => $data['preferred_date'], 'preferred_until' => $data['preferred_until'], 'time_from' => $data['time_from'] ?? null, 'time_until' => $data['time_until'] ?? null, 'status' => 'waiting', 'token_hash' => hash('sha256', $token), 'manage_token' => $token, 'token_expires_at' => $until->addDays(7)->endOfDay()->utc(), 'notification_consent_at' => now()]);
         }, 5);
@@ -88,7 +88,7 @@ class WaitlistOfferController extends Controller
     {
         $entry = $this->entry($token);
         DB::transaction(function () use ($entry): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             WaitlistEntry::whereKey($entry->id)->where('status', 'waiting')->update(['status' => 'cancelled', 'notification_consent_at' => null]);
             WaitlistOffer::where('waitlist_entry_id', $entry->id)->whereIn('status', ['pending', 'retry', 'sent'])->update(['status' => 'obsolete']);
         }, 5);

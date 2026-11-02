@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\GoogleCalendarEventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GoogleCalendarEvent extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<GoogleCalendarEventFactory> */
     use HasFactory;
 

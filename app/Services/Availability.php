@@ -195,7 +195,7 @@ class Availability
     public function canBook(Service $service, Staff $staff, CarbonImmutable $start, ?Booking $ignore = null, array $ignoreBookingIds = []): bool
     {
         $start = $start->utc();
-        $salon = Salon::query()->findOrFail(1);
+        $salon = Salon::current();
         $local = $start->setTimezone($salon->timezone);
         if (! $service->active || ! $staff->active || ! $service->staff()->whereKey($staff->id)->exists() || ! app(ServiceSelection::class)->eligible($service, $staff)
             || $start->lt(CarbonImmutable::now()->addMinutes($salon->min_notice_minutes))

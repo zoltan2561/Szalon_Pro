@@ -29,8 +29,8 @@ class BenefitsController extends Controller
         $this->authorizeOwner($request);
         $data = $request->validate(['loyalty_points_per_visit' => 'required|integer|min:0|max:100', 'loyalty_reward_threshold' => 'required|integer|min:1|max:1000', 'loyalty_reward_label' => 'required|string|max:120']);
         DB::transaction(function () use ($data): void {
-            Salon::whereKey(1)->increment('lock_version');
-            BenefitSettings::updateOrCreate(['salon_id' => 1], $data);
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
+            BenefitSettings::updateOrCreate(['salon_id' => Salon::current()->id], $data);
         }, 5);
 
         return back()->with('success', 'A hűségprogram szabályait elmentettük. A korábbi pontok változatlanok.');
@@ -41,7 +41,7 @@ class BenefitsController extends Controller
         $this->authorizeOwner($request);
         $data = $request->validate(['name' => 'required|string|max:120', 'service_id' => ['required', 'integer', Rule::exists('services', 'id')], 'visits_total' => 'required|integer|min:2|max:100', 'validity_days' => 'nullable|integer|min:1|max:3650']);
         DB::transaction(function () use ($request, $data, $passPlan): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             ($passPlan ?? new PassPlan)->fill($data + ['active' => $request->boolean('active')])->save();
         }, 5);
 
@@ -53,7 +53,7 @@ class BenefitsController extends Controller
         $this->authorizeOwner($request);
         $data = $request->validate(['loyalty_points' => 'nullable|integer|min:0|max:100']);
         DB::transaction(function () use ($service, $data): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $service->update(['loyalty_points' => $data['loyalty_points'] ?? null]);
         }, 5);
 

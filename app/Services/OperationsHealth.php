@@ -41,7 +41,7 @@ class OperationsHealth
 
     public function heartbeatKey(string $channel): string
     {
-        return 'salon:heartbeat:'.hash('sha256', (string) config('database.connections.'.config('database.default').'.database')).':'.$channel;
+        return 'salon:heartbeat:'.hash('sha256', (string) config('database.connections.'.config('database.default').'.database')).':tenant:'.app(TenantContext::class)->id().':'.$channel;
     }
 
     public function recordRun(string $channel): void
@@ -66,7 +66,7 @@ class OperationsHealth
     {
         $counts = [];
         foreach (['email' => 'outbox_messages', 'sms' => 'sms_outbox_messages'] as $channel => $table) {
-            $counts[$channel] = Schema::hasTable($table) ? DB::table($table)->whereIn('status', ['pending', 'retry', 'failed', 'uncertain'])->where('scheduled_at', '<=', now())->count() : 0;
+            $counts[$channel] = Schema::hasTable($table) ? DB::table($table)->where('tenant_id', app(TenantContext::class)->id())->whereIn('status', ['pending', 'retry', 'failed', 'uncertain'])->where('scheduled_at', '<=', now())->count() : 0;
         }
 
         return $counts;
@@ -80,9 +80,9 @@ class OperationsHealth
         if ($connection->getDriverName() === 'sqlite' && $connection->getDatabaseName() !== ':memory:' && strtolower($connection->selectOne('PRAGMA journal_mode')->journal_mode) !== 'wal') {
             $warnings['sqlite_wal'] = 'Az SQLite adatbázis nem WAL módban fut. A párhuzamos foglalásokhoz kérd az üzemeltetőtől a WAL mód bekapcsolását.';
         }
-        $smsEnabled = Schema::hasTable('salons') && (Salon::find(1)?->featureEnabled('sms') ?? false);
+        $smsEnabled = Schema::hasTable('salons') && (Salon::query()->first()?->featureEnabled('sms') ?? false);
         if (Schema::hasTable('fiscal_documents')) {
-            $billingIssues = DB::table('fiscal_documents')->where(function ($query): void {
+            $billingIssues = DB::table('fiscal_documents')->where('tenant_id', app(TenantContext::class)->id())->where(function ($query): void {
                 $query->whereIn('status', ['failed', 'uncertain', 'pending'])->orWhere(fn ($stale) => $stale->where('status', 'sending')->where('last_attempt_at', '<', now()->subMinutes(5)));
             })->count();
             if ($billingIssues) {
@@ -95,7 +95,13 @@ class OperationsHealth
         $queueConnection = DB::connection(config('queue.connections.database.connection'));
         $queueTable = config('queue.connections.database.table', 'jobs');
         if ($queueConnection->getSchemaBuilder()->hasTable($queueTable)) {
-            $stalePasswordRequests = $queueConnection->table($queueTable)->where('queue', 'password-resets')->where('created_at', '<', now()->subMinutes(5)->timestamp)->where('available_at', '<=', now()->timestamp)->count();
+            $tenantId = app(TenantContext::class)->id();
+            $stalePasswordRequests = $queueConnection->table($queueTable)->where('queue', 'password-resets')->where(function ($query) use ($tenantId): void {
+                $query->where('payload->tenant_id', $tenantId);
+                if ($tenantId === 1) {
+                    $query->orWhereNull('payload->tenant_id');
+                }
+            })->where('created_at', '<', now()->subMinutes(5)->timestamp)->where('available_at', '<=', now()->timestamp)->count();
             if ($stalePasswordRequests > 0) {
                 $warnings['password_reset_queue'] = $stalePasswordRequests.' jelszó-visszaállítási kérés több mint öt perce feldolgozásra vár. Ellenőrizd az időzítőt és a password-resets feldolgozót.';
             }

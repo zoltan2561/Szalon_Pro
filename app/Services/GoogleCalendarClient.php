@@ -29,6 +29,14 @@ class GoogleCalendarClient
 
     public function redirectUri(): string
     {
+        if (app(TenantContext::class)->id() !== 1) {
+            $uri = rtrim(config('app.url'), '/').'/google-naptar/kozponti-visszateres';
+            if (app()->environment('production') && ! str_starts_with($uri, 'https://')) {
+                throw new RuntimeException('google_insecure_redirect');
+            }
+
+            return $uri;
+        }
         $uri = config('services.google_calendar.redirect_uri');
         if (! is_string($uri) || $uri === '') {
             throw new RuntimeException('google_not_configured');

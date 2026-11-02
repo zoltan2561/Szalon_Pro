@@ -7,18 +7,26 @@ use App\Services\BookingInbox;
 use App\Services\Branding;
 use App\Services\DemoAccess;
 use App\Services\OperationsHealth;
+use App\Services\TenantContext;
+use App\Services\TenantPresenceVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(TenantContext::class);
+        $this->app->extend('validation.presence', fn ($verifier, $app) => new TenantPresenceVerifier($app['db']));
+    }
 
     public function boot(): void
     {
+        Queue::createPayloadUsing(fn (): array => ['tenant_id' => app(TenantContext::class)->id()]);
         View::composer(['errors.*', 'errors::*'], function (\Illuminate\View\View $view): void {
             $context = request()->attributes->get('error_contact');
             if (! is_array($context)) {

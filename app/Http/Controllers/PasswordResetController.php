@@ -55,8 +55,8 @@ class PasswordResetController extends Controller
         }
         $data['email'] = $user?->email ?? $data['email'];
         $changedUser = null;
-        $status = DB::transaction(function () use ($data, &$changedUser): string {
-            DB::table(config('auth.passwords.users.table'))->where('email', $data['email'])->lockForUpdate()->first();
+        $status = DB::transaction(function () use ($data, $user, &$changedUser): string {
+            DB::table(config('auth.passwords.users.table'))->where('email', $user?->getEmailForPasswordReset() ?? $data['email'])->lockForUpdate()->first();
 
             return Password::broker()->reset($data, function (User $user, string $password) use (&$changedUser): void {
                 $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();

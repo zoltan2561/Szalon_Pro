@@ -1,11 +1,11 @@
 @extends('layouts.public')
-@section('title', 'Időpontfoglalás')
+@section('title', $brand['content']['booking_title'])
 @section('content')
 @php($contactMode = $salon->featureEnabled('phone_booking') ? $salon->contact_mode : 'email')
 @php($referralSource = $salon->featureEnabled('sharing') && in_array(request('utm_source', old('referral_source')), \App\Services\BookingLinks::Sources, true) ? request('utm_source', old('referral_source')) : null)
 <div class="booking-wrap wrap">
-    <p class="eyebrow">EGY LÉPÉSSEL KÖZELEBB</p>
-    <h1 class="page-title">{{ $salon->demo ? $brand['demo_copy']['booking_heading'] : 'A következő énidőd.' }}</h1>
+    <p class="eyebrow">{{ $brand['content']['booking_eyebrow'] }}</p>
+    <h1 class="page-title">{{ $brand['content']['booking_heading'] }}</h1>
     <ol class="steps booking-steps" data-booking-steps aria-label="A foglalás lépései"><li><a href="#booking-service" data-booking-step="1" aria-current="step"><span class="step-number">1</span><span>Szolgáltatás</span></a></li><li><a href="#booking-slots" data-booking-step="2"><span class="step-number">2</span><span>Időpont</span></a></li><li><a href="#booking-guest" data-booking-step="3"><span class="step-number">3</span><span>Adataid</span></a></li></ol>
     @if($salon->demo)<div class="notice demo-booking-notice">Ez egy bemutató. A foglalás kipróbálható, de kérjük, ne adj meg valódi személyes adatot.</div>@endif
     @if(!$ready || !$salon->published)

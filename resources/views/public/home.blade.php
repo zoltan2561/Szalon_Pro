@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title', $isDemoHub ? 'Vendégfoglalás és szalonkezelés' : 'Kezdőlap')
+@section('title', $isDemoHub ? 'Vendégfoglalás és szalonkezelés' : $brand['content']['home_title'])
 @section('content')
 @if($isDemoHub)
     @include('public.home-demo')

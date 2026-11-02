@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Booking;
 use App\Models\Salon;
+use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,11 @@ class BackupSalon extends Command
 
     public function handle(): int
     {
+        if (Tenant::count() > 1) {
+            $this->error('A régi szalonmentés közös ügyféladatbázison nem használható. Készíts teljes, titkosított adatbázis- és fájlmentést az üzemeltetői eljárással.');
+
+            return self::FAILURE;
+        }
         $path = $this->option('path') ?: config('salon.backup_directory').'/'.now()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.backup';
         if (file_exists($path)) {
             $this->error('A célfájl már létezik.');

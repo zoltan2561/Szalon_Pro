@@ -39,7 +39,7 @@ class WaitlistOffers
         $created = 0;
         foreach ($ids as $id) {
             $created += (int) DB::transaction(function () use ($id): bool {
-                Salon::whereKey(1)->increment('lock_version');
+                Salon::whereKey(Salon::current()->id)->increment('lock_version');
                 $entry = WaitlistEntry::with('guest', 'service.staff')->lockForUpdate()->find($id);
                 if (! $entry || $entry->status !== 'waiting' || ! $entry->notification_consent_at || $entry->guest->anonymized_at || ! $entry->service->active || ($entry->last_offered_at && $entry->last_offered_at->gt(now()->subDay()))) {
                     return false;
@@ -84,7 +84,7 @@ class WaitlistOffers
         $sent = 0;
         foreach (WaitlistOffer::whereIn('status', ['pending', 'retry'])->where('scheduled_at', '<=', now())->orderBy('id')->limit(50)->pluck('id') as $id) {
             $offer = DB::transaction(function () use ($id): ?WaitlistOffer {
-                Salon::whereKey(1)->increment('lock_version');
+                Salon::whereKey(Salon::current()->id)->increment('lock_version');
                 $offer = WaitlistOffer::with('entry.guest', 'entry.service', 'staff')->lockForUpdate()->find($id);
                 if (! $offer || ! in_array($offer->status, ['pending', 'retry'], true) || $offer->scheduled_at->isFuture()) {
                     return null;
@@ -145,7 +145,7 @@ class WaitlistOffers
     public function accept(WaitlistOffer $offer): Booking
     {
         return DB::transaction(function () use ($offer): Booking {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $current = WaitlistOffer::with('entry.guest', 'entry.service', 'staff')->lockForUpdate()->findOrFail($offer->id);
             if (! $current->expires_at->isFuture()) {
                 throw ValidationException::withMessages(['offer' => 'Az ajánlat lejárt. A várólistán továbbra is szerepelsz.']);

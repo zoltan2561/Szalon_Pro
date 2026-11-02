@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
+use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Staff extends Model
 {
+    use BelongsToTenant;
     use HasFactory;
 
     protected $table = 'staff';
@@ -22,7 +25,7 @@ class Staff extends Model
 
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(Service::class);
+        return $this->belongsToMany(Service::class)->using(TenantPivot::class)->withPivot('tenant_id')->wherePivot('tenant_id', app(TenantContext::class)->id());
     }
 
     public function googleCalendarConnection(): HasOne

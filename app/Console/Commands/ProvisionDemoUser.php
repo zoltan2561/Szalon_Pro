@@ -17,7 +17,7 @@ class ProvisionDemoUser extends Command
 {
     public function handle(): int
     {
-        $salon = Salon::find(1);
+        $salon = Salon::query()->first();
         if (! $salon?->published || ! $salon->demo) {
             $this->error('A public viewer can only be provisioned on a published demo installation.');
 

@@ -29,7 +29,7 @@ class BookingService
         }
 
         return DB::transaction(function () use ($data, $actor, $rebookingGuest): Booking {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $fingerprint = hash('sha256', json_encode([$data['service_id'], $data['staff_id'], $data['starts_at'], $data['guest_id'] ?? $rebookingGuest?->id, $data['waitlist_entry_id'] ?? null, $data['name'] ?? null, $data['email'] ?? null, $data['phone'] ?? null, (bool) ($data['sms_opt_in'] ?? false), $actor?->id]));
             $key = ($actor ? 'admin:'.$actor->id.':' : 'public:').$data['request_key'];
             if (! empty($data['referral_source'])) {
@@ -122,7 +122,7 @@ class BookingService
     public function change(Booking $booking, array $data, ?User $actor = null, array $ignoreBookingIds = []): Booking
     {
         return DB::transaction(function () use ($booking, $data, $actor, $ignoreBookingIds): Booking {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             if ($actor) {
                 abort_unless($actor->role === 'owner' || ($actor->can_manage_bookings && $actor->staff_id === $booking->staff_id), 403);
@@ -218,7 +218,7 @@ class BookingService
     public function completeExpiredBooking(int $bookingId, CarbonImmutable $cutoff): bool
     {
         return DB::transaction(function () use ($bookingId, $cutoff): bool {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::whereKey($bookingId)->where('status', 'confirmed')->where('ends_at', '<=', $cutoff)->first();
             if (! $booking) {
                 return false;

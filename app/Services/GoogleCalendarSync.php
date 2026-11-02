@@ -88,6 +88,7 @@ class GoogleCalendarSync
                 throw new RuntimeException('google_invalid_events');
             }
             $rows[] = [
+                'tenant_id' => $connection->tenant_id,
                 'google_calendar_connection_id' => $connection->id,
                 'event_key' => hash('sha256', $event['id']),
                 'starts_at' => $start->utc(),

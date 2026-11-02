@@ -61,7 +61,7 @@ class WaitlistController extends Controller
             throw ValidationException::withMessages(['staff_id' => 'A szakember nem végezheti ezt a szolgáltatást.']);
         }
         DB::transaction(function () use ($user, $data, $service, $staffId): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             if (! empty($data['guest_id'])) {
                 $guest = Guest::findOrFail($data['guest_id']);
                 abort_if($guest->anonymized_at, 422);
@@ -95,7 +95,7 @@ class WaitlistController extends Controller
         $user = $request->user();
         abort_unless(($user->role === 'owner' || $user->can_manage_bookings) && WaitlistEntry::visibleTo($user)->whereKey($entry->id)->exists(), 403);
         DB::transaction(function () use ($entry): void {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $entry = WaitlistEntry::lockForUpdate()->findOrFail($entry->id);
             abort_unless($entry->status === 'waiting', 422);
             $entry->update(['status' => 'cancelled']);

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Tenant;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,11 @@ class RestoreSalon extends Command
 
     public function handle(): int
     {
+        if (Tenant::count() > 1) {
+            $this->error('A régi szalon-visszaállítás közös ügyféladatbázison nem használható. Kövesd a teljes adatbázis- és fájlmentés üzemeltetői visszaállítási eljárását.');
+
+            return self::FAILURE;
+        }
         foreach (BackupSalon::TABLES as $table) {
             if (DB::table($table)->exists()) {
                 $this->error('A cél nem üres. Külön, üres helyre állíts vissza; meglévő adatot nem írunk felül.');

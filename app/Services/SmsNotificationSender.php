@@ -75,7 +75,7 @@ class SmsNotificationSender
     private function claim(int $id): ?SmsOutboxMessage
     {
         return DB::transaction(function () use ($id): ?SmsOutboxMessage {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $message = SmsOutboxMessage::lockForUpdate()->findOrFail($id);
             if (! in_array($message->status, ['pending', 'retry'], true) || $message->scheduled_at->isFuture()) {
                 return null;

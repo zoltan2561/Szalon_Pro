@@ -27,7 +27,7 @@ class BillingService
             $this->error('A bizonylatküldés nincs engedélyezve vagy a beállítások hiányosak.');
         }
         [$document, $send] = DB::transaction(function () use ($booking, $data, $actor): array {
-            Salon::whereKey(1)->increment('lock_version');
+            Salon::whereKey(Salon::current()->id)->increment('lock_version');
             $booking = Booking::findOrFail($booking->id);
             if ($booking->status !== 'completed') {
                 $this->error('Csak elvégzett foglalásból állítható ki bizonylat.');
