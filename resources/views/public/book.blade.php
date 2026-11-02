@@ -9,7 +9,7 @@
     <ol class="steps booking-steps" data-booking-steps aria-label="A foglalás lépései"><li><a href="#booking-service" data-booking-step="1" aria-current="step"><span class="step-number">1</span><span>Szolgáltatás</span></a></li><li><a href="#booking-slots" data-booking-step="2"><span class="step-number">2</span><span>Időpont</span></a></li><li><a href="#booking-guest" data-booking-step="3"><span class="step-number">3</span><span>Adataid</span></a></li></ol>
     @if($salon->demo)<div class="notice demo-booking-notice">Ez egy bemutató. A foglalás kipróbálható, de kérjük, ne adj meg valódi személyes adatot.</div>@endif
     @if(!$ready || !$salon->published)
-        <div class="notice">Az online foglalás még nem aktív. Kérjük, keresd a szalont az elérhetőségein.</div>
+        <div class="notice">{{ !$salon->demo && !$salon->phone && !$salon->email && !$salon->address ? 'Az online időpontfoglalás hamarosan elérhető.' : 'Az online foglalás még nem aktív. Kérjük, keresd a szalont az elérhetőségein.' }}</div>
     @else
         @if($date < now($salon->timezone)->toDateString())
             <div class="notice">Ez a nap már elmúlt. Válassz mai vagy későbbi időpontot. <a href="{{ route('booking.form', array_filter(['service_id' => $service?->id, 'staff_id' => $staffId, 'utm_source' => $referralSource])) }}">Következő szabad nap keresése</a></div>

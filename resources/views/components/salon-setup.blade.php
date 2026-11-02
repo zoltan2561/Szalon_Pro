@@ -4,7 +4,7 @@
 @endphp
 @if(collect($setupSteps)->contains('complete', false))
 <section class="{{ ($filament ?? false) ? 'fi-section' : 'panel' }}" aria-labelledby="salon-setup-heading" style="padding:1.5rem">
-    <h2 id="salon-setup-heading">A szalonod indulási teendői</h2>
+    <h2 id="salon-setup-heading" style="font-size:1.125rem;font-weight:600;margin-bottom:.5rem">A szalonod indulási teendői</h2>
     <p>A saját adataiddal töltsd ki az alábbiakat. Ha egyedül dolgozol, magadat is vedd fel munkatársként. A Google Naptár később is összeköthető.</p>
     <ul style="list-style:none;padding:0;margin:1rem 0;display:grid;gap:.75rem">
         @foreach($setupSteps as $step)

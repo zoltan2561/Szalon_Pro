@@ -30,7 +30,7 @@ class SalonPreparationTest extends TestCase
             ->assertDontSee('owner@example.test')
             ->assertDontSee('Zárva')
             ->assertDontSee('mailto:', false);
-        $this->get($tenant->url().'/foglalas')->assertOk();
+        $this->get($tenant->url().'/foglalas')->assertOk()->assertSee('Az online időpontfoglalás hamarosan elérhető.')->assertDontSee('keresd a szalont az elérhetőségein');
         $this->get($tenant->url().'/adatkezeles')->assertOk()->assertSee('A tájékoztató hamarosan elérhető.')->assertDontSee('mailto:', false);
     }
 
