@@ -17,7 +17,10 @@ class AuthController extends Controller
         Auth::login($viewer);
         $this->regenerateSession($request);
 
-        return redirect()->route('admin.today');
+        $destination = in_array($request->input('destination'), ['admin.today', 'admin.calendar', 'admin.guests'], true)
+            ? $request->input('destination') : 'admin.today';
+
+        return redirect()->route($destination);
     }
 
     public function login(Request $request): RedirectResponse

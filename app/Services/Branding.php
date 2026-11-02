@@ -50,13 +50,7 @@ class Branding
 
     public function demoSalesContactUrl(): ?string
     {
-        $contact = config('salon.contact_url');
-        if (! is_string($contact) || $contact === '') {
-            return null;
-        }
-
-        return filter_var($contact, FILTER_VALIDATE_URL) !== false
-            && parse_url($contact, PHP_URL_SCHEME) === 'https' ? $contact : null;
+        return app(DemoJourney::class)->contact('navigation');
     }
 
     public function demoMarketingUrl(): string

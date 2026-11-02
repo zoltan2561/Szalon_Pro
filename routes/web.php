@@ -35,6 +35,19 @@ Route::get('/foadmin/atvetel/{token}', [TenantImpersonationController::class, 'c
 Route::post('/foadmin/visszateres', [TenantImpersonationController::class, 'stop'])->name('tenancy.impersonate.stop');
 
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/sitemap.xml', function () {
+    abort_unless(Salon::current()->demo && Salon::current()->published, 404);
+
+    return response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://szalon.pro/</loc></url></urlset>', 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+})->name('demo.sitemap');
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\nDisallow: /admin\nDisallow: /foglalas\nDisallow: /kezeles\nDisallow: /belepes\n";
+    if (Salon::current()->demo) {
+        $content .= "Sitemap: https://szalon.pro/sitemap.xml\n";
+    }
+
+    return response($content, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
 Route::get('/google-naptar/kozponti-visszateres', GoogleCalendarRelayController::class)->name('google.relay');
 Route::get('/ajandek/{token}', [VoucherController::class, 'show'])->middleware('throttle:booking')->name('vouchers.show');
 Route::get('/ertekeles/lemondas/{guest}', [ReviewConsentController::class, 'show'])->middleware('signed')->name('reviews.unsubscribe');

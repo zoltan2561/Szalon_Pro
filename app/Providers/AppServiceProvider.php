@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.*', 'public.*', 'admin.*', 'auth.*'], function ($view): void {
             $salon = Salon::current();
             $branding = app(Branding::class);
-            $demoHubEnabled = $salon->demo && (bool) config('salon.demo_hub');
+            $demoHubEnabled = $salon->demo && $salon->theme === 'salon' && (bool) config('salon.demo_hub');
             if (! request()->attributes->has('demo_access_available')) {
                 request()->attributes->set('demo_access_available', app(DemoAccess::class)->available());
             }

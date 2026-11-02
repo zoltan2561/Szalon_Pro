@@ -25,7 +25,7 @@ class DemoOwnerJourneyTest extends TestCase
             ->assertSee('href="'.route('admin.today').'"', false)
             ->assertSee('href="https://barber.example.test"', false)
             ->assertSee('href="https://nails.example.test"', false)
-            ->assertSee('href="https://example.test/kapcsolat"', false);
+            ->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false);
 
         $this->get(route('home', ['view' => 'guest']))->assertOk()
             ->assertDontSee('data-demo-hub', false)->assertSee('Próba hajvágás');

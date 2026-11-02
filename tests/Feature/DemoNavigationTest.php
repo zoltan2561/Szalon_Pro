@@ -34,9 +34,7 @@ class DemoNavigationTest extends TestCase
                 ->assertSee('href="https://szalon.pro/?view=guest"', false)
                 ->assertSee('href="https://barber.szalon.pro"', false)
                 ->assertSee('href="https://nails.szalon.pro"', false)
-                ->assertSee('href="https://szalon.pro/#arak"', false)
-                ->assertSee('Árak')
-                ->assertSee('href="https://szoftlab.hu"', false)
+                ->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false)
                 ->assertSee('Admin bemutató ('.$label.')');
             $activeUrl = ['salon' => 'https://szalon.pro/?view=guest', 'barber' => 'https://barber.szalon.pro', 'nails' => 'https://nails.szalon.pro'][$theme];
             $this->assertMatchesRegularExpression('/href="'.preg_quote($activeUrl, '/').'"\s+aria-current="page"/', $response->getContent());
@@ -50,13 +48,13 @@ class DemoNavigationTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('href="#arak"', false)->assertSee('id="arak"', false)
             ->assertSee('4 900 Ft / hó')
-            ->assertSee('Hűségidő nélkül, bevezetési díj nélkül. Bármikor lemondható.')
+            ->assertSee('Nincs hűségidő, 30 napos felmondással bármikor lemondható.')
             ->assertSee('Online időpontfoglaló és szalonkezelő rendszer fodrászatoknak, barbereknek és körmösöknek.')
             ->assertSee('Google Naptár-szinkron')->assertSee('E-mail-értesítések')
-            ->assertSee('href="https://szoftlab.hu"', false)
+            ->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false)
             ->assertDontSee('mailto:munka@szoftlab.hu', false);
         config(['salon.contact_url' => 'https://example.test/kapcsolat']);
-        $this->get('/')->assertSee('href="https://example.test/kapcsolat"', false)->assertDontSee('href="https://szoftlab.hu"', false);
+        $this->get('/')->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false)->assertDontSee('href="https://example.test/kapcsolat"', false);
     }
 
     public function test_restricted_reader_pages_explain_the_limit_in_hungarian_without_exposing_settings(): void
