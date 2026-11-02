@@ -10,7 +10,7 @@
         @include('public.home-services')
         @include('public.home-team')
         @include('public.home-studio')
-        @include('public.home-journey')
+        @if($salon->demo || $ready) @include('public.home-journey') @endif
         @include('public.home-gallery')
         @break
     @case('nails')
@@ -18,7 +18,7 @@
         @include('public.home-studio')
         @include('public.home-gallery')
         @include('public.home-services')
-        @include('public.home-journey')
+        @if($salon->demo || $ready) @include('public.home-journey') @endif
         @include('public.home-team')
         @break
     @default
@@ -26,7 +26,7 @@
         @include('public.home-studio')
         @include('public.home-services')
         @include('public.home-team')
-        @include('public.home-journey')
+        @if($salon->demo || $ready) @include('public.home-journey') @endif
         @include('public.home-gallery')
 @endswitch
 @include('public.home-system')

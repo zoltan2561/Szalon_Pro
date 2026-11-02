@@ -32,7 +32,7 @@ class TenantProvisioner
         return DB::transaction(function () use ($data): Tenant {
             $tenant = Tenant::create(['slug' => $data['slug'], 'name' => $data['name'], 'domain' => $data['slug'].'.'.config('tenancy.base_domain'), 'status' => 'active']);
             app(TenantContext::class)->run($tenant, function () use ($data): void {
-                Salon::create(['name' => $data['name'], 'tagline' => 'Idő magadra.', 'email' => $data['email'], 'demo' => false, 'published' => true, 'opening_hours' => array_fill(1, 5, [['09:00', '17:00']]), 'appearance' => config('branding.presets.salon.appearance')]);
+                Salon::create(['name' => $data['name'], 'tagline' => 'Idő magadra.', 'email' => '', 'demo' => false, 'published' => true, 'opening_hours' => [], 'appearance' => config('branding.presets.salon.appearance')]);
                 User::create(['name' => $data['name'], 'email' => mb_strtolower($data['email']), 'password' => Str::random(64), 'role' => 'owner', 'can_manage_bookings' => true, 'can_view_notes' => true]);
             });
 

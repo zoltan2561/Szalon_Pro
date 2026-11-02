@@ -45,6 +45,9 @@
     ];
 @endphp
 @if($displayWarnings->isNotEmpty())<details class="notice compact-warning operation-status" aria-label="Működési figyelmeztetések"><summary>{{ $displayWarnings->count() }} működési teendő</summary><ul>@foreach($displayWarnings as $key => $warning)<li>{{ $warningLabels[$key] ?? $warning }}</li>@endforeach</ul><a href="{{ route('admin.notifications') }}">Állapot és teendők megnyitása →</a></details>@endif
+@if(!$salon->demo && auth()->user()->role === 'owner' && request()->routeIs('admin.today'))
+    @include('components.salon-setup')
+@endif
 @yield('content')@yield('day-review')</main>
 <footer class="admin-footer">SzalonPRO · {{ config('salon.version') }} <span>Kevesebb szervezés. Több figyelem.</span></footer>
 </div>

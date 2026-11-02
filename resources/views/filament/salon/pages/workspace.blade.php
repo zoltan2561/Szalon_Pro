@@ -1,4 +1,7 @@
 <x-filament-panels::page>
+    @unless(\App\Models\Salon::current()->demo)
+        @include('components.salon-setup', ['filament' => true])
+    @endunless
     <x-filament::section heading="A szalon napi munkája">
         <p>A foglalásokat és a vendégeket a megszokott felületen kezeled. A beállítások csak a saját szalonodra érvényesek.</p>
         <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.5rem">
