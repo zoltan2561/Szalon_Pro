@@ -29,7 +29,7 @@ class BrandingTest extends TestCase
             ->assertSee('class="public premium salon', false)
             ->assertSee('Hajvágás')
             ->assertSee('A hajad, a te elképzelésed.')
-            ->assertSee('href="https://demo.test/hair"', false)
+            ->assertSee('href="https://demo.test/hair?view=guest"', false)
             ->assertSee('href="https://demo.test/barber"', false)
             ->assertSee('href="https://demo.test/nails"', false)
             ->assertSeeInOrder(['id="rolunk"', 'id="szolgaltatasok"', 'class="team-section', 'class="journey-section'], false);
@@ -49,12 +49,12 @@ class BrandingTest extends TestCase
         Salon::factory()->create(['demo' => true]);
         Service::factory()->create();
 
+        $this->get(route('home'))->assertOk()->assertSee('href="https://szoftlab.hu"', false);
+        config()->set('salon.contact_url', 'hello@example.test');
+        $this->get(route('home'))->assertOk()->assertDontSee('Saját szalont szeretnék')->assertDontSee('mailto:hello@example.test', false);
+        config()->set('salon.contact_url', 'javascript:alert(1)');
         $this->get(route('home'))->assertOk()->assertDontSee('Saját szalont szeretnék');
-        config()->set('salon.demo_sales_contact', 'hello@example.test');
-        $this->get(route('home'))->assertOk()->assertSee('href="mailto:hello@example.test"', false);
-        config()->set('salon.demo_sales_contact', 'javascript:alert(1)');
-        $this->get(route('home'))->assertOk()->assertDontSee('Saját szalont szeretnék');
-        config()->set('salon.demo_sales_contact', 'https://example.test/kapcsolat');
+        config()->set('salon.contact_url', 'https://example.test/kapcsolat');
         $this->get(route('home'))->assertOk()->assertSee('href="https://example.test/kapcsolat"', false);
     }
 

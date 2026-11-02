@@ -6,22 +6,17 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/branding/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('salon.css').'?v='.substr(hash_file('sha256', public_path('salon.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('premium.css').'?v='.substr(hash_file('sha256', public_path('premium.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('industry.css').'?v='.substr(hash_file('sha256', public_path('industry.css')), 0, 12) }}">
     <link rel="stylesheet" href="{{ asset('localized-fields.css').'?v='.substr(hash_file('sha256', public_path('localized-fields.css')), 0, 12) }}">
-<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('mobile-experience.css').'?v='.substr(hash_file('sha256', public_path('mobile-experience.css')), 0, 12) }}">@if($salon->demo)<link rel="stylesheet" href="{{ asset('demo.css').'?v='.substr(hash_file('sha256', public_path('demo.css')), 0, 12) }}">@endif</head>
+<link rel="stylesheet" href="{{ asset('booking-experience.css').'?v='.substr(hash_file('sha256', public_path('booking-experience.css')), 0, 12) }}"><link rel="stylesheet" href="{{ asset('mobile-experience.css').'?v='.substr(hash_file('sha256', public_path('mobile-experience.css')), 0, 12) }}">@if($salon->demo)<link rel="stylesheet" href="{{ asset('demo.css').'?v='.substr(hash_file('sha256', public_path('demo.css')), 0, 12) }}">@endif@if($salon->demo)<link rel="stylesheet" href="{{ asset('demo-navigation.css').'?v='.substr(hash_file('sha256', public_path('demo-navigation.css')), 0, 12) }}">@endif</head>
 <body class="public premium {{ $brand['theme'] }} font-{{ $brand['font'] }} layout-{{ $brand['layout'] }} {{ request()->routeIs('home') ? 'public-home' : 'public-inner' }} {{ request()->routeIs('login') ? 'login-page' : '' }}{{ request()->routeIs('booking.*') ? ' booking-page' : '' }}{{ $isDemoHub ? ' demo-hub' : '' }}"
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['secondary'] }};--secondary:{{ $brand['secondary'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
+@if($salon->demo && !$isDemoHub && !request()->routeIs('login'))
+    @include('components.demo-navigation')
+    <div class="demo-guest-shell">
+@endif
 @unless(request()->routeIs('login'))
-@if($salon->demo && !$isDemoHub && request()->routeIs('home') && count($demoUrls) === 3)
-<div class="demo-strip"><div class="wrap demo-strip-inner">
-    <span class="demo-strip-label"><span class="demo-strip-desktop">SzalonPRO · három külön szakági bemutató</span><span class="demo-strip-mobile">{{ request()->routeIs('booking.*') ? 'DEMÓ' : '3 külön demó · saját adatokkal' }}</span></span>
-    <nav class="demo-style-nav" aria-label="Szakági demó kiválasztása; mindegyik külön szolgáltatásokkal és foglalási adatokkal működik">
-        @foreach(['salon' => 'Fodrászat', 'barber' => 'Barber', 'nails' => 'Körmös'] as $style => $label)
-            <a href="{{ $demoUrls[$style] }}" @if($brand['theme'] === $style) aria-current="true" @endif>{{ $label }}</a>
-        @endforeach
-    </nav>
-</div></div>
-@elseif($salon->demo && !$isDemoHub)
-<div class="demo-flow-bar wrap"><span>Bemutató · {{ $brand['label'] }}</span><a href="{{ route('home') }}">Vissza a bemutatóhoz <x-icon name="arrow-right" /></a></div>
+@if($salon->demo && !$isDemoHub && !request()->routeIs('home'))
+<div class="demo-flow-bar wrap"><span>Bemutató · {{ $brand['label'] }}</span><a href="{{ $demoGuestHomeUrl }}">Vissza a bemutatóhoz <x-icon name="arrow-right" /></a></div>
 @endif
 <header class="public-header">
     <div class="header-inner wrap">
@@ -31,14 +26,14 @@
         </a>
         <nav class="desktop-nav" aria-label="Főmenü">
             @if($isDemoHub)
-            <a href="#szakagak">Szakági demók</a><a href="#napi-munka">Napi munka</a><a href="#sajat-arculat">Saját arculat</a><a class="button" href="#kapcsolat">Beszéljünk a szalonodról <x-icon name="arrow-right" /></a>
+            <a href="#szakagak">Szakági demók</a><a href="#napi-munka">Napi munka</a><a href="#arak">Árak</a>@if($demoSalesContactUrl)<a class="button" href="{{ $demoSalesContactUrl }}">Saját szalont szeretnék <x-icon name="arrow-right" /></a>@endif
             @else
             <a href="{{ $demoGuestHomeUrl }}#szolgaltatasok">{{ $brand['content']['nav_services'] }}</a><a href="{{ $demoGuestHomeUrl }}#rolunk">{{ $brand['content']['nav_about'] }}</a>@if($salon->demo)<a href="{{ $demoOverviewUrl }}">A rendszer</a>@endif<a href="{{ $demoGuestHomeUrl }}#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>
             <a class="button" href="{{ route('booking.form') }}">{{ $brand['cta_label'] }} <x-icon name="arrow-right" /></a>
             @endif
         </nav>
         <details class="mobile-menu"><summary aria-label="Menü"><x-icon name="list" /><span>Menü</span></summary>
-            <nav aria-label="Mobil főmenü">@if($isDemoHub)<a href="#szakagak">Szakági demók</a><a href="#napi-munka">Tulajdonosi bemutató</a><a href="#sajat-arculat">Saját arculat</a><a href="#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>@else<a href="{{ $demoGuestHomeUrl }}#szolgaltatasok">{{ $brand['content']['nav_services'] }}</a><a href="{{ $demoGuestHomeUrl }}#rolunk">{{ $brand['content']['nav_about'] }}</a>@if($salon->demo)<a href="{{ $demoOverviewUrl }}">A rendszer</a>@endif<a href="{{ $demoGuestHomeUrl }}#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>@endif<a href="{{ route('booking.form') }}">{{ $isDemoHub ? 'Vendégként kipróbálom' : $brand['content']['nav_booking'] }}</a></nav>
+            <nav aria-label="Mobil főmenü">@if($isDemoHub)<a href="#szakagak">Szakági demók</a><a href="#napi-munka">Tulajdonosi bemutató</a><a href="#sajat-arculat">Saját arculat</a><a href="#arak">Árak</a>@if($demoSalesContactUrl)<a href="{{ $demoSalesContactUrl }}">Saját szalont szeretnék</a>@endif @else<a href="{{ $demoGuestHomeUrl }}#szolgaltatasok">{{ $brand['content']['nav_services'] }}</a><a href="{{ $demoGuestHomeUrl }}#rolunk">{{ $brand['content']['nav_about'] }}</a>@if($salon->demo)<a href="{{ $demoOverviewUrl }}">A rendszer</a>@endif<a href="{{ $demoGuestHomeUrl }}#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>@endif<a href="{{ route('booking.form') }}">{{ $isDemoHub ? 'Vendégként kipróbálom' : $brand['content']['nav_booking'] }}</a></nav>
         </details>
     </div>
 </header>
@@ -54,11 +49,13 @@
 <footer class="public-footer wrap">
     <div><a class="brand footer-brand" href="{{ $isDemoHub ? route('home') : $demoGuestHomeUrl }}"><img class="brand-logo {{ $brand['custom_logo'] ? 'custom-logo' : 'default-logo' }}" src="{{ $brand['logo'] }}" alt="" width="40" height="40"><span>{{ $isDemoHub ? 'SzalonPRO' : $salon->name }}</span></a><p>{{ $isDemoHub ? 'Vendégfoglalás és napi szalonkezelés, a saját arculatoddal.' : $brand['content']['footer_tagline'] }}</p></div>
     <div><a href="{{ route('privacy') }}">{{ $brand['content']['footer_privacy'] }}</a><a href="{{ route('login') }}">{{ $brand['content']['footer_login'] }}</a><span class="muted">{{ $brand['content']['footer_credit'] }}</span></div>
+@if($salon->demo)<div class="demo-footer-links"><a href="{{ $demoMarketingUrl }}">SzalonPRO</a><a href="{{ rtrim($demoMarketingUrl, '/') }}/#arak">Árak</a>@unless($isDemoHub)<a class="demo-price-link" href="{{ rtrim($demoMarketingUrl, '/') }}/#arak">SzalonPRO: 4 900 Ft/hó, hűségidő nélkül – Árak és indulás</a>@endunless</div>@endif
 </footer>
 @endunless
 @unless(request()->routeIs('booking.*', 'waitlist.*', 'vouchers.*', 'login', 'privacy', 'password.*'))
 <div class="mobile-booking-bar"><span>{{ $isDemoHub ? 'A te szakmád.' : $brand['content']['mobile_cta'] }}</span><a class="button" href="{{ $isDemoHub ? '#szakagak' : route('booking.form') }}">{{ $isDemoHub ? 'Megnézem a demókat' : $brand['cta_label'] }} <x-icon name="arrow-right" /></a></div>
 @endunless
+@if($salon->demo && !$isDemoHub && !request()->routeIs('login'))</div>@endif
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>
 @if(request()->routeIs('booking.form', 'booking.rebook.form', 'booking.manage'))<script src="{{ asset('public-booking-refresh.js').'?v='.substr(hash_file('sha256', public_path('public-booking-refresh.js')), 0, 12) }}" defer></script>@endif

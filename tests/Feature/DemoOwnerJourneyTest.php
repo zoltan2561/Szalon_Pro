@@ -17,7 +17,7 @@ class DemoOwnerJourneyTest extends TestCase
         Service::factory()->create(['name' => 'Próba hajvágás']);
         config()->set('salon.demo_hub', true);
         config()->set('salon.demo_urls', ['salon' => 'https://hair.example.test', 'barber' => 'https://barber.example.test', 'nails' => 'https://nails.example.test']);
-        config()->set('salon.demo_sales_contact', 'https://example.test/kapcsolat');
+        config()->set('salon.contact_url', 'https://example.test/kapcsolat');
 
         $this->get(route('home'))->assertOk()
             ->assertSee('data-demo-hub', false)
@@ -42,14 +42,14 @@ class DemoOwnerJourneyTest extends TestCase
             ->assertDontSee('data-demo-hub', false)->assertDontSee('Tulajdonosi bemutató');
     }
 
-    public function test_booking_trial_keeps_the_current_industry_instead_of_offering_another_database(): void
+    public function test_booking_trial_keeps_the_current_industry_and_offers_explicit_demo_navigation(): void
     {
         Salon::factory()->create(['demo' => true]);
         Service::factory()->create();
         config()->set('salon.demo_urls', ['salon' => 'https://hair.example.test', 'barber' => 'https://barber.example.test', 'nails' => 'https://nails.example.test']);
 
         $this->get(route('booking.form'))->assertOk()
-            ->assertDontSee('class="demo-style-nav"', false)
+            ->assertSee('class="demo-style-nav"', false)
             ->assertSee('Vissza a bemutatóhoz');
     }
 }

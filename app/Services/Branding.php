@@ -50,16 +50,29 @@ class Branding
 
     public function demoSalesContactUrl(): ?string
     {
-        $contact = config('salon.demo_sales_contact');
+        $contact = config('salon.contact_url');
         if (! is_string($contact) || $contact === '') {
             return null;
-        }
-        if (filter_var($contact, FILTER_VALIDATE_EMAIL) !== false) {
-            return 'mailto:'.$contact;
         }
 
         return filter_var($contact, FILTER_VALIDATE_URL) !== false
             && parse_url($contact, PHP_URL_SCHEME) === 'https' ? $contact : null;
+    }
+
+    public function demoMarketingUrl(): string
+    {
+        return preg_replace('/[?#].*$/', '', $this->demoUrls()['salon'] ?? route('home'));
+    }
+
+    /** @return array{salon?: string, barber?: string, nails?: string} */
+    public function demoGuestUrls(): array
+    {
+        $urls = $this->demoUrls();
+        if (isset($urls['salon'])) {
+            $urls['salon'] = url()->query($urls['salon'], ['view' => 'guest']);
+        }
+
+        return $urls;
     }
 
     public function foreground(string $background): string

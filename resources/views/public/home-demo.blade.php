@@ -3,7 +3,8 @@
         <div class="demo-hero-copy">
             <p class="eyebrow">SZALONPRO · A VENDÉGEIDNEK ÉS NEKED</p>
             <h1 id="demo-title">Több figyelem a vendégnek.<br><em>Tisztább kép a napodról.</em></h1>
-            <p class="demo-lead">A vendéged időpontot foglal. Te átlátod, ki érkezik, mikor van szabad hely, és mi történt az előző alkalommal. Fodrászatnak, barbernek és manikűrösnek, a saját arculatoddal.</p>
+            <p class="demo-description">Online időpontfoglaló és szalonkezelő rendszer fodrászatoknak, barbereknek és körmösöknek.</p>
+            <p class="demo-lead">A vendéged időpontot foglal. Te átlátod, ki érkezik, mikor van szabad hely, és mi történt az előző alkalommal.</p>
             <div class="demo-hero-actions">@if($demoAccessAvailable)@include('components.demo-entry', ['showHint' => false])@else<a class="button" href="#napi-munka">Tulajdonosi bemutató <x-icon name="calendar-blank" /></a>@endif<a class="button secondary" href="{{ route('booking.form') }}">Vendégként kipróbálom <x-icon name="arrow-right" /></a></div>
             <p class="demo-trial-note">Működő bemutató mintaadatokkal. Az admin jelszó nélkül, olvasóként járható be; a vendégfoglaláshoz nem kell fiók.</p>
         </div>
@@ -36,7 +37,13 @@
             <li><span class="demo-workflow-number">3</span><div><h3>A következő alkalom is rendezett</h3><p>Rögzíted a munkát, visszanézed az előzményeket, és a meglévő vendégnek új időpontot keresel.</p><a href="{{ route('admin.guests') }}">Vendégkezelés megnyitása <x-icon name="arrow-right" /></a></div></li>
         </ol>
         <div class="demo-roles"><article><x-icon name="scissors" /><div><h3>Munkatársként</h3><p>A saját napod, vendégeid és a munkádhoz engedélyezett műveletek kerülnek előtérbe.</p></div></article><article><x-icon name="users" /><div><h3>Tulajdonosként</h3><p>A csapat naptárát, a szolgáltatásokat és az üzlet működését is áttekintheted.</p></div></article></div>
+        <div class="demo-roles"><article><x-icon name="calendar-blank" /><div><h3>Google Naptár-szinkron</h3><p>A kapcsolt naptár foglaltsága is számít az időpontválasztásnál, a foglalások a Google Naptárban is megjelennek.</p></div></article><article><x-icon name="envelope-simple" /><div><h3>E-mail-értesítések</h3><p>Visszaigazolások és emlékeztetők segítik a vendégeidet, hogy tudják, mikor érkezzenek.</p></div></article></div>
     </div></section>
+
+    <section class="demo-pricing wrap" id="arak" aria-labelledby="demo-pricing-title">
+        <div class="demo-pricing-summary"><p class="eyebrow">ÁRAK</p><h2 id="demo-pricing-title">A saját szalonod rendszere.</h2><p class="demo-pricing-amount">4 900 Ft / hó</p><p>Hűségidő nélkül, bevezetési díj nélkül. Bármikor lemondható.</p>@if($demoSalesContactUrl)<a class="button" href="{{ $demoSalesContactUrl }}">Saját szalont szeretnék <x-icon name="arrow-right" /></a>@endif</div>
+        <div class="demo-pricing-includes"><h3>Mit tartalmaz?</h3><ul><li>Online foglalóoldal saját arculattal</li><li>Admin: Mai nap, Naptár, Vendégek, Foglalások, Szolgáltatások, Csapat és munkarend</li><li>Google Naptár-szinkron</li><li>E-mail-értesítések</li></ul></div>
+    </section>
 
     <section class="demo-brand-section wrap" id="sajat-arculat" aria-labelledby="demo-brand-title"><p class="eyebrow">A SAJÁT SZALONODRA HANGOLVA</p><div class="demo-brand-grid"><h2 id="demo-brand-title">A vendég a te<br>szalonodat ismerje fel.</h2><div><p>Saját név, logó, színek és képek. A szolgáltatásaid, áraiddal és időtartamaiddal. A csapatod, a saját munkarendjével.</p><p>A szakági bemutatók kiindulópontok. A megrendelt felületet a vállalkozásod arculatához és működéséhez igazítjuk.</p><a class="demo-text-link" href="{{ $demoGuestHomeUrl }}">Megnézem a vendégoldal példáját <x-icon name="arrow-right" /></a></div></div></section>
 

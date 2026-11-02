@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => '1.4.1',
+    'version' => '1.4.2',
     'backup_directory' => storage_path('app/private/backups'),
     'backup_retention_days' => 30,
     'admin_password' => env('SALON_ADMIN_PASSWORD'),
@@ -13,5 +13,5 @@ return [
         'barber' => env('SALON_DEMO_BARBER_URL'),
         'nails' => env('SALON_DEMO_NAILS_URL'),
     ],
-    'demo_sales_contact' => env('SALON_DEMO_SALES_CONTACT'),
+    'contact_url' => env('SZALON_CONTACT_URL', 'https://szoftlab.hu'),
 ];

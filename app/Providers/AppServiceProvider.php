@@ -67,6 +67,8 @@ class AppServiceProvider extends ServiceProvider
                 request()->attributes->set('demo_access_available', app(DemoAccess::class)->available());
             }
             $view->with('salon', $salon)->with('brand', $branding->forSalon($salon))->with('demoUrls', $branding->demoUrls())->with('demoSalesContactUrl', $branding->demoSalesContactUrl())
+                ->with('demoGuestUrls', $branding->demoGuestUrls())->with('demoMarketingUrl', $branding->demoMarketingUrl())
+                ->with('demoStyleLabel', ['salon' => 'Fodrászat', 'barber' => 'Barber', 'nails' => 'Körmös'][$salon->theme] ?? 'Szalon')
                 ->with('demoViewer', auth()->user()?->isDemoViewer() ?? false)
                 ->with('demoAccessAvailable', request()->attributes->get('demo_access_available'))
                 ->with('isDemoHub', $demoHubEnabled && request()->routeIs('home') && request()->query('view') !== 'guest')
