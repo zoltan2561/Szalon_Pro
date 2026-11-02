@@ -39,6 +39,7 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $returnToGuestHome = $request->user()?->isDemoViewer() && $request->input('return_to') === 'guest';
         $destination = $request->user()?->isDemoViewer()
             ? ($request->input('return_to') === 'booking' ? 'booking.form' : 'home')
             : 'login';
@@ -46,7 +47,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route($destination);
+        return redirect()->route($destination, $returnToGuestHome ? ['view' => 'guest'] : []);
     }
 
     private function regenerateSession(Request $request): void

@@ -32,7 +32,7 @@
 <form class="mobile-logout" method="post" action="{{ route('logout') }}">@csrf<button class="text-button">Kilépés</button></form>
 </header>
 <main id="main" class="admin-content">@include('components.flash')
-@if($demoViewer)<details class="demo-viewer-banner"><summary><strong>Olvasó demó</strong><span>A mintaadatok védettek <x-icon name="arrow-right" /></span></summary><div><p>A naptárt és a munkafolyamatokat bejárhatod. A vendégek adatai mintaként jelennek meg, a mentési műveletek nem érhetők el.</p><form method="post" action="{{ route('logout') }}">@csrf<input type="hidden" name="return_to" value="booking"><button class="button secondary">Vendégként is kipróbálom <x-icon name="arrow-right" /></button></form></div></details>@endif
+@if($demoViewer)<details class="demo-viewer-banner"><summary><strong>Olvasó demó</strong><span>A mintaadatok védettek <x-icon name="arrow-right" /></span></summary><div><p>A naptárt és a munkafolyamatokat bejárhatod. A vendégek adatai mintaként jelennek meg, a mentési műveletek nem érhetők el.</p><form method="post" action="{{ route('logout') }}">@csrf<input type="hidden" name="return_to" value="guest"><button class="button secondary">Vendégként is kipróbálom <x-icon name="arrow-right" /></button></form></div></details>@endif
 @php
     $displayWarnings = collect($operationWarnings ?? [])->except($salon->demo ? ['mail', 'password_reset'] : []);
     if ($displayWarnings->has('mail')) {

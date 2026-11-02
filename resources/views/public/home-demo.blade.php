@@ -5,7 +5,7 @@
             <h1 id="demo-title">Több figyelem a vendégnek.<br><em>Tisztább kép a napodról.</em></h1>
             <p class="demo-description">Online időpontfoglaló és szalonkezelő rendszer fodrászatoknak, barbereknek és körmösöknek.</p>
             <p class="demo-lead">A vendéged időpontot foglal. Te átlátod, ki érkezik, mikor van szabad hely, és mi történt az előző alkalommal.</p>
-            <div class="demo-hero-actions">@if($demoAccessAvailable)@include('components.demo-entry', ['showHint' => false])@else<a class="button" href="#napi-munka">Tulajdonosi bemutató <x-icon name="calendar-blank" /></a>@endif<a class="button secondary" href="{{ route('booking.form') }}">Vendégként kipróbálom <x-icon name="arrow-right" /></a></div>
+            <div class="demo-hero-actions">@if($demoAccessAvailable)@include('components.demo-entry', ['showHint' => false])@else<a class="button" href="#napi-munka">Tulajdonosi bemutató <x-icon name="calendar-blank" /></a>@endif<a class="button secondary" href="{{ $demoGuestHomeUrl }}">Vendégként kipróbálom <x-icon name="arrow-right" /></a></div>
             <p class="demo-trial-note">Működő bemutató mintaadatokkal. Az admin jelszó nélkül, olvasóként járható be; a vendégfoglaláshoz nem kell fiók.</p>
         </div>
         <figure class="demo-hero-photo"><img src="{{ asset('assets/branding/hair-hero-mobile.webp') }}" alt="Világos szalonbelső tükrökkel és fodrászszékekkel" width="720" height="960" fetchpriority="high"><figcaption>Fodrászat · Barber · Manikűr<br><span>AI-generált bemutató hangulatkép</span></figcaption></figure>

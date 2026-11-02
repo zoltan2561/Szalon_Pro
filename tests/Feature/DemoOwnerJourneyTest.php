@@ -21,7 +21,7 @@ class DemoOwnerJourneyTest extends TestCase
 
         $this->get(route('home'))->assertOk()
             ->assertSee('data-demo-hub', false)
-            ->assertSee('href="'.route('booking.form').'"', false)
+            ->assertSee('href="'.route('home', ['view' => 'guest']).'"', false)
             ->assertSee('href="'.route('admin.today').'"', false)
             ->assertSee('href="https://barber.example.test"', false)
             ->assertSee('href="https://nails.example.test"', false)

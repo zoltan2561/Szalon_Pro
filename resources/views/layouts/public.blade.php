@@ -33,7 +33,7 @@
             @endif
         </nav>
         <details class="mobile-menu"><summary aria-label="Menü"><x-icon name="list" /><span>Menü</span></summary>
-            <nav aria-label="Mobil főmenü">@if($isDemoHub)<a href="#szakagak">Szakági demók</a><a href="#napi-munka">Tulajdonosi bemutató</a><a href="#sajat-arculat">Saját arculat</a><a href="#arak">Árak</a>@if($demoSalesContactUrl)<a href="{{ $demoSalesContactUrl }}">Saját szalont szeretnék</a>@endif @else<a href="{{ $demoGuestHomeUrl }}#szolgaltatasok">{{ $brand['content']['nav_services'] }}</a><a href="{{ $demoGuestHomeUrl }}#rolunk">{{ $brand['content']['nav_about'] }}</a>@if($salon->demo)<a href="{{ $demoOverviewUrl }}">A rendszer</a>@endif<a href="{{ $demoGuestHomeUrl }}#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>@endif<a href="{{ route('booking.form') }}">{{ $isDemoHub ? 'Vendégként kipróbálom' : $brand['content']['nav_booking'] }}</a></nav>
+            <nav aria-label="Mobil főmenü">@if($isDemoHub)<a href="#szakagak">Szakági demók</a><a href="#napi-munka">Tulajdonosi bemutató</a><a href="#sajat-arculat">Saját arculat</a><a href="#arak">Árak</a>@if($demoSalesContactUrl)<a href="{{ $demoSalesContactUrl }}">Saját szalont szeretnék</a>@endif @else<a href="{{ $demoGuestHomeUrl }}#szolgaltatasok">{{ $brand['content']['nav_services'] }}</a><a href="{{ $demoGuestHomeUrl }}#rolunk">{{ $brand['content']['nav_about'] }}</a>@if($salon->demo)<a href="{{ $demoOverviewUrl }}">A rendszer</a>@endif<a href="{{ $demoGuestHomeUrl }}#kapcsolat">{{ $brand['content']['nav_contact'] }}</a>@endif<a href="{{ $isDemoHub ? $demoGuestHomeUrl : route('booking.form') }}">{{ $isDemoHub ? 'Vendégként kipróbálom' : $brand['content']['nav_booking'] }}</a></nav>
         </details>
     </div>
 </header>
@@ -41,7 +41,7 @@
 <main id="main">
     @include('components.flash')
     @if($demoViewer)
-    <aside class="demo-viewer-banner wrap"><div><strong>Most az olvasó demófiókot használod.</strong><p>A vendégfoglalás kipróbálásához lépj át a vendégoldalra.</p></div><form method="post" action="{{ route('logout') }}">@csrf<input type="hidden" name="return_to" value="booking"><button class="button secondary">Vendégként kipróbálom <x-icon name="arrow-right" /></button></form></aside>
+    <aside class="demo-viewer-banner wrap"><div><strong>Most az olvasó demófiókot használod.</strong><p>A vendégfoglalás kipróbálásához lépj át a vendégoldalra.</p></div><form method="post" action="{{ route('logout') }}">@csrf<input type="hidden" name="return_to" value="guest"><button class="button secondary">Vendégként kipróbálom <x-icon name="arrow-right" /></button></form></aside>
     @endif
     @yield('content')
 </main>

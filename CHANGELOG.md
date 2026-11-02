@@ -1,5 +1,9 @@
 # Változásnapló
 
+## 1.4.3 – 2026-11-02
+
+- A „Vendégként kipróbálom” gombok a mintaoldal főoldalára vezetnek; az olvasó adminból kilépve is először a vendégoldal nyílik meg.
+
 ## 1.4.2 – 2026-11-02
 
 - Árak blokk és menüpont a marketingoldalon: 4 900 Ft/hó, hűségidő és bevezetési díj nélkül; Google Naptár-szinkron és e-mail-értesítések feltüntetése.

@@ -233,6 +233,8 @@ class PublicDemoViewerTest extends TestCase
         $viewer = $this->viewer();
         $this->actingAs($viewer)->post(route('logout'), ['return_to' => 'booking'])->assertRedirect(route('booking.form'));
         $this->assertGuest();
+        $this->actingAs($viewer)->post(route('logout'), ['return_to' => 'guest'])->assertRedirect(route('home', ['view' => 'guest']));
+        $this->assertGuest();
         $this->actingAs($viewer)->post(route('logout'), ['return_to' => 'https://attacker.example'])->assertRedirect(route('home'));
         $this->assertGuest();
     }
