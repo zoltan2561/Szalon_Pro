@@ -20,7 +20,7 @@ class ResolveTenant
     {
         $context = app(TenantContext::class);
         $host = strtolower($request->getHost());
-        $demoHosts = array_filter(array_map(fn (string $url): ?string => parse_url($url, PHP_URL_HOST), config('salon.demo_urls', [])));
+        $demoHosts = array_filter(array_map(fn ($url): ?string => is_string($url) ? parse_url($url, PHP_URL_HOST) : null, config('salon.demo_urls', [])));
         $isLegacy = $context->isCentralHost($host) || in_array($host, array_merge(config('tenancy.demo_domains'), $demoHosts), true);
         $tenant = $isLegacy ? Tenant::find(1) : Tenant::where('domain', $host)->first();
         $salon = $tenant ? Salon::withoutGlobalScopes()->where('tenant_id', $tenant->id)->first(['name', 'phone', 'email']) : null;

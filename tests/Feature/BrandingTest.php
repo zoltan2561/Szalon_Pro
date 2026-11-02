@@ -44,18 +44,18 @@ class BrandingTest extends TestCase
         $this->get(route('home'))->assertOk()->assertDontSee('Szakági demó kiválasztása');
     }
 
-    public function test_demo_sales_contact_is_shown_only_when_it_is_valid_and_configured(): void
+    public function test_demo_sales_contact_always_uses_the_central_prefilled_quote(): void
     {
         Salon::factory()->create(['demo' => true]);
         Service::factory()->create();
 
-        $this->get(route('home'))->assertOk()->assertSee('href="https://szoftlab.hu"', false);
+        $this->get(route('home'))->assertOk()->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false);
         config()->set('salon.contact_url', 'hello@example.test');
-        $this->get(route('home'))->assertOk()->assertDontSee('Saját szalont szeretnék')->assertDontSee('mailto:hello@example.test', false);
+        $this->get(route('home'))->assertOk()->assertSee('Saját szalont szeretnék')->assertDontSee('mailto:hello@example.test', false);
         config()->set('salon.contact_url', 'javascript:alert(1)');
-        $this->get(route('home'))->assertOk()->assertDontSee('Saját szalont szeretnék');
+        $this->get(route('home'))->assertOk()->assertSee('Saját szalont szeretnék')->assertDontSee('javascript:alert(1)', false);
         config()->set('salon.contact_url', 'https://example.test/kapcsolat');
-        $this->get(route('home'))->assertOk()->assertSee('href="https://example.test/kapcsolat"', false);
+        $this->get(route('home'))->assertOk()->assertSee('tipus=order&amp;termek=szalonpro&amp;csomag=monthly', false)->assertDontSee('href="https://example.test/kapcsolat"', false);
     }
 
     public function test_demo_profiles_have_distinct_text_and_section_order(): void

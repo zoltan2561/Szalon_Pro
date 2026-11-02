@@ -23,7 +23,7 @@ class TenantProvisioner
         ])->validate();
 
         $domain = $data['slug'].'.'.config('tenancy.base_domain');
-        $demoHosts = array_filter(array_map(fn (string $url): ?string => parse_url($url, PHP_URL_HOST), config('salon.demo_urls', [])));
+        $demoHosts = array_filter(array_map(fn ($url): ?string => is_string($url) ? parse_url($url, PHP_URL_HOST) : null, config('salon.demo_urls', [])));
         $reservedDomains = array_map(fn (string $host): string => strtolower(trim($host)), [...config('tenancy.central_domains'), ...config('tenancy.demo_domains'), ...$demoHosts]);
         if (in_array(strtolower($domain), $reservedDomains, true) || Tenant::where('domain', $domain)->exists()) {
             throw ValidationException::withMessages(['slug' => 'Ez a webcím már használatban van. Válassz másik aldomainnevet.']);
