@@ -1,5 +1,10 @@
 # Változásnapló
 
+## 1.4.5 – 2026-11-02
+
+- A marketingoldal napi munkát bemutató gombjai alapállapotban is kontrasztosak; a címek, leírások és gombok közös sorokhoz igazodnak.
+- Az „Így indulsz” lépései olvasható, egyszeres számozással, asztalon egymás mellett, mobilon egymás alatt és irányjelző nyilakkal jelennek meg.
+
 ## 1.4.4 – 2026-11-02
 
 - Egységes admin színkódolás, állapotjelmagyarázat és olvashatóbb napi/heti naptár; mobilon előrébb kerülnek az időpontok, a szűrők összecsukhatók.
