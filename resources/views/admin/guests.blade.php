@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-heading"><div><p class="eyebrow">ISMERŐS ARCOK, SZEMÉLYES FIGYELEM</p><h1>Vendégeim</h1><p class="muted">A látogatások száma és ideje az elvégzett foglalásokat mutatja.</p></div></div>
 <form method="get" action="{{ route('admin.guests') }}" class="panel" data-live-guests-form>
-    <div class="form-grid"><label>Vendég keresése<input name="q" type="search" inputmode="search" data-live-guests value="{{ $search }}" maxlength="120" placeholder="Név, e-mail vagy telefon"></label>
+    <div class="form-grid"><div class="guest-search-field"><label>Vendég keresése<input name="q" type="search" inputmode="search" data-live-guests value="{{ $search }}" maxlength="120" placeholder="Név, e-mail vagy telefon"></label><button type="button" class="text-button guest-search-clear" data-clear-guest-search hidden>Keresés törlése</button></div>
     <label>Rendezés<select name="sort" data-guest-sort><option value="name" @selected($sort === 'name')>Név szerint</option><option value="last_visit" @selected($sort === 'last_visit')>Legutóbbi látogatás szerint</option></select></label></div>
     <button class="button">Keresés</button><p class="muted" data-guest-list-status aria-live="polite"></p>
 </form>

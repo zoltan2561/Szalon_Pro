@@ -51,11 +51,19 @@ document.querySelectorAll('form[data-auto-filter]').forEach(form => {
                 const oldFilters = oldOverview.querySelector('[data-calendar-filters]');
                 const newFilters = newOverview.querySelector('[data-calendar-filters]');
                 if (oldFilters && newFilters) newFilters.open = oldFilters.open;
+                const oldTools = oldOverview.querySelector('.today-calendar-tools');
+                const newTools = newOverview.querySelector('.today-calendar-tools');
+                if (oldTools && newTools) newTools.open = oldTools.open;
+                const oldActions = oldContext.querySelector('.daily-actions');
+                const newActions = newContext.querySelector('.daily-actions');
+                if (oldActions && newActions) newActions.open = oldActions.open;
+                const focusedControl = form.contains(document.activeElement) ? document.activeElement : null;
                 newForm.replaceWith(form);
                 oldOverview.replaceWith(newOverview);
                 oldHeading.replaceWith(newHeading);
                 oldContext.replaceWith(newContext);
                 bindCalendarTracks(newOverview);
+                focusedControl?.focus({preventScroll: true});
             } else {
                 const oldResults = document.querySelector('[data-auto-filter-results]');
                 const newResults = page.querySelector('[data-auto-filter-results]');

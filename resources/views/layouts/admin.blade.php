@@ -24,7 +24,7 @@
 </div>
 </aside>
 <div class="admin-shell">
-@if($demoViewer) @include('components.demo-navigation') @endif
+@if($demoViewer)<details class="admin-demo-navigation" data-mobile-disclosure open><summary>Bemutatók és saját szalon <x-icon name="arrow-right" /></summary>@include('components.demo-navigation')</details>@endif
 <header class="admin-top">
 <span class="eyebrow">A SZALONOD, ÁTLÁTHATÓAN</span>
 <div><span class="live-dot" aria-hidden="true"></span>{{ $salon->demo ? 'Bemutató környezet':'Munkafelület' }}</div>
@@ -56,11 +56,11 @@
 @foreach(['today'=>['clock','Ma'],'calendar'=>['calendar-blank','Naptár']] as $key=>$item)
 <a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" /><span>{{ $item[1] }}</span></a>
 @endforeach
-@if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="mobile-new-booking" href="{{ route('admin.create') }}" aria-label="Új foglalás" @if(request()->routeIs('admin.create','admin.booking','admin.booking.*')) aria-current="page" @endif><x-icon name="calendar-blank" /><span>+ Új</span></a>@else<span class="mobile-tab-disabled" aria-label="Új foglaláshoz nincs jogosultság">Új foglalás</span>@endif
-<a href="{{ route('admin.guests') }}" @if(request()->routeIs('admin.guests','admin.guest')) aria-current="page" @endif><x-icon name="users" /><span>Vendégeim</span></a>
+@if(auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings)<a class="mobile-new-booking" href="{{ route('admin.create') }}" aria-label="Új foglalás" @if(request()->routeIs('admin.create')) aria-current="page" @endif><x-icon name="calendar-blank" /><span>+ Új</span></a>@else<span class="mobile-tab-disabled" aria-label="Új foglaláshoz nincs jogosultság">Új foglalás</span>@endif
+<a href="{{ route('admin.guests') }}" @if(request()->routeIs('admin.guests','admin.guest')) aria-current="page" @endif><x-icon name="users" /><span>Vendégek</span></a>
 <button type="button" data-open-more aria-controls="admin-more-menu" aria-expanded="false" @if(!request()->routeIs('admin.today','admin.calendar','admin.guests','admin.guest','admin.create','admin.booking','admin.booking.*')) aria-current="page" @endif><x-icon name="list" /><span>Több</span></button>
 </nav>
-<dialog id="admin-more-menu" class="admin-more-sheet" aria-labelledby="admin-more-title"><div class="section-heading"><h2 id="admin-more-title">További lehetőségek</h2><form method="dialog"><button class="button secondary" aria-label="Menü bezárása">Bezárás</button></form></div><div class="more-account-info"><x-icon name="user" /><span><strong>{{ auth()->user()->name }}</strong><small>{{ $salon->name }} · {{ $roleLabel }}</small></span></div><nav aria-label="További menüpontok">@include('components.admin-links')<a href="{{ $demoGuestHomeUrl }}"><x-icon name="eye" />Vendégoldal megnyitása</a></nav><form method="post" action="{{ route('logout') }}">@csrf<button class="button secondary full">{{ $demoViewer ? 'Kilépés a bemutatóból' : 'Kijelentkezés' }}</button></form><small class="more-build">SzalonPRO · {{ config('salon.version') }}</small></dialog>
+<dialog id="admin-more-menu" class="admin-more-sheet" aria-labelledby="admin-more-title"><div class="section-heading"><h2 id="admin-more-title">További lehetőségek</h2><form method="dialog"><button class="button secondary" aria-label="Menü bezárása">Bezárás</button></form></div><div class="more-account-info"><x-icon name="user" /><span><strong>{{ auth()->user()->name }}</strong><small>{{ $salon->name }} · {{ $roleLabel }}</small></span></div><nav aria-label="További menüpontok">@include('components.admin-links', ['compactMenu' => true])<a href="{{ $demoGuestHomeUrl }}"><x-icon name="eye" />Vendégoldal megnyitása</a></nav><form method="post" action="{{ route('logout') }}">@csrf<button class="button secondary full">{{ $demoViewer ? 'Kilépés a bemutatóból' : 'Kijelentkezés' }}</button></form><small class="more-build">SzalonPRO · {{ config('salon.version') }}</small></dialog>
 <script src="{{ asset('localized-fields.js').'?v='.substr(hash_file('sha256', public_path('localized-fields.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('upload-controls.js').'?v='.substr(hash_file('sha256', public_path('upload-controls.js')), 0, 12) }}" defer></script>
 <script src="{{ asset('salon.js').'?v='.substr(hash_file('sha256', public_path('salon.js')), 0, 12) }}" defer></script>

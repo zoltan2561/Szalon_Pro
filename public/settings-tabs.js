@@ -7,6 +7,18 @@
     const panels = tabs.map(tab => document.getElementById(tab.hash.slice(1)));
     if (!tabs.length || panels.some(panel => !panel || !form.contains(panel))) return;
 
+    const sectionPicker = document.querySelector('[data-settings-section]');
+    if (sectionPicker) {
+        tabs.forEach((tab, index) => sectionPicker.add(new Option(tab.textContent.trim(), String(index))));
+        sectionPicker.closest('label').hidden = false;
+        sectionPicker.closest('.settings-navigation').classList.add('has-section-picker');
+        sectionPicker.addEventListener('change', () => {
+            const index = Number(sectionPicker.value);
+            selectTab(index);
+            history.replaceState(null, '', tabs[index].hash);
+        });
+    }
+
     tablist.setAttribute('role', 'tablist');
     tablist.setAttribute('aria-label', 'Beállítások szakaszai');
     tabs.forEach((tab, index) => {
@@ -18,6 +30,7 @@
     });
 
     const selectTab = index => {
+        if (sectionPicker) sectionPicker.value = String(index);
         tabs.forEach((tab, tabIndex) => {
             const selected = tabIndex === index;
             tab.setAttribute('aria-selected', String(selected));
@@ -32,6 +45,7 @@
         tab.addEventListener('click', event => {
             event.preventDefault();
             selectTab(index);
+            history.replaceState(null, '', tab.hash);
         });
         tab.addEventListener('keydown', event => {
             let next = null;

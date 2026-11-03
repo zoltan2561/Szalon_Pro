@@ -439,3 +439,147 @@
 }
 @media(prefers-reduced-motion:reduce){.admin.premium-admin a,.admin.premium-admin button{transition:none}}
 @media(max-width:360px){.admin.premium-admin .catalog-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.admin.premium-admin .catalog-actions form:last-child{grid-column:1/-1}.admin.premium-admin .catalog-actions .button{white-space:nowrap}}
+.admin.premium-admin {
+    --admin-text-body: 16px;
+    --admin-text-label: 14px;
+    --admin-text-caption: 12px;
+    --admin-radius: 16px;
+    --admin-mobile-nav-height: 76px;
+    font-size: var(--admin-text-body);
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+}
+.admin.premium-admin .admin-content { max-width: 1440px; }
+.admin.premium-admin .panel { border-radius: var(--admin-radius); }
+.admin.premium-admin label,
+.admin.premium-admin .muted,
+.admin.premium-admin .detail-grid small,
+.admin.premium-admin .calendar-agenda-detail > span:not(.calendar-status),
+.admin.premium-admin .calendar-agenda-detail > small { font-size: var(--admin-text-label); line-height: 1.6; }
+.admin.premium-admin .button { min-height: 48px; font-size: var(--admin-text-label); line-height: 1.4; }
+.admin.premium-admin .button, .admin.premium-admin summary { touch-action: manipulation; }
+.admin.premium-admin .button:active { filter: brightness(.95); }
+.admin.premium-admin .next-guest .next-time { font-family: inherit; font-weight: 650; letter-spacing: -.04em; }
+.admin.premium-admin .calendar-agenda-heading h2 { font-size: 20px; margin: 0; }
+.admin.premium-admin .calendar-agenda-detail > strong { font-size: 16px; }
+.admin.premium-admin .calendar-status { font-size: var(--admin-text-caption); }
+.admin.premium-admin .calendar-agenda-time { font-size: 16px; }
+.admin.premium-admin .calendar-agenda-time small { font-size: var(--admin-text-caption); }
+.admin.premium-admin .calendar-summary article > span,
+.admin.premium-admin .calendar-summary article > small { font-size: var(--admin-text-caption); }
+.daily-actions > summary, .today-calendar-tools > summary { display: none; }
+.daily-actions { margin-bottom: 16px; }
+.daily-actions .quick-actions { margin-bottom: 0; }
+.admin.premium-admin .mobile-section-title { display: flex; align-items: center; gap: 10px; }
+.admin.premium-admin .mobile-section-title > span { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 8px; background: var(--admin-action-soft); color: var(--admin-info); font-size: 14px; }
+.admin.premium-admin .manual-service-label { font-size: var(--admin-text-label); }
+.admin.premium-admin .settings-mobile-section { display: none; }
+.admin.premium-admin .guest-search-clear { min-height: 44px; font-size: var(--admin-text-label); text-align: left; }
+.admin.premium-admin .guest-search-clear[hidden] { display: none; }
+.admin.premium-admin .guest-search-field { min-width: 0; }
+.admin.premium-admin .admin-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 20px; margin-top: 16px; border-top: 1px solid var(--admin-line); font-size: var(--admin-text-label); }
+.admin.premium-admin .admin-pagination p { margin: 0; color: var(--admin-muted); }
+.admin.premium-admin .pagination-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.admin.premium-admin .pagination-controls > a,
+.admin.premium-admin .pagination-disabled { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--admin-line); border-radius: 10px; text-decoration: none; }
+.admin.premium-admin .pagination-controls > a { background: var(--admin-surface); color: var(--admin-info); }
+.admin.premium-admin .pagination-controls > a:hover { background: var(--admin-action-soft); }
+.admin.premium-admin .pagination-disabled { color: var(--admin-muted); background: var(--admin-soft); }
+.admin.premium-admin .pagination-position { padding: 0 4px; color: var(--admin-muted); }
+.admin.premium-admin .menu-availability { margin-left: auto; font-size: var(--admin-text-caption); color: var(--admin-muted); }
+@media (max-width: 1000px) {
+    .admin.premium-admin .sidebar { backdrop-filter: none; background: var(--admin-surface); }
+    .admin.premium-admin .mobile-admin-identity small { font-size: var(--admin-text-caption); }
+    .admin.premium-admin .mobile-admin-tabs { height: calc(var(--admin-mobile-nav-height) + env(safe-area-inset-bottom)); box-sizing: border-box; }
+    .admin.premium-admin .mobile-admin-tabs a,
+    .admin.premium-admin .mobile-admin-tabs button,
+    .admin.premium-admin .mobile-tab-disabled { font: 600 12px/1.3 'DM Sans', Arial, sans-serif; min-height: 0; height: 100%; }
+    .admin.premium-admin .mobile-admin-tabs a > span { white-space: nowrap; }
+    .admin.premium-admin .admin-shell { padding-bottom: calc(var(--admin-mobile-nav-height) + 24px + env(safe-area-inset-bottom)); }
+    .admin.premium-admin:has(.booking-mobile-actions) .admin-shell { padding-bottom: calc(var(--admin-mobile-nav-height) + 120px + env(safe-area-inset-bottom)); }
+    .admin.premium-admin .mobile-admin-tabs .mobile-new-booking { border-radius: 14px; }
+    .admin.premium-admin .admin-more-sheet { max-height: calc(100dvh - 24px); }
+    .admin.premium-admin .admin-more-sheet .admin-menu-group { display: block; margin: 0; border-bottom: 1px solid var(--admin-line); }
+    .admin.premium-admin .admin-more-sheet .admin-menu-label { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 12px 4px; color: var(--admin-ink); font-size: 15px; letter-spacing: normal; text-transform: none; list-style: none; cursor: pointer; }
+    .admin.premium-admin .admin-more-sheet .admin-menu-label::-webkit-details-marker { display: none; }
+    .admin.premium-admin .admin-more-sheet .admin-menu-label .icon { width: 18px; height: 18px; transform: rotate(90deg); }
+    .admin.premium-admin .admin-more-sheet .admin-menu-group[open] > summary .icon { transform: rotate(-90deg); }
+    .admin.premium-admin .admin-more-sheet nav { display: block; }
+    .admin.premium-admin .admin-more-sheet nav a { min-height: 48px; padding: 12px; margin-bottom: 8px; font-size: 14px; border-radius: 10px; }
+    .admin.premium-admin .admin-more-sheet nav > a { margin-top: 16px; }
+    .admin.premium-admin .admin-more-sheet .more-account-info small { font-size: var(--admin-text-caption); }
+}
+@media (max-width: 640px) {
+    .admin.premium-admin .admin-content { padding: 16px 16px 24px; }
+    .admin.premium-admin .page-heading { margin-bottom: 16px; }
+    .admin.premium-admin .page-heading h1 { font-size: 28px; line-height: 1.2; }
+    .admin.premium-admin .page-heading .eyebrow { font-size: 11px; letter-spacing: .08em; }
+    .admin.premium-admin .page-heading .muted { font-size: 14px; }
+    .admin.premium-admin .next-guest { padding: 16px; gap: 10px; border-radius: var(--admin-radius); grid-template-columns: minmax(0, 1fr) 96px; }
+    .admin.premium-admin .next-guest h2 { font-size: 22px; margin: 6px 0; }
+    .admin.premium-admin .next-guest .eyebrow { font-size: 11px; letter-spacing: .06em; margin: 0; }
+    .admin.premium-admin .next-guest p { font-size: 14px; line-height: 1.5; margin: 0; }
+    .admin.premium-admin .next-guest .next-time { font-size: 30px; }
+    .admin.premium-admin .next-guest .next-time small { font-size: 12px; line-height: 1.5; letter-spacing: normal; }
+    .admin.premium-admin .next-guest-actions { margin-top: 8px; }
+    .admin.premium-admin .next-guest-actions a { min-height: 44px; font-size: 14px; line-height: 1.4; }
+    .admin.premium-admin .daily-actions { margin-bottom: 12px; }
+    .admin.premium-admin.admin-today-page .daily-actions { order: 5; }
+    .admin.premium-admin.admin-today-page .day-review { order: 6; }
+    .admin.premium-admin .daily-actions .quick-actions { margin-top: 0; }
+    .admin.premium-admin .daily-actions > summary,
+    .admin.premium-admin .today-calendar-tools > summary { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 14px; font-size: 14px; color: var(--admin-info); list-style: none; cursor: pointer; }
+    .admin.premium-admin .daily-actions > summary { padding-inline: 0; }
+    .admin.premium-admin .daily-actions > summary::-webkit-details-marker,
+    .admin.premium-admin .today-calendar-tools > summary::-webkit-details-marker { display: none; }
+    .admin.premium-admin .daily-actions > summary .icon,
+    .admin.premium-admin .today-calendar-tools > summary .icon { width: 16px; height: 16px; margin-left: auto; flex: none; transform: rotate(90deg); }
+    .admin.premium-admin .today-calendar-tools > summary small { margin-left: auto; font-size: 12px; }
+    .admin.premium-admin .today-calendar-tools > summary .icon { margin-left: 0; }
+    .admin.premium-admin [data-mobile-disclosure][open] > summary .icon { transform: rotate(-90deg); }
+    .admin.premium-admin .daily-actions .quick-actions { padding-top: 8px; gap: 8px; }
+    .admin.premium-admin .today-calendar-tools { border-bottom: 1px solid var(--admin-line); }
+    .admin.premium-admin .calendar-agenda-item { padding: 14px; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
+    .admin.premium-admin .calendar-agenda-detail .calendar-status { font-size: 12px; margin-top: 6px; }
+    .admin.premium-admin .booking-stage-primary,
+    .admin.premium-admin:has(.booking-mobile-actions) .visit-stage .actions { display: none; }
+    .admin.premium-admin .booking-mobile-actions { bottom: calc(var(--admin-mobile-nav-height) + env(safe-area-inset-bottom)); }
+    .admin.premium-admin .booking-mobile-actions .button { font-size: 13px; min-height: 48px; }
+    .admin.premium-admin .booking-mobile-actions .button.danger { background: var(--admin-surface); border-color: var(--admin-danger-line); color: var(--admin-danger); }
+    .admin.premium-admin .booking-focus-actions { gap: 8px; }
+    .admin.premium-admin .booking-grid .panel { padding: 18px; }
+    .admin.premium-admin .booking-grid .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+    .admin.premium-admin .detail-grid strong { font-size: 15px; line-height: 1.5; }
+    .admin.premium-admin .detail-grid > div { min-width: 0; overflow-wrap: anywhere; }
+    .admin.premium-admin:has(.admin-settings) .page-heading { flex-direction: row; align-items: center; }
+    .admin.premium-admin:has(.admin-settings) .page-heading .muted,
+    .admin.premium-admin:has(.admin-settings) .page-heading .eyebrow { display: none; }
+    .admin.premium-admin .has-section-picker > h2,
+    .admin.premium-admin .has-section-picker .settings-tablist { display: none; }
+    .admin.premium-admin .has-section-picker .settings-mobile-section { display: block; margin: 0; }
+    .admin.premium-admin .settings-mobile-section select { font-size: 16px; min-height: 48px; margin-top: 6px; }
+    .admin.premium-admin .settings-navigation { padding: 16px; }
+    .admin.premium-admin .settings-navigation > p { font-size: 12px; margin: 8px 0; }
+    .admin.premium-admin .settings-navigation > a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; }
+    .admin.premium-admin .guest-table td { font-size: 14px; line-height: 1.6; }
+    .admin.premium-admin .guest-table td:first-child > a { display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; }
+    .admin.premium-admin .guest-table td small { font-size: 12px; }
+    .admin.premium-admin .admin-pagination { display: block; }
+    .admin.premium-admin .pagination-controls { display: grid; grid-template-columns: 1fr 1fr; margin-top: 12px; }
+    .admin.premium-admin .pagination-position { grid-column: 1 / -1; grid-row: 1; text-align: center; padding-bottom: 4px; }
+}
+@media (max-width: 360px) {
+    .admin.premium-admin .next-guest { grid-template-columns: minmax(0, 1fr) 80px; padding: 14px; }
+    .admin.premium-admin .next-guest .next-time { font-size: 27px; }
+    .admin.premium-admin .mobile-admin-tabs a,
+    .admin.premium-admin .mobile-admin-tabs button { font-size: 11px; }
+    .admin.premium-admin .today-calendar-tools > summary { flex-wrap: wrap; gap: 6px; }
+}
+.admin.premium-admin .admin-demo-navigation > summary { display: none; }
+@media (max-width: 640px) {
+    .admin.premium-admin .admin-demo-navigation { background: var(--admin-surface); border-bottom: 1px solid var(--admin-line); }
+    .admin.premium-admin .admin-demo-navigation > summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 10px 16px; color: var(--admin-info); font-size: 14px; cursor: pointer; list-style: none; }
+    .admin.premium-admin .admin-demo-navigation > summary::-webkit-details-marker { display: none; }
+    .admin.premium-admin .admin-demo-navigation > summary .icon { width: 16px; height: 16px; transform: rotate(90deg); }
+    .admin.premium-admin .admin-demo-navigation[open] > summary .icon { transform: rotate(-90deg); }
+}

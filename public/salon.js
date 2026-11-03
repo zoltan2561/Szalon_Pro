@@ -23,7 +23,7 @@ if (moreButtons.length && moreSheet instanceof HTMLDialogElement) {
 
 const calendarMobileLayout = window.matchMedia('(max-width: 640px)');
 const adaptCalendarFilters = () => {
-    document.querySelectorAll('[data-calendar-filters]').forEach(panel => {
+    document.querySelectorAll('[data-calendar-filters], [data-mobile-disclosure]').forEach(panel => {
         panel.open = !calendarMobileLayout.matches;
     });
 };
@@ -351,14 +351,20 @@ const guestSearchForm = document.querySelector('[data-live-guests-form]');
 if (guestSearch && guestList && guestSearchForm) {
     const status = guestSearchForm.querySelector('[data-guest-list-status]');
     const sort = guestSearchForm.querySelector('[data-guest-sort]');
+    const clearSearch = guestSearchForm.querySelector('[data-clear-guest-search]');
     let sequence = 0;
     let timer;
+    let activeRequest;
+    let composing = false;
+    const syncClearSearch = () => { if (clearSearch) clearSearch.hidden = !guestSearch.value; };
     const refreshGuests = async current => {
         const target = new URL(guestSearchForm.action);
         target.search = new URLSearchParams(new FormData(guestSearchForm)).toString();
+        activeRequest?.abort();
+        activeRequest = new AbortController();
         status.textContent = 'Keresés…';
         try {
-            const response = await fetch(target, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            const response = await fetch(target, {headers: {'X-Requested-With': 'XMLHttpRequest'}, signal: activeRequest.signal});
             if (!response.ok) throw new Error('Guest search failed');
             const page = new DOMParser().parseFromString(await response.text(), 'text/html');
             const results = page.querySelector('[data-guest-list]');
@@ -368,16 +374,34 @@ if (guestSearch && guestList && guestSearchForm) {
             history.replaceState(null, '', target);
             status.textContent = 'A vendéglista frissült.';
         } catch (error) {
-            if (current === sequence) status.textContent = 'Nem sikerült frissíteni a listát. Nyomd meg a Keresés gombot.';
+            if (current === sequence && error.name !== 'AbortError') status.textContent = 'Nem sikerült frissíteni a listát. Nyomd meg a Keresés gombot.';
         }
     };
     const queueGuestSearch = delay => {
         const current = ++sequence;
         clearTimeout(timer);
+        activeRequest?.abort();
         timer = setTimeout(() => refreshGuests(current), delay);
     };
-    guestSearch.addEventListener('input', () => queueGuestSearch(300));
+    guestSearch.addEventListener('input', () => {
+        syncClearSearch();
+        if (!composing) queueGuestSearch(guestSearch.value ? 300 : 0);
+    });
+    guestSearch.addEventListener('compositionstart', () => {
+        composing = true;
+        ++sequence;
+        clearTimeout(timer);
+        activeRequest?.abort();
+    });
+    guestSearch.addEventListener('compositionend', () => { composing = false; queueGuestSearch(300); });
+    clearSearch?.addEventListener('click', () => {
+        guestSearch.value = '';
+        syncClearSearch();
+        guestSearch.focus();
+        queueGuestSearch(0);
+    });
     sort?.addEventListener('change', () => queueGuestSearch(0));
+    syncClearSearch();
 }
 
 document.querySelectorAll('form[data-work-exception]').forEach(form => {

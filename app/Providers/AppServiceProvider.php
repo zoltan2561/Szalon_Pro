@@ -11,6 +11,7 @@ use App\Services\TenantContext;
 use App\Services\TenantPresenceVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
@@ -26,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::defaultView('components.pagination');
+
         Queue::createPayloadUsing(fn (): array => ['tenant_id' => app(TenantContext::class)->id()]);
         View::composer(['errors.*', 'errors::*'], function (\Illuminate\View\View $view): void {
             $context = request()->attributes->get('error_contact');

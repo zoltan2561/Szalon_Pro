@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'Új foglalás')
 @section('content')
-<div class="page-heading"><div><p class="eyebrow">TELEFONON, SZEMÉLYESEN, ÜZENETBEN</p><h1>Új foglalás</h1><p class="muted">A telefonos vagy személyes foglalás is a közös naptárba kerül.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow">TELEFONON, SZEMÉLYESEN, ÜZENETBEN</p><h1>Új foglalás</h1><p class="muted">Szolgáltatás, időpont, vendég — három egyszerű lépés.</p></div></div>
 <div class="booking-grid"><div>
     <form method="get" action="{{ route('admin.create') }}#manual-booking-slots" class="panel" data-manual-filters>
         <h2 class="mobile-section-title"><span>1</span> Szolgáltatás és nap</h2>
@@ -20,12 +20,12 @@
         @if($service)@include('components.selected-service-inputs')@endif
         @if(request()->filled('waitlist_entry_id'))<input type="hidden" name="waitlist_entry_id" value="{{ request('waitlist_entry_id') }}">@endif
         <section id="manual-booking-slots" data-manual-slots aria-labelledby="manual-slots-heading">
-        <h2 id="manual-slots-heading" tabindex="-1">Válassz időpontot</h2>
+        <h2 id="manual-slots-heading" class="mobile-section-title" tabindex="-1"><span>2</span> Válassz időpontot</h2>
         @if($calendarStart && ! $selectedSlot)<p class="notice" data-calendar-slot-unavailable>A naptárban kiválasztott időpont ehhez a szolgáltatáshoz már nem foglalható. Válassz egy másik szabad időpontot.</p>@endif
         @include('components.slots', ['groupAnyStaff' => ! $staffId, 'selectedSlot' => $selectedSlot, 'showSlotDate' => true])
         </section>
         <section class="manual-guest-fields" data-manual-guest-fields aria-labelledby="manual-booking-guest">
-        <h2 id="manual-booking-guest" tabindex="-1">Ki érkezik?</h2>
+        <h2 id="manual-booking-guest" class="mobile-section-title" tabindex="-1"><span>3</span> Ki érkezik?</h2>
         <p class="manual-selection" data-manual-selection aria-live="polite" hidden></p>
         <label>Vendég keresése név, e-mail vagy telefonszám alapján<input type="search" data-guest-search autocomplete="off" aria-controls="manual-guest-results"></label>
         <div id="manual-guest-results" class="manual-guest-results" data-guest-results hidden></div><p class="muted" data-guest-search-status aria-live="polite"></p>

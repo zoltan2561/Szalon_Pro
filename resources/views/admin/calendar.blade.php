@@ -89,12 +89,14 @@
 @endif
 
 @if($isTodayPage && (auth()->user()->role === 'owner' || auth()->user()->can_manage_bookings))
+<details class="daily-actions" data-mobile-disclosure open><summary>További napi műveletek <x-icon name="arrow-right" /></summary>
 <div class="quick-actions">
 <a class="button secondary" href="{{ route('admin.create', ['nearest' => 1] + $calendarFilter) }}">Legközelebbi szabad időpont</a>
 @if(auth()->user()->role === 'owner')<details class="quick-sheet"><summary class="button secondary">Idő blokkolása vagy szabadság</summary>
 <form method="post" action="{{ route('admin.block') }}">@csrf<h2>Idősáv blokkolása</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Ettől<input type="datetime-local" name="starts_at" required></label><label>Eddig<input type="datetime-local" name="ends_at" required></label><label>Megnevezés<input name="reason" value="Szünet" required maxlength="120"></label><button class="button">Blokkolás mentése</button></form>
 <form method="post" action="{{ route('admin.exception') }}">@csrf<h2>Szabadság</h2><label>Szakember<select name="staff_id">@foreach($calendarStaff->where('active', true) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label><label>Nap<input type="date" name="date" value="{{ $date }}" required></label><input type="hidden" name="closed" value="1"><button class="button secondary">Szabadság mentése</button></form></details>@endif
 </div>
+</details>
 @endif
 </div>
 
@@ -106,10 +108,12 @@
 </section>
 
 <section class="panel calendar-workspace" aria-labelledby="calendar-heading">
+    @if($isTodayPage)<details class="today-calendar-tools" data-mobile-disclosure open><summary><span>Nézet és szűrők</span><small>{{ $selectedStaffId ? $staffOptions->firstWhere('id', $selectedStaffId)?->name : 'Minden szakember' }}</small><x-icon name="arrow-right" /></summary>@endif
     @include('admin.calendar-toolbar')
     @include('components.calendar-legend')
 
     @include('admin.calendar-quick-search')
+    @if($isTodayPage)</details>@endif
 
     @if($week)
         @include('admin.calendar-week')
@@ -175,7 +179,7 @@
                 @endif
             </div>
             <section class="calendar-agenda" aria-labelledby="agenda-heading">
-                <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA · MINDEN ÁLLAPOT</p><h3 id="agenda-heading">Időpontok</h3></div><span>{{ $bookings->count() }}</span></div>
+                <div class="calendar-agenda-heading"><div><p class="eyebrow">RÉSZLETES NAPI LISTA · MINDEN ÁLLAPOT</p><h2 id="agenda-heading">Időpontok</h2></div><span>{{ $bookings->count() }}</span></div>
                 <ol class="calendar-agenda-list">
                     @forelse($bookings as $booking)
                         <li><a class="calendar-agenda-item {{ $booking->status }}" href="{{ route('admin.booking', $booking) }}"><span class="calendar-agenda-time">{{ $booking->starts_at->setTimezone($salon->timezone)->format('H:i') }}<small>{{ $booking->ends_at->setTimezone($salon->timezone)->format('H:i') }}</small></span><span class="calendar-agenda-detail"><strong>{{ $booking->guest->name }}</strong>@if($salon->featureEnabled('no_show_protection') && $booking->guest->no_show_count)<small>Nem jelent meg: {{ $booking->guest->no_show_count }}</small>@endif<span>{{ $booking->service_name }} · {{ $booking->duration_minutes }} perc</span><small>{{ $booking->staff->name }}</small><span class="calendar-status {{ $booking->status }}">{{ $booking->visitLabel() }}</span></span></a></li>
