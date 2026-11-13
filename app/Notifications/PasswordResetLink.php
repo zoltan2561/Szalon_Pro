@@ -26,7 +26,8 @@ class PasswordResetLink extends Notification
         $url = $baseUrl.route('password.reset', ['token' => $this->token, 'email' => $notifiable->email], false);
 
         return (new MailMessage)->subject('Jelszó-visszaállítás – '.$salon->name)
-            ->from(config('mail.from.address'), $salon->name)->replyTo($salon->email, $salon->name)
+            ->from(config('mail.from.address'), $salon->name)
+            ->when(filled($salon->email), fn (MailMessage $message): MailMessage => $message->replyTo($salon->email, $salon->name))
             ->view(['html' => 'emails.password-reset', 'text' => 'emails.password-reset-text'], ['salon' => $salon, 'resetUrl' => $url, 'expiresMinutes' => config('auth.passwords.users.expire')]);
     }
 }

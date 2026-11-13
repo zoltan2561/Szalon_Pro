@@ -20,7 +20,8 @@ class PasswordChanged extends Notification
         $salon = Salon::current();
 
         return (new MailMessage)->subject('A jelszavad megváltozott – '.$salon->name)
-            ->from(config('mail.from.address'), $salon->name)->replyTo($salon->email, $salon->name)
+            ->from(config('mail.from.address'), $salon->name)
+            ->when(filled($salon->email), fn (MailMessage $message): MailMessage => $message->replyTo($salon->email, $salon->name))
             ->view(['html' => 'emails.password-changed', 'text' => 'emails.password-changed-text'], ['salon' => $salon]);
     }
 }

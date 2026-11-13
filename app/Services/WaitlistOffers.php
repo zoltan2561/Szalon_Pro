@@ -106,7 +106,10 @@ class WaitlistOffers
                 if ($offer->channel === 'email' && $this->health->mailReady()) {
                     Mail::send(['html' => 'emails.waitlist-offer', 'text' => 'emails.waitlist-offer-text'], ['offer' => $offer, 'salon' => Salon::current()], function (Message $mail) use ($offer): void {
                         $mail->to($offer->entry->guest->email)->subject('Szabad időpontot találtunk – '.Salon::current()->name);
-                        $mail->from(config('mail.from.address'), Salon::current()->name)->replyTo(Salon::current()->email, Salon::current()->name);
+                        $mail->from(config('mail.from.address'), Salon::current()->name);
+                        if (filled(Salon::current()->email)) {
+                            $mail->replyTo(Salon::current()->email, Salon::current()->name);
+                        }
                         $mail->getSymfonyMessage()->getHeaders()->addIdHeader('Message-ID', 'waitlist-'.$offer->id.'@'.parse_url(config('app.url'), PHP_URL_HOST));
                     });
                     $values = ['status' => 'sent', 'sent_at' => now(), 'last_error' => null];

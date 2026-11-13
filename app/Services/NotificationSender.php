@@ -53,7 +53,10 @@ class NotificationSender
                 Mail::send(['html' => $view, 'text' => $view.'-text'], ['booking' => $booking, 'salon' => Salon::current(), 'kind' => $message->kind, 'unsubscribeUrl' => $unsubscribeUrl, 'guestCancelled' => $guestCancelled], function (Message $mail) use ($booking, $message, $unsubscribeUrl, $recipients): void {
                     $titles = ['confirmation' => 'Foglalás visszaigazolása', 'changed' => 'Időpontod módosult', 'cancelled' => 'Foglalás lemondva', 'reminder' => 'Emlékeztető az időpontodra', 'review' => 'Hogyan érezted magad?', 'new_booking' => 'Új foglalás érkezett'];
                     $mail->to($recipients)->subject($titles[$message->kind].' – '.Salon::current()->name);
-                    $mail->from(config('mail.from.address'), Salon::current()->name)->replyTo(Salon::current()->email, Salon::current()->name);
+                    $mail->from(config('mail.from.address'), Salon::current()->name);
+                    if (filled(Salon::current()->email)) {
+                        $mail->replyTo(Salon::current()->email, Salon::current()->name);
+                    }
                     $mail->getSymfonyMessage()->getHeaders()->addIdHeader('Message-ID', 'booking-'.$booking->id.'-'.$message->revision.'-'.$message->kind.'@'.parse_url(config('app.url'), PHP_URL_HOST));
                     if ($unsubscribeUrl) {
                         $mail->getSymfonyMessage()->getHeaders()->addTextHeader('List-Unsubscribe', '<'.$unsubscribeUrl.'>');
