@@ -239,7 +239,7 @@ class AdminController extends Controller
                 ->orderByDesc('starts_at')->get()->first(fn (Booking $visit): bool => collect($visit->work_notes ?? [])->contains(fn ($note): bool => filled($note)) || filled($visit->work_photos));
         }
 
-        return view('admin.booking', compact('previousWorkNotes', 'booking', 'date', 'seriesBookings', 'swapDate', 'swapCandidates') + ['slots' => $availability->slots($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
+        return view('admin.booking', compact('previousWorkNotes', 'booking', 'date', 'seriesBookings', 'swapDate', 'swapCandidates') + ['slots' => $availability->slotsForMoving($service, $date, $staffId, $booking), 'usablePasses' => $benefits->usablePassesFor($booking)]);
     }
 
     public function updateBooking(Booking $booking, Request $request, BookingService $bookings): RedirectResponse

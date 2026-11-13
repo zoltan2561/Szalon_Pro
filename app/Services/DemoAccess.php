@@ -31,7 +31,7 @@ class DemoAccess
         return in_array($routeName, [
             'home', 'privacy', 'booking.form',
             'admin.today', 'admin.calendar', 'admin.bookings.index', 'admin.booking',
-            'admin.guests', 'admin.guest', 'admin.create', 'admin.services', 'admin.staff',
+            'admin.guests', 'admin.guest', 'admin.create', 'admin.services', 'admin.staff', 'admin.settings',
             'admin.statistics.index', 'admin.series.preview',
         ], true);
     }

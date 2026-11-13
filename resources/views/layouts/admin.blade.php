@@ -71,6 +71,7 @@
 @if(request()->routeIs('admin.booking'))<script src="{{ asset('admin-appointment-refresh.js').'?v='.substr(hash_file('sha256', public_path('admin-appointment-refresh.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.booking', 'admin.booking.reorganize.preview'))<script src="{{ asset('booking-reorganization.js').'?v='.substr(hash_file('sha256', public_path('booking-reorganization.js')), 0, 12) }}" defer></script>@endif
 @if(request()->routeIs('admin.settings'))<script src="{{ asset('settings-tabs.js').'?v='.substr(hash_file('sha256', public_path('settings-tabs.js')), 0, 12) }}" defer></script>@endif
+@if(request()->routeIs('admin.settings'))<script src="{{ asset('appearance-preview.js').'?v='.substr(hash_file('sha256', public_path('appearance-preview.js')), 0, 12) }}" defer></script>@endif
 <script src="{{ asset('mobile-experience.js').'?v='.substr(hash_file('sha256', public_path('mobile-experience.js')), 0, 12) }}" defer></script>
 @unless($demoViewer)<script src="{{ asset('booking-inbox.js').'?v='.substr(hash_file('sha256', public_path('booking-inbox.js')), 0, 12) }}" defer></script>@endunless
 @if($demoViewer)<script src="{{ asset('demo-readonly.js').'?v='.substr(hash_file('sha256', public_path('demo-readonly.js')), 0, 12) }}" defer></script>@endif

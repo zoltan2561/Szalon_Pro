@@ -44,6 +44,20 @@ class BrandingTest extends TestCase
         $this->get(route('home'))->assertOk()->assertDontSee('Szakági demó kiválasztása');
     }
 
+    public function test_dark_backgrounds_mark_the_page_so_the_default_logo_stays_visible_on_the_login_page(): void
+    {
+        $dark = Salon::factory()->create(['theme' => 'salon', 'appearance' => ['paper' => '#191C1B']]);
+
+        $html = $this->get(route('login'))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/<body class="[^"]*\bis-dark\b/', $html);
+        $this->assertStringContainsString('<img class="default-logo" src=', $html);
+        $this->assertTrue(app(Branding::class)->forSalon($dark)['dark']);
+
+        $dark->update(['appearance' => ['paper' => '#EFE3D4']]);
+        $this->assertFalse(app(Branding::class)->forSalon($dark->fresh())['dark']);
+        $this->assertDoesNotMatchRegularExpression('/<body class="[^"]*\bis-dark\b/', $this->get(route('login'))->getContent());
+    }
+
     public function test_demo_sales_contact_always_uses_the_central_prefilled_quote(): void
     {
         Salon::factory()->create(['demo' => true]);

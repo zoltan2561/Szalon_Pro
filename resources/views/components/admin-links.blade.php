@@ -1,10 +1,10 @@
 @if($demoViewer)
 <x-admin-menu-group label="A bemutatóban" :collapsible="$compactMenu ?? false" :expanded="true">
-@foreach(['bookings.index'=>['list','Foglalások'],'services'=>['scissors','Szolgáltatások'],'staff'=>['users','Csapat és munkarend']] as $key=>$item)
+@foreach(['bookings.index'=>['list','Foglalások'],'services'=>['scissors','Szolgáltatások'],'staff'=>['users','Csapat és munkarend'],'settings'=>['gear-six','Beállítások és arculat']] as $key=>$item)
 <a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
 @if($salon->featureEnabled('statistics'))<a href="{{ route('admin.statistics.index') }}" @if(request()->routeIs('admin.statistics.*')) aria-current="page" @endif><x-icon name="squares-four" />Statisztika</a>@endif
-@foreach(['settings' => ['gear-six', 'Beállítások'], 'google.index' => ['calendar-blank', 'Google Naptár'], 'notifications' => ['envelope-simple', 'Értesítések'], 'account' => ['user', 'Fiók']] as $key => $item)
+@foreach(['google.index' => ['calendar-blank', 'Google Naptár'], 'notifications' => ['envelope-simple', 'Értesítések'], 'account' => ['user', 'Fiók']] as $key => $item)
 <a class="menu-locked" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" /><span>{{ $item[1] }}</span><small class="menu-availability">Saját szalonnál</small></a>
 @endforeach
 </x-admin-menu-group>

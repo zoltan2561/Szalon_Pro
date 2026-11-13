@@ -32,6 +32,19 @@ class Availability
         return $time->utc();
     }
 
+    /**
+     * Free slots for moving a booking: the booking's own current time with the same staff member is not offered as a new time.
+     *
+     * @return list<array{starts_at: string, staff_id: int, staff_name: string, label: string, offset: string}>
+     */
+    public function slotsForMoving(Service $service, string $date, ?int $staffId, Booking $booking): array
+    {
+        return array_values(array_filter(
+            $this->slots($service, $date, $staffId, $booking),
+            fn (array $slot): bool => ! ($slot['staff_id'] === $booking->staff_id && CarbonImmutable::parse($slot['starts_at'])->equalTo($booking->starts_at)),
+        ));
+    }
+
     public function slots(Service $service, string $date, ?int $staffId = null, ?Booking $ignore = null, ?array $slotData = null): array
     {
         $salon = $slotData['salon'] ?? Salon::current();

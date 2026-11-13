@@ -153,7 +153,7 @@ class PublicController extends Controller
         ]);
         $staffId = $request->has('staff_id') ? ($request->integer('staff_id') ?: null) : $booking->staff_id;
         $date = $request->query('date') ?: $booking->starts_at->setTimezone($salon->timezone)->toDateString();
-        $slots = $availability->slots($service, $date, $staffId, $booking);
+        $slots = $availability->slotsForMoving($service, $date, $staffId, $booking);
         $nextAvailable = null;
         $nextAvailableUrl = null;
         if (! $slots && $booking->status === 'confirmed' && now()->lt($booking->starts_at->subHours($salon->cancel_notice_hours))) {

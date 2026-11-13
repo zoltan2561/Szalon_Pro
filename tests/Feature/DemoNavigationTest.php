@@ -72,12 +72,42 @@ class DemoNavigationTest extends TestCase
 
         $html = $this->actingAs($viewer)->get('/admin')->assertOk()->getContent();
 
-        $this->assertSame(8, substr_count($html, 'class="menu-locked"'), 'Four sections appear in the sidebar and in the mobile sheet.');
-        $this->assertSame(8, substr_count($html, '<small class="menu-availability">Saját szalonnál</small>'));
-        $this->assertStringNotContainsString('assets/icons/eye.svg\')" aria-hidden="true"></span><span>Beállítások', $html);
-        foreach (['gear-six', 'envelope-simple'] as $icon) {
+        $this->assertSame(6, substr_count($html, 'class="menu-locked"'), 'Three sections appear in the sidebar and in the mobile sheet.');
+        $this->assertSame(6, substr_count($html, '<small class="menu-availability">Saját szalonnál</small>'));
+        $this->assertStringNotContainsString('<span>Beállítások</span><small class="menu-availability">', $html);
+        foreach (['calendar-blank', 'envelope-simple', 'gear-six'] as $icon) {
             $this->assertStringContainsString('assets/icons/'.$icon.'.svg', $html);
         }
+    }
+
+    public function test_reader_can_view_the_settings_and_appearance_preview_but_not_change_them(): void
+    {
+        $salon = $this->prepareDemo('barber');
+        $salon->update(['billing_agent_key' => 'private-billing-secret']);
+        $viewer = User::factory()->create(['role' => 'owner', 'email' => 'demo@example.test', 'is_demo_viewer' => true]);
+
+        $this->actingAs($viewer)->get('/admin/beallitasok')->assertOk()
+            ->assertSee('Olvasó demó.')
+            ->assertSee('data-appearance-preview', false)
+            ->assertSee('data-demo-readonly="true"', false)
+            ->assertSee('Beállítások és arculat')
+            ->assertDontSee('private-billing-secret');
+        $this->post('/admin/beallitasok', ['name' => 'Tiltott módosítás'])->assertForbidden();
+        $this->post('/admin/beallitasok/arculat', ['preset' => 'nails'])->assertForbidden();
+        $this->assertSame('barber', $salon->fresh()->theme);
+        $this->assertNotSame('Tiltott módosítás', $salon->fresh()->name);
+    }
+
+    public function test_owner_settings_include_the_live_appearance_preview_and_script(): void
+    {
+        Salon::factory()->create(['tagline' => "Első sor\nMásodik sor"]);
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $this->actingAs($owner)->get('/admin/beallitasok')->assertOk()
+            ->assertSee('data-appearance-preview', false)
+            ->assertSee('appearance-preview.js', false)
+            ->assertSee('data-preview-title>Első sor</p>', false)
+            ->assertDontSee('Olvasó demó.');
     }
 
     public function test_marketing_page_explains_the_price_inclusions_and_single_contact_destination(): void
@@ -102,7 +132,7 @@ class DemoNavigationTest extends TestCase
         $salon->update(['billing_agent_key' => 'private-billing-secret']);
         $viewer = User::factory()->create(['role' => 'owner', 'email' => 'demo@example.test', 'is_demo_viewer' => true]);
         $this->actingAs($viewer);
-        foreach (['/admin/beallitasok', '/admin/google-naptar', '/admin/ertesitesek', '/admin/fiok'] as $path) {
+        foreach (['/admin/google-naptar', '/admin/ertesitesek', '/admin/fiok'] as $path) {
             $this->get($path)->assertForbidden()
                 ->assertSee('Ez a rész a demóban csak bemutató.')
                 ->assertSee('Saját szalonnál elérhető.')

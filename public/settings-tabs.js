@@ -16,6 +16,7 @@
             const index = Number(sectionPicker.value);
             selectTab(index);
             history.replaceState(null, '', tabs[index].hash);
+            showSection();
         });
     }
 
@@ -41,11 +42,16 @@
             extra.hidden = extra.dataset.settingsExtra !== panels[index].id;
         });
     };
+    const showSection = () => {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        tablist.closest('.settings-navigation')?.scrollIntoView({block: 'start', behavior: reduceMotion ? 'auto' : 'smooth'});
+    };
     tabs.forEach((tab, index) => {
         tab.addEventListener('click', event => {
             event.preventDefault();
             selectTab(index);
             history.replaceState(null, '', tab.hash);
+            showSection();
         });
         tab.addEventListener('keydown', event => {
             let next = null;

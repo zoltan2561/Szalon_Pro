@@ -26,6 +26,7 @@ class Branding
             'content' => app(PublicContent::class)->forSalon($salon),
             'accent' => $accent,
             'on_accent' => $this->foreground($accent),
+            'dark' => $this->luminance((string) ($appearance['paper'] ?? '#FFFFFF')) < 0.18,
             'secondary' => $appearance['secondary'] ?? $appearance['surface'],
             'font' => $salon->font,
             'show_hero' => $showHero,

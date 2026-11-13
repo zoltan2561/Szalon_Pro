@@ -187,7 +187,7 @@ class PublicDemoViewerTest extends TestCase
     public static function sensitivePages(): array
     {
         return array_map(fn (string $path): array => [$path], [
-            '/admin/beallitasok', '/admin/fiok', '/admin/google-naptar',
+            '/admin/fiok', '/admin/google-naptar',
             '/admin/google-naptar/visszateres', '/admin/ertesitesek', '/admin/bizonylatok',
             '/admin/vendegek/1/export', '/admin/foglalas/1/foto/0', '/admin/foglalas/1/naptar',
             '/admin/megosztas', '/admin/modulok', '/kezeles/private-token',
@@ -203,7 +203,7 @@ class PublicDemoViewerTest extends TestCase
         $booking = Booking::factory()->create(['guest_id' => $guest->id, 'work_notes' => ['formula' => 'PrivateUniqueWorkNotes'], 'work_photos' => ['private-photo.jpg'], 'manage_token' => 'private-management-token']);
         Booking::factory()->create(['guest_id' => $guest->id, 'status' => 'completed', 'starts_at' => now()->subDays(3), 'ends_at' => now()->subDays(3)->addHour(), 'work_notes' => ['formula' => 'PrivateUniquePreviousNotes']]);
         $this->actingAs($this->viewer());
-        foreach ([route('admin.today'), route('admin.calendar'), route('admin.bookings.index'), route('admin.booking', $booking), route('admin.guests'), route('admin.guest', $guest), route('admin.create', ['guest_id' => $guest->id]), route('admin.services'), route('admin.staff'), route('admin.statistics.index')] as $url) {
+        foreach ([route('admin.today'), route('admin.calendar'), route('admin.bookings.index'), route('admin.settings'), route('admin.booking', $booking), route('admin.guests'), route('admin.guest', $guest), route('admin.create', ['guest_id' => $guest->id]), route('admin.services'), route('admin.staff'), route('admin.statistics.index')] as $url) {
             $response = $this->get($url)->assertOk();
             foreach (['PrivateUniqueGuest', 'private-unique@real.example', '+36309988776', '36309988776', 'PrivateUniqueGuestNotes', 'PrivateUniqueWorkNotes', 'PrivateUniquePreviousNotes', 'private-photo.jpg', 'private-management-token'] as $private) {
                 $response->assertDontSee($private, false);

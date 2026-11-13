@@ -12,6 +12,16 @@
         @foreach(['paper'=>'Oldal háttere','surface'=>'Kiemelt felületek','ink'=>'Fő szövegszín','muted'=>'Másodlagos szöveg','line'=>'Elválasztók'] as $key=>$label)<label>{{ $label }}<input type="color" name="appearance[{{ $key }}]" value="{{ $appearance[$key] }}" required></label>@endforeach
     </div>
     <p class="settings-note">A gombok feliratszíne az arculati színhez igazodik. A szöveg és a hátterek kontrasztját mentéskor ellenőrizzük.</p>
+    <div class="appearance-preview" data-appearance-preview role="group" aria-label="Élő minta az arculatról">
+        <p class="appearance-preview-label">Élő minta · a változtatást mentés előtt is látod</p>
+        <div class="appearance-preview-card">
+            <p class="appearance-preview-eyebrow" data-preview-eyebrow>{{ $appearance['eyebrow'] }}</p>
+            <p class="appearance-preview-title" data-preview-title>{{ \Illuminate\Support\Str::before(trim((string) $salon->tagline), chr(10)) }}</p>
+            <p class="appearance-preview-text">Rövid minta a vendégoldalról: szolgáltatás, időtartam, szabad időpont.</p>
+            <div class="appearance-preview-actions"><span class="appearance-preview-button" data-preview-cta>{{ $appearance['cta_label'] }}</span><span class="appearance-preview-chip">Kiemelt felület</span></div>
+        </div>
+        <p class="settings-note appearance-preview-warning" data-preview-warning role="status" hidden></p>
+    </div>
     <div class="form-grid"><label>Rövid felirat a fő üzenet fölött<input name="appearance[eyebrow]" maxlength="100" value="{{ $appearance['eyebrow'] }}" required></label><label>Foglalási gomb szövege<input name="appearance[cta_label]" maxlength="40" value="{{ $appearance['cta_label'] }}" required></label></div>
     <label class="check"><input type="checkbox" name="appearance[show_team]" value="1" @checked($appearance['show_team'] ?? false)><span>Szakemberek megjelenítése a főoldalon</span></label>
     <label class="check"><input type="checkbox" name="appearance[show_gallery]" value="1" @checked($appearance['show_gallery'] ?? false)><span>Referenciafotók megjelenítése a főoldalon</span></label>

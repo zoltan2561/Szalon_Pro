@@ -73,6 +73,8 @@ php artisan serve --host=127.0.0.1 --port=8095
 
 A `salon:install` nem ír felül meglévő telepítést. Demóhoz új, üres adatbázisban add meg a `--demo=salon`, `--demo=barber` vagy `--demo=nails` kapcsolót. Demót ne telepíts éles ügyféladatbázisba.
 
+Az üres demónaptár élethű, szintetikus foglalásokkal tölthető fel: `php artisan salon:demo-data` (három hét múltbeli és két hét jövőbeli foglalás, a munkarendet és a puffert tiszteletben tartva). Csak publikált demó szalonon fut, értesítést nem küld, ismételt futtatáskor nem duplikál; a `--refresh` kizárólag a saját szintetikus vendégeit és foglalásait cseréli.
+
 A belépés után a Beállítások induló lépései vezetnek végig az adatokon, arculaton, munkatársakon, szolgáltatásokon, tesztfoglaláson és előnézeten. Aktív szolgáltatás, alkalmas szakember és elegendő közös munkaidő nélkül nem engedélyezhető a közzététel. Nem demó telepítésnél a bemutató adatkezelési jelölő és a helyőrző telefonszám is megakadályozza a közzétételt; saját tartalom és valódi telefonszám szükséges. Ez tartalmi alapellenőrzés, nem az adatkezelési tájékoztató jogi jóváhagyása. Saját nyitókép nélkül a valódi szalon szöveges nyitóoldalt kap; a generált bemutató fotók nem jelennek meg.
 
 A képfelhasználási jogok elfogadásának idejét mentjük. Korábban elfogadott jogok mellett a szöveges vagy működési beállítások mentéséhez nem kell új jelölés; új logó, nyitókép vagy galériakép feltöltésekor ismét meg kell erősíteni. A korábbi kiadásokban nem tárolt elfogadást az első ilyen mentésnél egyszer rögzíteni kell. Közzététel előtt a nyitóoldal és az adatkezelési oldal csak a tulajdonosi előnézetben érhető el.
