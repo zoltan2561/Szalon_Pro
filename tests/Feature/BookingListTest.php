@@ -26,12 +26,29 @@ class BookingListTest extends TestCase
 
         $response = $this->actingAs($owner)->get(route('admin.bookings.index', ['q' => 'Anna', 'date' => '2026-10-25', 'status' => 'confirmed']));
         $response
-            ->assertOk()->assertSee('Foglalások')->assertSee('Példa Anna')->assertSee('2026. 10. 25. 00:30')
+            ->assertOk()->assertSee('Foglalások')->assertSee('Példa Anna')->assertSee('2026. 10. 25. · vasárnap')->assertSee('<strong>00:30</strong>', false)
             ->assertViewHas('bookings', fn ($bookings) => $bookings->total() === 1 && $bookings->first()->id === $booking->id);
         $this->assertMatchesRegularExpression('/data-open-more[^>]*aria-current="page"/', $response->getContent());
         $this->get(route('admin.bookings.index', ['q' => '305551111']))
             ->assertOk()->assertViewHas('bookings', fn ($bookings) => $bookings->total() === 3);
         $this->get(route('admin.bookings.index', ['status' => 'bad']))->assertSessionHasErrors('status');
+    }
+
+    public function test_results_are_grouped_by_local_day_with_status_and_a_collapsible_filter_panel(): void
+    {
+        Salon::factory()->create(['timezone' => 'Europe/Budapest']);
+        $owner = User::factory()->create(['role' => 'owner']);
+        $first = Booking::factory()->create(['status' => 'confirmed', 'starts_at' => now()->addDays(2)->setTime(8, 0), 'ends_at' => now()->addDays(2)->setTime(9, 0), 'guest_id' => Guest::factory()->create(['name' => 'Első Vendég', 'phone' => null])]);
+        Booking::factory()->create(['status' => 'confirmed', 'starts_at' => now()->addDays(2)->setTime(12, 0), 'ends_at' => now()->addDays(2)->setTime(13, 0)]);
+        Booking::factory()->create(['status' => 'confirmed', 'starts_at' => now()->addDays(4)->setTime(12, 0), 'ends_at' => now()->addDays(4)->setTime(13, 0)]);
+
+        $html = $this->actingAs($owner)->get(route('admin.bookings.index'))->assertOk()->getContent();
+
+        $this->assertSame(2, substr_count($html, 'class="booking-day-heading"'), 'Three bookings on two local days make two day headings.');
+        $this->assertSame(3, substr_count($html, 'class="booking-result confirmed"'));
+        $this->assertStringContainsString('<details class="panel booking-filter-panel" data-mobile-disclosure open><summary>', $html);
+        $this->assertStringContainsString('href="'.route('admin.booking', $first).'"', $html);
+        $this->assertStringContainsString('<small class="booking-result-phone">Nincs telefonszám</small><span class="badge confirmed">Visszaigazolt</span>', $html);
     }
 
     public function test_staff_only_sees_own_bookings_and_other_booking_detail_is_forbidden(): void
