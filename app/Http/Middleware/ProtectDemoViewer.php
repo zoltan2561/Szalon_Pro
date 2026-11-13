@@ -34,7 +34,9 @@ class ProtectDemoViewer
             return redirect()->route('admin.today');
         }
         if (! $request->isMethodSafe() || ! $access->allowsRoute((string) $request->route()?->getName())) {
+            $guestFlow = $request->routeIs('booking.*', 'waitlist.*', 'vouchers.*');
             $description = match (true) {
+                $guestFlow => 'Az olvasó demófiókkal a vendégoldali foglalás és kezelés nem használható, hogy a mintaadatok védettek maradjanak.',
                 $request->routeIs('admin.google.*') => 'Itt kötöd össze a munkatársak Google Naptárát.',
                 $request->routeIs('admin.notifications') => 'Itt állítod be és ellenőrzöd az értesítéseket.',
                 $request->routeIs('admin.settings', 'admin.settings.*') => 'Itt állítod be a saját szalonod arculatát, adatait és nyitvatartását.',
@@ -42,7 +44,7 @@ class ProtectDemoViewer
                 default => 'A bemutatóban a mintaadatok védettek, ez a művelet nem használható.',
             };
 
-            return response()->view('admin.demo-restricted', ['description' => $description], 403)->header('Cache-Control', 'no-store, private');
+            return response()->view('admin.demo-restricted', ['description' => $description, 'guestFlow' => $guestFlow], 403)->header('Cache-Control', 'no-store, private');
         }
 
         $response = $next($request);

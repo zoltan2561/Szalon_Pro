@@ -132,6 +132,34 @@ class PublicDemoViewerTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    #[DataProvider('guestFlowRequests')]
+    public function test_blocked_guest_flow_pages_guide_the_viewer_to_try_the_booking_as_a_guest(string $method, string $path): void
+    {
+        Salon::factory()->create(['demo' => true]);
+        config()->set('salon.demo_viewer_enabled', true);
+        $this->actingAs($this->viewer());
+
+        $this->call($method, $path, ['name' => 'Changed'])
+            ->assertForbidden()
+            ->assertSee('A foglalást vendégként próbáld ki.')
+            ->assertSee('name="return_to" value="booking"', false)
+            ->assertSee('Vendégként próbálom ki')
+            ->assertDontSee('Ez a rész a demóban csak bemutató.');
+        $this->assertDatabaseCount('bookings', 0);
+        $this->assertDatabaseCount('guests', 0);
+    }
+
+    public static function guestFlowRequests(): array
+    {
+        return [
+            'booking submission' => ['POST', '/foglalas'],
+            'booking management link' => ['GET', '/kezeles/private-token'],
+            'booking management change' => ['POST', '/kezeles/private-token'],
+            'waitlist offer' => ['GET', '/szabad-idopont/private-token'],
+            'waitlist join' => ['POST', '/varolista'],
+        ];
+    }
+
     public static function unsafeRequests(): array
     {
         return [

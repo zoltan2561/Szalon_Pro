@@ -41,6 +41,45 @@ class DemoNavigationTest extends TestCase
         }
     }
 
+    #[DataProvider('industries')]
+    public function test_guest_pages_wrap_the_demo_navigation_in_a_disclosure_that_mobile_collapses(string $theme, string $label): void
+    {
+        $this->prepareDemo($theme);
+
+        foreach (['/?view=guest', '/foglalas'] as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+            $this->assertMatchesRegularExpression('/<details class="public-demo-navigation" data-mobile-disclosure open><summary><span>SzalonPRO bemutató · '.preg_quote($label, '/').'<small>/u', $html);
+            $this->assertStringContainsString('Most ezt nézed: '.$label.' bemutató', $html);
+            $this->assertSame(1, substr_count($html, 'data-demo-navigation'));
+        }
+    }
+
+    public function test_reader_notice_is_shown_on_guest_pages_but_not_on_the_marketing_hub_that_offers_both_entries(): void
+    {
+        $this->prepareDemo('salon');
+        config(['salon.demo_hub' => true]);
+        $viewer = User::factory()->create(['role' => 'owner', 'email' => 'demo@example.test', 'is_demo_viewer' => true]);
+        $this->actingAs($viewer);
+
+        $this->get('/')->assertOk()->assertSee('Admin bemutató (Fodrászat)')->assertDontSee('Most az olvasó demófiókot használod.');
+        $this->get('/foglalas')->assertOk()->assertSee('Most az olvasó demófiókot használod.');
+    }
+
+    public function test_reader_menu_marks_owner_only_sections_with_their_own_icons_and_a_single_availability_note(): void
+    {
+        $this->prepareDemo('salon');
+        $viewer = User::factory()->create(['role' => 'owner', 'email' => 'demo@example.test', 'is_demo_viewer' => true]);
+
+        $html = $this->actingAs($viewer)->get('/admin')->assertOk()->getContent();
+
+        $this->assertSame(8, substr_count($html, 'class="menu-locked"'), 'Four sections appear in the sidebar and in the mobile sheet.');
+        $this->assertSame(8, substr_count($html, '<small class="menu-availability">Saját szalonnál</small>'));
+        $this->assertStringNotContainsString('assets/icons/eye.svg\')" aria-hidden="true"></span><span>Beállítások', $html);
+        foreach (['gear-six', 'envelope-simple'] as $icon) {
+            $this->assertStringContainsString('assets/icons/'.$icon.'.svg', $html);
+        }
+    }
+
     public function test_marketing_page_explains_the_price_inclusions_and_single_contact_destination(): void
     {
         $this->prepareDemo('salon');
@@ -87,7 +126,7 @@ class DemoNavigationTest extends TestCase
         Salon::factory()->create();
         $owner = User::factory()->create(['role' => 'owner']);
         $html = $this->actingAs($owner)->get('/admin/szolgaltatasok')->assertOk()->getContent();
-        $this->assertMatchesRegularExpression('/<details class="panel"\s*>\s*<summary>\+ Új szolgáltatás<\/summary>/u', $html);
+        $this->assertMatchesRegularExpression('/<details class="panel catalog-item"\s*>\s*<summary class="catalog-summary"><span class="catalog-summary-main"><strong>\+ Új szolgáltatás<\/strong>/u', $html);
     }
 
     private function prepareDemo(string $theme): Salon

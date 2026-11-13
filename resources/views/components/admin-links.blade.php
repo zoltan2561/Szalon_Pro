@@ -4,8 +4,8 @@
 <a href="{{ route('admin.'.$key) }}" @if(request()->routeIs('admin.'.$key)) aria-current="page" @endif><x-icon :name="$item[0]" />{{ $item[1] }}</a>
 @endforeach
 @if($salon->featureEnabled('statistics'))<a href="{{ route('admin.statistics.index') }}" @if(request()->routeIs('admin.statistics.*')) aria-current="page" @endif><x-icon name="squares-four" />Statisztika</a>@endif
-@foreach(['settings' => 'Beállítások', 'google.index' => 'Google Naptár', 'notifications' => 'Értesítések', 'account' => 'Fiók'] as $key => $label)
-<a href="{{ route('admin.'.$key) }}"><x-icon name="eye" />{{ $label }}<small class="menu-availability">Saját szalonnál</small></a>
+@foreach(['settings' => ['gear-six', 'Beállítások'], 'google.index' => ['calendar-blank', 'Google Naptár'], 'notifications' => ['envelope-simple', 'Értesítések'], 'account' => ['user', 'Fiók']] as $key => $item)
+<a class="menu-locked" href="{{ route('admin.'.$key) }}"><x-icon :name="$item[0]" /><span>{{ $item[1] }}</span><small class="menu-availability">Saját szalonnál</small></a>
 @endforeach
 </x-admin-menu-group>
 @else

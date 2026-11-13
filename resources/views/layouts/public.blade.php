@@ -11,7 +11,7 @@
       style="--accent:{{ $brand['accent'] }};--on-accent:{{ $brand['on_accent'] }};--paper:{{ $brand['paper'] }};--ink:{{ $brand['ink'] }};--muted:{{ $brand['muted'] }};--soft:{{ $brand['secondary'] }};--secondary:{{ $brand['secondary'] }};--line:{{ $brand['line'] }};--radius:{{ $brand['radius'] }}px">
 <a class="skip" href="#main">Ugrás a tartalomra</a>
 @if($salon->demo && !$isDemoHub && !request()->routeIs('login'))
-    @include('components.demo-navigation')
+    <details class="public-demo-navigation" data-mobile-disclosure open><summary><span>SzalonPRO bemutató · {{ $demoStyleLabel }}<small>Szakág váltása, admin bemutató</small></span><x-icon name="arrow-right" /></summary>@include('components.demo-navigation')</details>
     <div class="demo-guest-shell">
 @endif
 @unless(request()->routeIs('login'))
@@ -40,7 +40,7 @@
 @endunless
 <main id="main">
     @include('components.flash')
-    @if($demoViewer)
+    @if($demoViewer && !$isDemoHub)
     <aside class="demo-viewer-banner wrap"><div><strong>Most az olvasó demófiókot használod.</strong><p>A vendégfoglalás kipróbálásához lépj át a vendégoldalra.</p></div><form method="post" action="{{ route('logout') }}">@csrf<input type="hidden" name="return_to" value="guest"><button class="button secondary">Vendégként kipróbálom <x-icon name="arrow-right" /></button></form></aside>
     @endif
     @yield('content')
